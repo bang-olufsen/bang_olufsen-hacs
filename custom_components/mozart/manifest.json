@@ -3,7 +3,7 @@
 	"name": "Bang & Olufsen Mozart",
 	"documentation": "https://github.com/bang-olufsen/Mozart-HACS",
 	"issue_tracker": "https://github.com/bang-olufsen/Mozart-HACS/issues",
-	"requirements": ["mozart-api==2.3.4.15123.1"],
+	"requirements": ["mozart-api==2.3.4.15123.2"],
 	"zeroconf": ["_bangolufsen._tcp.local."],
 	"version": "0.1.0",
 	"codeowners": ["@mj23000"],
