@@ -1,0 +1,164 @@
+beolink_join:
+  name: Beolink join
+  description: Join a Beolink experience.
+  target:
+    entity:
+      integration: mozart
+      domain: media_player
+    device:
+      integration: mozart
+  fields:
+    beolink_jid:
+      name: Beolink JID
+      description: Manually specify Beolink JID to join.
+      required: false
+      example: 1111.2222222.33333333@products.bang-olufsen.com
+      selector:
+        text:
+
+beolink_expand:
+  name: Beolink expand
+  description: Expand current Beolink experience.
+  target:
+    entity:
+      integration: mozart
+      domain: media_player
+    device:
+      integration: mozart
+  fields:
+    beolink_jids:
+      name: Beolink JIDs
+      description: Specify which Beolink JIDs will join current Beolink experience.
+      required: true
+      example: >-
+        [
+          1111.2222222.33333333@products.bang-olufsen.com,
+          4444.5555555.66666666@products.bang-olufsen.com
+        ]
+      selector:
+        object:
+
+beolink_unexpand:
+  name: Beolink unexpand
+  description: Unexpand from current Beolink experience.
+  target:
+    entity:
+      integration: mozart
+      domain: media_player
+    device:
+      integration: mozart
+  fields:
+    beolink_jids:
+      name: Beolink JIDs
+      description: Specify which Beolink JIDs will leave from current Beolink experience.
+      required: true
+      example: >-
+        [
+          1111.2222222.33333333@products.bang-olufsen.com,
+          4444.5555555.66666666@products.bang-olufsen.com
+        ]
+      selector:
+        object:
+
+beolink_leave:
+  name: Beolink leave
+  description: Leave a Beolink experience.
+  target:
+    entity:
+      integration: mozart
+      domain: media_player
+    device:
+      integration: mozart
+
+beolink_allstandby:
+  name: Beolink allstandby
+  description: Set all Connected Beolink devices to standby.
+  target:
+    entity:
+      integration: mozart
+      domain: media_player
+    device:
+      integration: mozart
+
+beolink_set_volume:
+  name: Beolink set volume
+  description: Set a volume level for all connected Beolink devices.
+  target:
+    entity:
+      integration: mozart
+      domain: media_player
+    device:
+      integration: mozart
+  fields:
+    volume_level:
+      name: Volume level
+      description: Specify the volume level.
+      required: true
+      example: 0.4
+      selector:
+        text:
+
+beolink_leader_command:
+  name: Beolink leader command
+  description: Send a media_player command to Beolink leader.
+  target:
+    entity:
+      integration: mozart
+      domain: media_player
+    device:
+      integration: mozart
+  fields:
+    command:
+      name: Command
+      description: Specify the media_player command.
+      required: true
+      example: "set_volume_level"
+      selector:
+        select:
+          options:
+            - "set_volume_level"
+            - "media_seek"
+            - "mute_volume"
+            - "select_source"
+            - "volume_up"
+            - "volume_down"
+            - "media_play_pause"
+            - "media_pause"
+            - "media_play"
+            - "media_stop"
+            - "media_next_track"
+            - "media_previous_track"
+            - "toggle"
+    parameter:
+      name: Parameter
+      description: Specify the media_player command's parameter.
+      required: false
+      example: 0.4
+      selector:
+        text:
+
+overlay_audio:
+  name: Overlay audio
+  description: Overlay audio over any currently playing audio.
+  target:
+    entity:
+      integration: mozart
+      domain: media_player
+    device:
+      integration: mozart
+  fields:
+    uri:
+      name: URI
+      description: Specify the audio to play.
+      required: true
+      selector:
+        text:
+    absolute_volume:
+      name: Absolute volume
+      description: Specify an absolute volume for the overlay.
+      required: false
+      example: 40
+      selector:
+        number:
+          min: 0
+          max: 100
