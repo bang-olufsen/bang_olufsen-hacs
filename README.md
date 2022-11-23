@@ -1,6 +1,6 @@
 # Home assistant integration for Mozart products
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/bang-olufsen/Mozart-HACS)
 
 This integration enables control of some of the features of a Bang & Olufsen Mozart device through Home Assistant.
 
@@ -8,7 +8,7 @@ This integration enables control of some of the features of a Bang & Olufsen Moz
 
 Mozart devices that have been tested and _should_ work without any trouble are:
 
-- [BeoLab 28](https://www.bang-olufsen.com/en/dk/speakers/beolab-28)
+- [Beoab 28](https://www.bang-olufsen.com/en/dk/speakers/beolab-28)
 - [Beosound Balance](https://www.bang-olufsen.com/en/dk/speakers/beosound-balance)
 - [Beosound Emerge](https://www.bang-olufsen.com/en/dk/speakers/beosound-emerge)
 - [Beosound Level](https://www.bang-olufsen.com/en/dk/speakers/beosound-level)
