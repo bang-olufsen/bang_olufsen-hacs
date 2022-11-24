@@ -187,7 +187,7 @@ SUPPORTS_PROXIMITY_SENSOR: Final[tuple] = (
 
 # Device trigger events
 BANGOLUFSEN_EVENT: Final[str] = f"{DOMAIN}_event"
-BANGOLUFSEN_WEBSOCKET_EVENT: Final[str] = "f{DOMAIN}_websocket_event"
+BANGOLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 # Device dispatcher events
 CLEANUP: Final[str] = "CLEANUP"
