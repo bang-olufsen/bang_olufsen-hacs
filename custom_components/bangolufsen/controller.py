@@ -1,4 +1,4 @@
-"""Websocket listener(s) for the Bang & Olufsen Mozart integration."""
+"""Websocket listener handling for the Bang & Olufsen integration."""
 from __future__ import annotations
 
 import asyncio
@@ -28,11 +28,11 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import (
+    BANGOLUFSEN_EVENT,
+    BANGOLUFSEN_WEBSOCKET_EVENT,
     BATTERY_NOTIFICATION,
     CLEANUP,
     CONNECTION_STATUS,
-    MOZART_EVENT,
-    MOZART_WEBSOCKET_EVENT,
     NOTIFICATION_NOTIFICATION,
     NOTIFICATION_NOTIFICATION_PROXIMITY,
     PLAYBACK_ERROR_NOTIFICATION,
@@ -43,58 +43,54 @@ from .const import (
     SOURCE_CHANGE_NOTIFICATION,
     VOLUME_NOTIFICATION,
     WS_REMOTE_CONTROL_AVAILABLE,
-    MozartVariables,
+    BangOlufsenVariables,
     get_device,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class MozartController(MozartVariables):
-    """The main listener and dispatcher for Mozart WebSocket notifications."""
+class BangOlufsenController(BangOlufsenVariables):
+    """The dispatcher and handler for WebSocket notifications."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Init the main listener and dispatcher for WebSocket notifications."""
+        """Init the dispatcher and handler for WebSocket notifications."""
         super().__init__(entry)
 
         self.hass = hass
         self.websocket_remote_control: bool = False
 
-        # Get the Mozart device for device triggers
+        # Get the device for device triggers
         self._device: DeviceEntry | None = get_device(self.hass, self._unique_id)
 
-        self._mozart_client.get_on_connection(self.on_connection)
-        self._mozart_client.get_on_connection_lost(self.on_connection_lost)
-        self._mozart_client.get_battery_notifications(self.on_battery_notification)
-        self._mozart_client.get_beo_remote_button_notifications(
+        self._client.get_on_connection(self.on_connection)
+        self._client.get_on_connection_lost(self.on_connection_lost)
+        self._client.get_battery_notifications(self.on_battery_notification)
+        self._client.get_beo_remote_button_notifications(
             self.on_beo_remote_button_notification
         )
-        self._mozart_client.get_button_notifications(self.on_button_notification)
-        self._mozart_client.get_notification_notifications(
-            self.on_notification_notification
-        )
-        self._mozart_client.get_playback_error_notifications(
+        self._client.get_button_notifications(self.on_button_notification)
+        self._client.get_notification_notifications(self.on_notification_notification)
+        self._client.get_playback_error_notifications(
             self.on_playback_error_notification
         )
-        self._mozart_client.get_playback_metadata_notifications(
+        self._client.get_playback_metadata_notifications(
             self.on_playback_metadata_notification
         )
-        self._mozart_client.get_playback_progress_notifications(
+        self._client.get_playback_progress_notifications(
             self.on_playback_progress_notification
         )
-        self._mozart_client.get_playback_state_notifications(
+        self._client.get_playback_state_notifications(
             self.on_playback_state_notification
         )
-        self._mozart_client.get_sound_settings_notifications(
+        self._client.get_sound_settings_notifications(
             self.on_sound_settings_notification
         )
-        self._mozart_client.get_source_change_notifications(
-            self.on_source_change_notification
-        )
-        self._mozart_client.get_volume_notifications(self.on_volume_notification)
+        self._client.get_source_change_notifications(self.on_source_change_notification)
+        self._client.get_volume_notifications(self.on_volume_notification)
 
         # Used for firing events and debugging
-        self._mozart_client.get_all_notifications_raw(self.on_all_notifications_raw)
+        self._client.get_all_notifications_raw(self.on_all_notifications_raw)
 
         # Register dispatchers.
         cleanup_dispatcher = async_dispatcher_connect(
@@ -116,13 +112,11 @@ class MozartController(MozartVariables):
         """Start the notification WebSocket listener."""
 
         # Kill notification listeners if already running
-        if self._mozart_client.websocket_connected:
-            self._mozart_client.disconnect_notifications()
+        if self._client.websocket_connected:
+            self._client.disconnect_notifications()
 
         # Check if the remote control listener should be activated.
-        bluetooth_remote_list = self._mozart_client.get_bluetooth_remotes(
-            async_req=True
-        ).get()
+        bluetooth_remote_list = self._client.get_bluetooth_remotes(async_req=True).get()
 
         if len(bluetooth_remote_list.items) > 0:
             self.websocket_remote_control = True
@@ -143,21 +137,21 @@ class MozartController(MozartVariables):
         async_dispatcher_send(
             self.hass,
             f"{self._unique_id}_{CONNECTION_STATUS}",
-            self._mozart_client.websocket_connected,
+            self._client.websocket_connected,
         )
 
     async def _wait_for_connection(self) -> None:
         """Wait for WebSocket connection to be established."""
-        self._mozart_client.connect_notifications(self.websocket_remote_control)
+        self._client.connect_notifications(self.websocket_remote_control)
 
-        while not self._mozart_client.websocket_connected:
+        while not self._client.websocket_connected:
             pass
 
     async def _wait_for_disconnect(self) -> None:
         """Wait for WebSocket connection to be disconnected."""
-        self._mozart_client.disconnect_notifications()
+        self._client.disconnect_notifications()
 
-        while self._mozart_client.websocket_connected:
+        while self._client.websocket_connected:
             pass
 
     async def _async_receive_notifications(self) -> bool:
@@ -196,7 +190,7 @@ class MozartController(MozartVariables):
 
         if notification.type == "KeyPress":
             self.hass.bus.async_fire(
-                MOZART_EVENT,
+                BANGOLUFSEN_EVENT,
                 event_data={
                     CONF_TYPE: f"{notification.key}_{notification.type}",
                     CONF_DEVICE_ID: self._device.id,
@@ -212,7 +206,7 @@ class MozartController(MozartVariables):
 
         # Trigger the device trigger
         self.hass.bus.async_fire(
-            MOZART_EVENT,
+            BANGOLUFSEN_EVENT,
             event_data={
                 CONF_TYPE: f"{notification.button}_{notification.state}",
                 CONF_DEVICE_ID: self._device.id,
@@ -298,5 +292,5 @@ class MozartController(MozartVariables):
 
     def on_all_notifications_raw(self, notification: dict) -> None:
         """Receive all notifications."""
-        _LOGGER.debug("%s", notification)
-        self.hass.bus.async_fire(MOZART_WEBSOCKET_EVENT, notification)
+        _LOGGER.warning("%s", notification)
+        self.hass.bus.async_fire(BANGOLUFSEN_WEBSOCKET_EVENT, notification)

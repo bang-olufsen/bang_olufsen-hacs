@@ -3,10 +3,10 @@ beolink_join:
   description: Join a Beolink experience.
   target:
     entity:
-      integration: mozart
+      integration: bangolufsen
       domain: media_player
     device:
-      integration: mozart
+      integration: bangolufsen
   fields:
     beolink_jid:
       name: Beolink JID
@@ -21,10 +21,10 @@ beolink_expand:
   description: Expand current Beolink experience.
   target:
     entity:
-      integration: mozart
+      integration: bangolufsen
       domain: media_player
     device:
-      integration: mozart
+      integration: bangolufsen
   fields:
     beolink_jids:
       name: Beolink JIDs
@@ -43,10 +43,10 @@ beolink_unexpand:
   description: Unexpand from current Beolink experience.
   target:
     entity:
-      integration: mozart
+      integration: bangolufsen
       domain: media_player
     device:
-      integration: mozart
+      integration: bangolufsen
   fields:
     beolink_jids:
       name: Beolink JIDs
@@ -65,30 +65,30 @@ beolink_leave:
   description: Leave a Beolink experience.
   target:
     entity:
-      integration: mozart
+      integration: bangolufsen
       domain: media_player
     device:
-      integration: mozart
+      integration: bangolufsen
 
 beolink_allstandby:
   name: Beolink allstandby
   description: Set all Connected Beolink devices to standby.
   target:
     entity:
-      integration: mozart
+      integration: bangolufsen
       domain: media_player
     device:
-      integration: mozart
+      integration: bangolufsen
 
 beolink_set_volume:
   name: Beolink set volume
   description: Set a volume level for all connected Beolink devices.
   target:
     entity:
-      integration: mozart
+      integration: bangolufsen
       domain: media_player
     device:
-      integration: mozart
+      integration: bangolufsen
   fields:
     volume_level:
       name: Volume level
@@ -103,10 +103,10 @@ beolink_leader_command:
   description: Send a media_player command to Beolink leader.
   target:
     entity:
-      integration: mozart
+      integration: bangolufsen
       domain: media_player
     device:
-      integration: mozart
+      integration: bangolufsen
   fields:
     command:
       name: Command
@@ -142,10 +142,10 @@ overlay_audio:
   description: Overlay audio over any currently playing audio.
   target:
     entity:
-      integration: mozart
+      integration: bangolufsen
       domain: media_player
     device:
-      integration: mozart
+      integration: bangolufsen
   fields:
     uri:
       name: URI

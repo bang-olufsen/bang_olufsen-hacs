@@ -1,7 +1,5 @@
-"""Button entities for the Bang & Olufsen Mozart integration."""
+"""Button entities for the Bang & Olufsen integration."""
 from __future__ import annotations
-
-import logging
 
 from mozart_api.models import Preset
 
@@ -16,16 +14,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    BANGOLUFSEN_EVENT,
     CONNECTION_STATUS,
+    DOMAIN,
     HASS_FAVOURITES,
-    MOZART_DOMAIN,
-    MOZART_EVENT,
-    MozartVariables,
+    BangOlufsenVariables,
     get_device,
 )
-from .coordinator import MozartCoordinator
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import BangOlufsenCoordinator
 
 
 async def async_setup_entry(
@@ -33,30 +29,28 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set Mozart button entities from config entry."""
+    """Set up Button entities from config entry."""
     entities = []
-    configuration = hass.data[MOZART_DOMAIN][config_entry.unique_id]
+    configuration = hass.data[DOMAIN][config_entry.unique_id]
 
-    # Add favourite button entities.
+    # Add favourite Button entities.
     for button in configuration[HASS_FAVOURITES]:
         entities.append(button)
 
     async_add_entities(new_entities=entities, update_before_add=True)
 
 
-class MozartButton(ButtonEntity, MozartVariables):
-    """Button for Mozart actions."""
+class BangOlufsenButton(ButtonEntity, BangOlufsenVariables):
+    """Base Button class."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Init the Mozart select."""
+        """Init the Button."""
         super().__init__(entry)
 
         self._attr_entity_category = None
         self._attr_available = True
         self._attr_device_class = ButtonDeviceClass.UPDATE
-        self._attr_device_info = DeviceInfo(
-            identifiers={(MOZART_DOMAIN, self._unique_id)}
-        )
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -80,18 +74,18 @@ class MozartButton(ButtonEntity, MozartVariables):
         self.async_write_ha_state()
 
 
-class MozartButtonFavourite(CoordinatorEntity, MozartButton):
-    """Favourite button."""
+class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
+    """Favourite Button."""
 
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinator: MozartCoordinator,
+        coordinator: BangOlufsenCoordinator,
         favourite: Preset,
     ) -> None:
-        """Init a favourite button."""
+        """Init a favourite Button."""
         CoordinatorEntity.__init__(self, coordinator)
-        MozartButton.__init__(self, entry)
+        BangOlufsenButton.__init__(self, entry)
 
         self._favourite_id: int = int(favourite.name[6:])
         self._favourite: Preset = favourite
@@ -126,7 +120,7 @@ class MozartButtonFavourite(CoordinatorEntity, MozartButton):
 
     async def async_press(self) -> None:
         """Handle the action."""
-        self._mozart_client.activate_preset(id=self._favourite_id, async_req=True)
+        self._client.activate_preset(id=self._favourite_id, async_req=True)
 
         # Trigger the trigger for the physical favourite button.
         if 0 < self._favourite_id < 5:
@@ -136,7 +130,7 @@ class MozartButtonFavourite(CoordinatorEntity, MozartButton):
             assert isinstance(self._device, DeviceEntry)
 
             self.hass.bus.async_fire(
-                MOZART_EVENT,
+                BANGOLUFSEN_EVENT,
                 event_data={
                     CONF_TYPE: f"{self._favourite.name}_shortPress",
                     CONF_DEVICE_ID: self._device.id,

@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Mozart enheden er allerede konfigureret.",
-            "api_exception": "En fejl opstod ved initialiseringen af Mozart enheden. Prøv at vente eller at genstarte Mozart enheden.",
-            "max_retry_error": "Kan ikke forbinde til enheden på den givne IP-adresse. Tjek om IP-adressen stemmer overens med Mozart enhedens.",
-            "new_connection_error": "Kan ikke detektere en enhed på givne IP-adresse. Tjek om IP-adressen stemmer overens med Mozart enhedens.",
+            "already_configured": "Enheden er allerede konfigureret.",
+            "api_exception": "En fejl opstod ved initialiseringen af enheden. Prøv at vente eller at genstarte enheden.",
+            "max_retry_error": "Kan ikke forbinde til enheden på den givne IP-adresse. Tjek om IP-adressen stemmer overens med enhedens.",
+            "new_connection_error": "Kan ikke detektere en enhed på givne IP-adresse. Tjek om IP-adressen stemmer overens med enhedens.",
             "no_device": "Kunne ikke finde enheden.",
             "value_error": "Ikke en gyldig IP-adresse."
         },
@@ -22,9 +22,9 @@
             "user":{
                 "data": {
                     "host": "IP-adresse",
-                    "model": "Mozart enhedens model"
+                    "model": "Enhedens model"
                 },
-                "description": "Konfigurer din Bang & Olufsen Mozart enhed."
+                "description": "Konfigurer din Bang & Olufsen enhed."
             }
         }
 
@@ -136,10 +136,10 @@
     },
     "options":{
         "abort": {
-            "already_configured": "Mozart enheden er allerede konfigureret.",
-            "api_exception": "En fejl opstod ved initialiseringen af Mozart enheden. Prøv at vente eller at genstarte Mozart enheden.",
-            "max_retry_error": "Kan ikke forbinde til enheden på den givne IP-adresse. Tjek om IP-adressen stemmer overens med Mozart enhedens.",
-            "new_connection_error": "Kan ikke detektere en enhed på givne IP-adresse. Tjek om IP-adressen stemmer overens med Mozart enhedens.",
+            "already_configured": "Enheden er allerede konfigureret.",
+            "api_exception": "En fejl opstod ved initialiseringen af enheden. Prøv at vente eller at genstarte enheden.",
+            "max_retry_error": "Kan ikke forbinde til enheden på den givne IP-adresse. Tjek om IP-adressen stemmer overens med enhedens.",
+            "new_connection_error": "Kan ikke detektere en enhed på givne IP-adresse. Tjek om IP-adressen stemmer overens med enhedens.",
             "no_device": "Kunne ikke finde enheden.",
             "value_error": "Ikke en gyldig IP-adresse."
         },

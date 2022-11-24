@@ -1,4 +1,4 @@
-"""Sensor entities for the Bang & Olufsen Mozart integration."""
+"""Sensor entities for the Bang & Olufsen integration."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -20,9 +20,9 @@ from homeassistant.util.dt import utcnow
 from .const import (
     BATTERY_NOTIFICATION,
     CONNECTION_STATUS,
+    DOMAIN,
     HASS_SENSORS,
-    MOZART_DOMAIN,
-    MozartVariables,
+    BangOlufsenVariables,
 )
 
 
@@ -31,30 +31,28 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Mozart sensor entities from config entry."""
+    """Set up Sensor entities from config entry."""
     entities = []
 
     # Add sensor entities.
-    for sensor in hass.data[MOZART_DOMAIN][config_entry.unique_id][HASS_SENSORS]:
+    for sensor in hass.data[DOMAIN][config_entry.unique_id][HASS_SENSORS]:
         entities.append(sensor)
 
     async_add_entities(new_entities=entities, update_before_add=True)
 
 
-class MozartSensor(MozartVariables, SensorEntity):
-    """Sensor for Mozart."""
+class BangOlufsenSensor(BangOlufsenVariables, SensorEntity):
+    """Base Sensor class."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Init the Mozart Sensor."""
+        """Init the Sensor."""
         super().__init__(entry)
 
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_available = True
         self._attr_should_poll = False
-        self._attr_device_info = DeviceInfo(
-            identifiers={(MOZART_DOMAIN, self._unique_id)}
-        )
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -78,11 +76,11 @@ class MozartSensor(MozartVariables, SensorEntity):
         self.async_write_ha_state()
 
 
-class MozartSensorBatteryLevel(MozartSensor):
-    """Battery level sensor for Mozart."""
+class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
+    """Battery level Sensor."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Init the battery level sensor."""
+        """Init the battery level Sensor."""
         super().__init__(entry)
 
         self._attr_name = f"{self._name} Battery level"
@@ -114,11 +112,11 @@ class MozartSensorBatteryLevel(MozartSensor):
         self.async_write_ha_state()
 
 
-class MozartSensorBatteryChargingTime(MozartSensor):
-    """Battery charging time sensor for Mozart."""
+class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
+    """Battery charging time Sensor."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Init the battery charging time sensor."""
+        """Init the battery charging time Sensor."""
         super().__init__(entry)
 
         self._attr_name = f"{self._name} Battery charging time"
@@ -158,11 +156,11 @@ class MozartSensorBatteryChargingTime(MozartSensor):
         self.async_write_ha_state()
 
 
-class MozartSensorBatteryPlayingTime(MozartSensor):
-    """Battery playing time sensor for Mozart."""
+class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
+    """Battery playing time Sensor."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Init the battery playing time sensor."""
+        """Init the battery playing time Sensor."""
         super().__init__(entry)
 
         self._attr_name = f"{self._name} Battery playing time"

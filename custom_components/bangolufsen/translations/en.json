@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Already configured. Only a single configuration possible.",
-            "api_exception": "An error occurred while initializing the Mozart device. Try waiting or restarting the Mozart device.",
+            "api_exception": "An error occurred while initializing the device. Try waiting or restarting the device.",
             "max_retry_error": "Unable to connect to the device at the address. Please check if the IP address is correct.",
             "new_connection_error": "Unable to detect a device at the address. Please check if the IP address is correct.",
             "no_device": "Unable to retrieve device.",
@@ -22,9 +22,9 @@
             "user": {
                 "data": {
                     "host": "IP Address",
-                    "model": "Mozart device model"
+                    "model": "Device model"
                 },
-                "description": "Manually configure your Bang & Olufsen Mozart device."
+                "description": "Manually configure your Bang & Olufsen device."
             }
         }
     },
@@ -136,7 +136,7 @@
     "options": {
         "abort": {
             "already_configured": "Already configured. Only a single configuration possible.",
-            "api_exception": "An error occurred while initializing the Mozart device. Try waiting or restarting the Mozart device.",
+            "api_exception": "An error occurred while initializing the device. Try waiting or restarting the device.",
             "max_retry_error": "Unable to connect to the device at the address. Please check if the IP address is correct.",
             "new_connection_error": "Unable to detect a device at the address. Please check if the IP address is correct.",
             "no_device": "Unable to retrieve device.",

@@ -1,4 +1,4 @@
-"""Constants for the Bang & Olufsen Mozart integration."""
+"""Constants for the Bang & Olufsen integration."""
 from __future__ import annotations
 
 from enum import Enum
@@ -46,7 +46,7 @@ class ArtSizeEnum(Enum):
 
 
 class SourceEnum(StrEnum):
-    """Enum used for associating source ids with friendly names. May not include all sources."""
+    """Enum used for associating device source ids with friendly names. May not include all sources."""
 
     uriStreamer = "Audio Streamer"
     bluetooth = "Bluetooth"
@@ -68,7 +68,7 @@ class SourceEnum(StrEnum):
 
 
 class RepeatEnum(StrEnum):
-    """Enum used for translating Mozart repeat settings to Home Assistant settings."""
+    """Enum used for translating device repeat settings to Home Assistant settings."""
 
     all = "all"
     one = "track"
@@ -76,7 +76,7 @@ class RepeatEnum(StrEnum):
 
 
 class StateEnum(StrEnum):
-    """Enum used for translating Mozart states to Home Assistant states."""
+    """Enum used for translating device states to Home Assistant states."""
 
     # Playback states
     started = MediaPlayerState.PLAYING
@@ -86,30 +86,30 @@ class StateEnum(StrEnum):
     stopped = MediaPlayerState.PAUSED
     ended = MediaPlayerState.PAUSED
     error = MediaPlayerState.IDLE
-    # Mozart devices' initial state is "unknown" and should be treated as "idle"
+    # A devices initial state is "unknown" and should be treated as "idle"
     unknown = MediaPlayerState.IDLE
 
 
 # Media types for play_media
-class MozartMediaType(StrEnum):
-    """Mozart specific media types."""
+class BangOlufsenMediaType(StrEnum):
+    """Bang & Olufsen specific media types."""
 
     FAVOURITE = "favourite"
     DEEZER = "deezer"
 
 
 # Proximity detection for binary_sensor
-class MozartProximityEnum(Enum):
-    """Mozart proximity detection mapping.."""
+class ProximityEnum(Enum):
+    """Proximity detection mapping.."""
 
     proximityPresenceDetected = True
     proximityPresenceNotDetected = False
 
 
-MOZART_DOMAIN: Final[str] = "mozart"
+DOMAIN: Final[str] = "bangolufsen"
 
 # Default values for configuration.
-DEFAULT_NAME: Final[str] = "Mozart device"
+DEFAULT_NAME: Final[str] = "Bang & Olufsen device"
 DEFAULT_HOST: Final[str] = "192.168.1.1"
 DEFAULT_DEFAULT_VOLUME: Final[int] = 40
 DEFAULT_MAX_VOLUME: Final[int] = 100
@@ -164,19 +164,17 @@ ATTR_ITEM_NUMBER: Final[str] = "in"
 ATTR_FRIENDLY_NAME: Final[str] = "fn"
 
 # Power states.
-MOZART_ON: Final[str] = "on"
-MOZART_NETWORK_STANDBY: Final[str] = "networkStandby"
-
+BANGOLUFSEN_ON: Final[str] = "on"
 
 VALID_MEDIA_TYPES: Final[tuple] = (
-    MozartMediaType.FAVOURITE,
-    MozartMediaType.DEEZER,
+    BangOlufsenMediaType.FAVOURITE,
+    BangOlufsenMediaType.DEEZER,
     MediaType.MUSIC,
     MediaType.URL,
 )
 
 # Playback states for playing and not playing
-PLAYING: Final[tuple] = ("started", "buffering", MOZART_ON)
+PLAYING: Final[tuple] = ("started", "buffering", BANGOLUFSEN_ON)
 NOT_PLAYING: Final[tuple] = ("idle", "paused", "stopped", "ended", "unknown", "error")
 
 # Product capabilities for creating entities
@@ -188,8 +186,8 @@ SUPPORTS_PROXIMITY_SENSOR: Final[tuple] = (
 )
 
 # Device trigger events
-MOZART_EVENT: Final[str] = "mozart_event"
-MOZART_WEBSOCKET_EVENT: Final[str] = "mozart_websocket_event"
+BANGOLUFSEN_EVENT: Final[str] = f"{DOMAIN}_event"
+BANGOLUFSEN_WEBSOCKET_EVENT: Final[str] = "f{DOMAIN}_websocket_event"
 
 # Device dispatcher events
 CLEANUP: Final[str] = "CLEANUP"
@@ -261,20 +259,20 @@ ACCEPTED_COMMANDS_LISTS: Final[tuple] = (
 
 
 def get_device(hass: HomeAssistant | None, unique_id: str) -> DeviceEntry | None:
-    """Get the Mozart device."""
+    """Get the device."""
     if not isinstance(hass, HomeAssistant):
         return None
 
     registry = device_registry.async_get(hass)
-    device = registry.async_get_device({(MOZART_DOMAIN, unique_id)})
+    device = registry.async_get_device({(DOMAIN, unique_id)})
     return device
 
 
-class MozartVariables:
-    """Shared variables for Mozart entities."""
+class BangOlufsenVariables:
+    """Shared variables for entities."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize the Mozart object."""
+        """Initialize the object."""
 
         # get the input from the config entry.
         self.entry: ConfigEntry = entry
@@ -288,7 +286,7 @@ class MozartVariables:
 
         self._dispatchers: list = []
 
-        self._mozart_client: MozartClient = MozartClient(
+        self._client: MozartClient = MozartClient(
             host=self._host, websocket_reconnect=True
         )
 

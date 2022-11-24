@@ -1,4 +1,4 @@
-"""Switch entities for the Bang & Olufsen Mozart integration."""
+"""Switch entities for the Bang & Olufsen integration."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -15,10 +15,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONNECTION_STATUS,
+    DOMAIN,
     HASS_SWITCHES,
-    MOZART_DOMAIN,
     SOUND_SETTINGS_NOTIFICATION,
-    MozartVariables,
+    BangOlufsenVariables,
 )
 
 SCAN_INTERVAL = timedelta(seconds=120)
@@ -29,30 +29,28 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Mozart switch entities from config entry."""
+    """Set up Switches from config_entry."""
     entities = []
 
     # Add switch entities.
-    for switch in hass.data[MOZART_DOMAIN][config_entry.unique_id][HASS_SWITCHES]:
+    for switch in hass.data[DOMAIN][config_entry.unique_id][HASS_SWITCHES]:
         entities.append(switch)
 
     async_add_entities(new_entities=entities, update_before_add=True)
 
 
-class MozartSwitch(MozartVariables, SwitchEntity):
-    """Number for Mozart settings."""
+class BangOlufsenSwitch(BangOlufsenVariables, SwitchEntity):
+    """Base Switch class."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Init the Mozart number."""
+        """Init the Switch."""
         super().__init__(entry)
 
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_device_class = SwitchDeviceClass.SWITCH
         self._attr_available = True
         self._attr_should_poll = False
-        self._attr_device_info = DeviceInfo(
-            identifiers={(MOZART_DOMAIN, self._unique_id)}
-        )
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
         self._attr_is_on = False
 
     async def async_added_to_hass(self) -> None:
@@ -83,11 +81,11 @@ class MozartSwitch(MozartVariables, SwitchEntity):
             await self.async_turn_on()
 
 
-class MozartSwitchLoudness(MozartSwitch):
-    """Loudness switch for Mozart settings."""
+class BangOlufsenSwitchLoudness(BangOlufsenSwitch):
+    """Loudness Switch."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Init the loudness switch."""
+        """Init the loudness Switch."""
         super().__init__(entry)
 
         self._attr_name = f"{self._name} Loudness"
@@ -96,14 +94,14 @@ class MozartSwitchLoudness(MozartSwitch):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Activate the option."""
-        self._mozart_client.set_sound_settings_adjustments_loudness(
+        self._client.set_sound_settings_adjustments_loudness(
             loudness=Loudness(value=True),
             async_req=True,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Deactivate the option."""
-        self._mozart_client.set_sound_settings_adjustments_loudness(
+        self._client.set_sound_settings_adjustments_loudness(
             loudness=Loudness(value=False),
             async_req=True,
         )

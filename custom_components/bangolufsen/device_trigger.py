@@ -1,4 +1,4 @@
-"""Device triggers for the Bang & Olufsen Mozart integration."""
+"""Device triggers for the Bang & Olufsen integration."""
 from __future__ import annotations
 
 from typing import Any
@@ -13,7 +13,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.typing import ConfigType
 
-from .const import HASS_CONTROLLER, MOZART_DOMAIN, MOZART_EVENT
+from .const import BANGOLUFSEN_EVENT, DOMAIN, HASS_CONTROLLER
 
 BUTTON_TRIGGERS = (
     "Preset1_shortPress",
@@ -137,7 +137,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
-    """List device triggers for Mozart devices."""
+    """List device triggers for Bang & Olufsen devices."""
     triggers = []
 
     # Get the device serial number in order to retrieve the controller
@@ -147,7 +147,7 @@ async def async_get_triggers(
 
     serial_number = list(registry.devices[device_id].identifiers)[0][1]
 
-    controller = hass.data[MOZART_DOMAIN][serial_number][HASS_CONTROLLER]
+    controller = hass.data[DOMAIN][serial_number][HASS_CONTROLLER]
 
     trigger_types: tuple[str, ...] = ()
 
@@ -162,7 +162,7 @@ async def async_get_triggers(
             {
                 CONF_PLATFORM: "device",
                 CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: MOZART_DOMAIN,
+                CONF_DOMAIN: DOMAIN,
                 CONF_TYPE: trigger_type,
             }
         )
@@ -179,7 +179,7 @@ async def async_attach_trigger(
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
             event_trigger.CONF_PLATFORM: "event",
-            event_trigger.CONF_EVENT_TYPE: MOZART_EVENT,
+            event_trigger.CONF_EVENT_TYPE: BANGOLUFSEN_EVENT,
             event_trigger.CONF_EVENT_DATA: {
                 CONF_TYPE: config[CONF_TYPE],
                 CONF_DEVICE_ID: config[CONF_DEVICE_ID],

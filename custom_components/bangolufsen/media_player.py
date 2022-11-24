@@ -1,4 +1,4 @@
-"""Media player entity for the Bang & Olufsen Mozart integration."""
+"""Media player entity for the Bang & Olufsen integration."""
 from __future__ import annotations
 
 import asyncio
@@ -75,9 +75,9 @@ from .const import (
     CONF_MAX_VOLUME,
     CONF_VOLUME_STEP,
     CONNECTION_STATUS,
+    DOMAIN,
     HASS_CONTROLLER,
     HASS_MEDIA_PLAYER,
-    MOZART_DOMAIN,
     NO_METADATA,
     NOTIFICATION_NOTIFICATION,
     PLAYBACK_ERROR_NOTIFICATION,
@@ -89,17 +89,17 @@ from .const import (
     VOLUME_NOTIFICATION,
     WS_REMOTE_CONTROL_AVAILABLE,
     ArtSizeEnum,
-    MozartMediaType,
-    MozartVariables,
+    BangOlufsenMediaType,
+    BangOlufsenVariables,
     RepeatEnum,
     SourceEnum,
     StateEnum,
 )
-from .coordinator import MozartCoordinator
+from .coordinator import BangOlufsenCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-MOZART_FEATURES = (
+BANGOLUFSEN_FEATURES = (
     MediaPlayerEntityFeature.PAUSE
     | MediaPlayerEntityFeature.SEEK
     | MediaPlayerEntityFeature.VOLUME_SET
@@ -126,9 +126,9 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up a mozart media_player from config entry."""
-    mozart_device = hass.data[MOZART_DOMAIN][config_entry.unique_id][HASS_MEDIA_PLAYER]
-    async_add_entities([mozart_device])
+    """Set up a Media Player entity from config entry."""
+    device = hass.data[DOMAIN][config_entry.unique_id][HASS_MEDIA_PLAYER]
+    async_add_entities([device])
 
     # Register services.
     platform = entity_platform.async_get_current_platform()
@@ -216,13 +216,15 @@ async def async_setup_entry(
     )
 
 
-class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
-    """Representation of a Mozart media player."""
+class BangOlufsenMediaPlayer(
+    MediaPlayerEntity, BangOlufsenVariables, CoordinatorEntity
+):
+    """Representation of a media player."""
 
-    def __init__(self, entry: ConfigEntry, coordinator: MozartCoordinator) -> None:
-        """Initialize the Mozart media player."""
+    def __init__(self, entry: ConfigEntry, coordinator: BangOlufsenCoordinator) -> None:
+        """Initialize the media player."""
         MediaPlayerEntity.__init__(self)
-        MozartVariables.__init__(self, entry)
+        BangOlufsenVariables.__init__(self, entry)
         CoordinatorEntity.__init__(self, coordinator)
 
         # Static entity attributes
@@ -230,7 +232,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
         self._attr_name = self._name
         self._attr_icon = "mdi:speaker-wireless"
-        self._attr_supported_features = MOZART_FEATURES
+        self._attr_supported_features = BANGOLUFSEN_FEATURES
         self._attr_unique_id = self._unique_id
 
         self._beolink_jid: str = self.entry.data[CONF_BEOLINK_JID]
@@ -345,7 +347,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         )
 
         # Initialize the entity and WebSocket notification listener
-        await self.mozart_init()
+        await self.bangolufsen_init()
 
     async def async_will_remove_from_hass(self) -> None:
         """Turn off the WebSocket listener and dispatchers."""
@@ -354,17 +356,17 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         for dispatcher in self._dispatchers:
             dispatcher()
 
-    async def mozart_init(self) -> bool:
+    async def bangolufsen_init(self) -> bool:
         """Initialize network dependent variables."""
         # Get software version.
-        self._software_status = self._mozart_client.get_softwareupdate_status(
+        self._software_status = self._client.get_softwareupdate_status(
             async_req=True
         ).get()
 
         # Update the device sw version
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device(
-            identifiers={(MOZART_DOMAIN, self._unique_id)}
+            identifiers={(DOMAIN, self._unique_id)}
         )
 
         # Update the HA device if the sw version does not match
@@ -383,7 +385,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         )
 
         # Get all available sources.
-        sources = self._mozart_client.get_available_sources(
+        sources = self._client.get_available_sources(
             target_remote=False, async_req=True
         ).get()
 
@@ -394,7 +396,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
                 self._source_list_friendly.append(source.name)
 
         # Set the default and maximum volume of the product.
-        self._mozart_client.set_volume_settings(
+        self._client.set_volume_settings(
             volume_settings=VolumeSettings(
                 default=VolumeLevel(level=self._default_volume),
                 maximum=VolumeLevel(level=self._max_volume),
@@ -403,7 +405,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         )
 
         # Get overall device state once. This is handled by WebSocket events the rest of the time.
-        product_state = self._mozart_client.get_product_state(async_req=True).get()
+        product_state = self._client.get_product_state(async_req=True).get()
 
         # Get volume information.
         self._volume = product_state.volume
@@ -429,9 +431,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         self._update_deezer_track_id()
 
         # Get playback queue settings
-        self._queue_settings = self._mozart_client.get_settings_queue(
-            async_req=True
-        ).get()
+        self._queue_settings = self._client.get_settings_queue(async_req=True).get()
 
         # Update beolink listener / leader attributes.
         await self._update_beolink()
@@ -446,7 +446,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         await asyncio.sleep(1)
 
         # Only receive WebSocket notifications when the dispatchers are ready.
-        await self.hass.data[MOZART_DOMAIN][self.entry.unique_id][
+        await self.hass.data[DOMAIN][self.entry.unique_id][
             HASS_CONTROLLER
         ].start_notification_listener()
 
@@ -488,7 +488,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         # Add Beolink JID
         self._beolink_attribute = {"beolink": {"self": {self._name: self._beolink_jid}}}
 
-        peers = self._mozart_client.get_beolink_peers(async_req=True).get()
+        peers = self._client.get_beolink_peers(async_req=True).get()
 
         if len(peers) > 0:
             self._beolink_attribute["beolink"]["peers"] = {}
@@ -500,7 +500,10 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         self._remote_leader = self._playback_metadata.remote_leader
 
         # Temp fix for mismatch in WebSocket metadata and "real" REST endpoint where the remote leader is not deleted.
-        if self.source in (SourceEnum.lineIn, SourceEnum.uriStreamer):
+        if self.source in (
+            SourceEnum.lineIn,
+            SourceEnum.uriStreamer,
+        ):
             self._remote_leader = None
 
         # If the device is a listener.
@@ -511,7 +514,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
 
         # If not listener, check if leader.
         else:
-            self._beolink_listeners = self._mozart_client.get_beolink_listeners(
+            self._beolink_listeners = self._client.get_beolink_listeners(
                 async_req=True
             ).get()
 
@@ -581,9 +584,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         self._bluetooth_attribute = {"bluetooth": {}}
 
         # Add paired remotes
-        bluetooth_remote_list = self._mozart_client.get_bluetooth_remotes(
-            async_req=True
-        ).get()
+        bluetooth_remote_list = self._client.get_bluetooth_remotes(async_req=True).get()
 
         if len(bluetooth_remote_list.items) > 0:
             self._bluetooth_attribute["bluetooth"]["remote"] = {}
@@ -594,7 +595,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
                 ] = remote.address
 
         # Add currently connected bluetooth device
-        bluetooth_device_list = self._mozart_client.get_bluetooth_devices_status(
+        bluetooth_device_list = self._client.get_bluetooth_devices_status(
             async_req=True
         ).get()
 
@@ -820,7 +821,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         """Return information about the device."""
         return DeviceInfo(
             configuration_url=f"http://{self._host}/#/",
-            identifiers={(MOZART_DOMAIN, self._unique_id)},
+            identifiers={(DOMAIN, self._unique_id)},
             manufacturer="Bang & Olufsen",
             model=self._model,
             name=self.name,
@@ -865,7 +866,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
     async def async_volume_up(self) -> None:
         """Volume up the on media player."""
         new_volume = min(self._volume.level.level + self._volume_step, self._max_volume)
-        self._mozart_client.set_current_volume_level(
+        self._client.set_current_volume_level(
             volume_level=VolumeLevel(level=new_volume),
             async_req=True,
         )
@@ -873,21 +874,21 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
     async def async_volume_down(self) -> None:
         """Volume down the on media player."""
         new_volume = max(self._volume.level.level - self._volume_step, 0)
-        self._mozart_client.set_current_volume_level(
+        self._client.set_current_volume_level(
             volume_level=VolumeLevel(level=new_volume),
             async_req=True,
         )
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._mozart_client.set_current_volume_level(
+        self._client.set_current_volume_level(
             volume_level=VolumeLevel(level=int(volume * 100)),
             async_req=True,
         )
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute media player."""
-        self._mozart_client.set_volume_mute(
+        self._client.set_volume_mute(
             volume_mute=VolumeMute(muted=mute),
             async_req=True,
         )
@@ -901,24 +902,24 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
 
     async def async_media_pause(self) -> None:
         """Pause media player."""
-        self._mozart_client.post_playback_command(command="pause", async_req=True)
+        self._client.post_playback_command(command="pause", async_req=True)
 
     async def async_media_play(self) -> None:
         """Play media player."""
-        self._mozart_client.post_playback_command(command="play", async_req=True)
+        self._client.post_playback_command(command="play", async_req=True)
 
     async def async_media_stop(self) -> None:
         """Pause media player."""
-        self._mozart_client.post_playback_command(command="stop", async_req=True)
+        self._client.post_playback_command(command="stop", async_req=True)
 
     async def async_media_next_track(self) -> None:
         """Send the next track command."""
-        self._mozart_client.post_playback_command(command="skip", async_req=True)
+        self._client.post_playback_command(command="skip", async_req=True)
 
     async def async_media_seek(self, position: float) -> None:
         """Seek to position in ms."""
         if self.source == "Deezer":
-            self._mozart_client.seek_to_position(
+            self._client.seek_to_position(
                 position_ms=int(position * 1000), async_req=True
             )
             # Try to prevent the playback progress from bouncing in the UI.
@@ -931,15 +932,15 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
 
     async def async_media_previous_track(self) -> None:
         """Send the previous track command."""
-        self._mozart_client.post_playback_command(command="prev", async_req=True)
+        self._client.post_playback_command(command="prev", async_req=True)
 
     async def async_clear_playlist(self) -> None:
         """Clear the current playback queue."""
-        self._mozart_client.post_clear_queue(async_req=True)
+        self._client.post_clear_queue(async_req=True)
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set playback queues to shuffle."""
-        self._mozart_client.set_settings_queue(
+        self._client.set_settings_queue(
             play_queue_settings=PlayQueueSettings(shuffle=shuffle),
             async_req=True,
         )
@@ -948,7 +949,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set playback queues to repeat."""
-        self._mozart_client.set_settings_queue(
+        self._client.set_settings_queue(
             play_queue_settings=PlayQueueSettings(repeat=RepeatEnum[repeat]),
             async_req=True,
         )
@@ -959,7 +960,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         if source in self._source_list_friendly:
             index = self._source_list_friendly.index(source)
 
-            self._mozart_client.set_active_source(
+            self._client.set_active_source(
                 source_id=self._source_list[index],
                 async_req=True,
             )
@@ -1002,14 +1003,12 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
 
         if media_type == MediaType.URL:
 
-            self._mozart_client.post_uri_source(
-                uri=Uri(location=media_id), async_req=True
-            )
+            self._client.post_uri_source(uri=Uri(location=media_id), async_req=True)
 
-        elif media_type == MozartMediaType.FAVOURITE:
-            self._mozart_client.activate_preset(id=media_id, async_req=True)
+        elif media_type == BangOlufsenMediaType.FAVOURITE:
+            self._client.activate_preset(id=media_id, async_req=True)
 
-        elif media_type == MozartMediaType.DEEZER:
+        elif media_type == BangOlufsenMediaType.DEEZER:
             try:
                 if media_id == "flow":
 
@@ -1019,7 +1018,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
                         deezer_id = kwargs[ATTR_MEDIA_EXTRA]["id"]
 
                     # Play Deezer flow.
-                    self._mozart_client.start_deezer_flow(
+                    self._client.start_deezer_flow(
                         user_flow=UserFlow(user_id=deezer_id), async_req=True
                     )
 
@@ -1031,7 +1030,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
                         if "start_from" in kwargs[ATTR_MEDIA_EXTRA]:
                             start_from = kwargs[ATTR_MEDIA_EXTRA]["start_from"]
 
-                        self._mozart_client.add_to_queue(
+                        self._client.add_to_queue(
                             play_queue_item=PlayQueueItem(
                                 provider=PlayQueueItemType(value="deezer"),
                                 start_now_from_position=start_from,
@@ -1043,7 +1042,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
 
                     # Play a Deezer track.
                     else:
-                        self._mozart_client.add_to_queue(
+                        self._client.add_to_queue(
                             play_queue_item=PlayQueueItem(
                                 provider=PlayQueueItemType(value="deezer"),
                                 start_now_from_position=0,
@@ -1072,12 +1071,12 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
     async def async_beolink_join(self, beolink_jid: str | None = None) -> None:
         """Join a Beolink multi-room experience."""
         if beolink_jid is None:
-            self._mozart_client.join_latest_beolink_experience(async_req=True)
+            self._client.join_latest_beolink_experience(async_req=True)
         else:
             if not check_valid_jid(beolink_jid):
                 return
 
-            self._mozart_client.join_beolink_peer(jid=beolink_jid, async_req=True)
+            self._client.join_beolink_peer(jid=beolink_jid, async_req=True)
 
     async def async_beolink_expand(self, beolink_jids: list[str]) -> None:
         """Expand a Beolink multi-room experience with a device or devices."""
@@ -1091,7 +1090,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
     async def _beolink_expand(self, beolink_jids: list[str]) -> None:
         """Expand the Beolink experience with a non blocking delay."""
         for beolink_jid in beolink_jids:
-            self._mozart_client.post_beolink_expand(jid=beolink_jid, async_req=True)
+            self._client.post_beolink_expand(jid=beolink_jid, async_req=True)
             await asyncio.sleep(1)
 
     async def async_beolink_unexpand(self, beolink_jids: list[str]) -> None:
@@ -1106,16 +1105,16 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
     async def _beolink_unexpand(self, beolink_jids: list[str]) -> None:
         """Unexpand the Beolink experience with a non blocking delay."""
         for beolink_jid in beolink_jids:
-            self._mozart_client.post_beolink_unexpand(jid=beolink_jid, async_req=True)
+            self._client.post_beolink_unexpand(jid=beolink_jid, async_req=True)
             await asyncio.sleep(1)
 
     async def async_beolink_leave(self) -> None:
         """Leave the current Beolink experience."""
-        self._mozart_client.post_beolink_leave(async_req=True)
+        self._client.post_beolink_leave(async_req=True)
 
     async def async_beolink_allstandby(self) -> None:
         """Set all connected Beolink devices to standby."""
-        self._mozart_client.post_beolink_allstandby(async_req=True)
+        self._client.post_beolink_allstandby(async_req=True)
 
     async def async_beolink_listener_command(
         self, command: str, parameter: str | None = None
@@ -1200,7 +1199,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         self, uri: str, absolute_volume: int | None = None
     ) -> None:
         """Overlay audio over any currently playing audio."""
-        self._mozart_client.post_overlay_play(
+        self._client.post_overlay_play(
             overlay_play_request=OverlayPlayRequest(
                 uri=Uri(location=uri), volume_absolute=absolute_volume
             ),

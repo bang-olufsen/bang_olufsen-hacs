@@ -1,4 +1,4 @@
-"""Binary sensor entities for the Bang & Olufsen Mozart integration."""
+"""Binary sensor entities for the Bang & Olufsen integration."""
 from __future__ import annotations
 
 from mozart_api.models import BatteryState, WebsocketNotificationTag
@@ -16,10 +16,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     BATTERY_NOTIFICATION,
     CONNECTION_STATUS,
+    DOMAIN,
     HASS_BINARY_SENSORS,
-    MOZART_DOMAIN,
     NOTIFICATION_NOTIFICATION_PROXIMITY,
-    MozartVariables,
+    BangOlufsenVariables,
 )
 
 
@@ -28,30 +28,28 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up a Mozart binary_sensor entity from config entry."""
+    """Set up Binary Sensor entities from config entry."""
     entities = []
-    configuration = hass.data[MOZART_DOMAIN][config_entry.unique_id]
+    configuration = hass.data[DOMAIN][config_entry.unique_id]
 
-    # Add regular binary sensors
+    # Add Binary Sensor entities
     for binary_sensor in configuration[HASS_BINARY_SENSORS]:
         entities.append(binary_sensor)
 
     async_add_entities(new_entities=entities, update_before_add=True)
 
 
-class MozartBinarySensor(MozartVariables, BinarySensorEntity):
-    """Binary sensor for Mozart settings."""
+class BangOlufsenBinarySensor(BangOlufsenVariables, BinarySensorEntity):
+    """Base Binary Sensor class."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Init the Mozart binary sensor."""
+        """Init the Binary Sensor."""
         super().__init__(entry)
 
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_available = True
         self._attr_should_poll = False
-        self._attr_device_info = DeviceInfo(
-            identifiers={(MOZART_DOMAIN, self._unique_id)}
-        )
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -74,11 +72,11 @@ class MozartBinarySensor(MozartVariables, BinarySensorEntity):
         self.async_write_ha_state()
 
 
-class MozartBinarySensorBatteryCharging(MozartBinarySensor):
-    """Battery charging binary sensor for Mozart."""
+class BangOlufsenBinarySensorBatteryCharging(BangOlufsenBinarySensor):
+    """Battery charging Binary Sensor."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Init the battery charging binary sensor."""
+        """Init the battery charging Binary Sensor."""
         super().__init__(entry)
 
         self._attr_name = f"{self._name} Battery charging"
@@ -111,11 +109,11 @@ class MozartBinarySensorBatteryCharging(MozartBinarySensor):
         self.async_write_ha_state()
 
 
-class MozartBinarySensorProximity(MozartBinarySensor):
-    """Proximity binary sensor for Mozart."""
+class BangOlufsenBinarySensorProximity(BangOlufsenBinarySensor):
+    """Proximity Binary Sensor."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Init the proximity binary sensor."""
+        """Init the proximity Binary Sensor."""
         super().__init__(entry)
 
         self._attr_name = f"{self._name} proximity"

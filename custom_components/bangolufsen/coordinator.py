@@ -1,4 +1,4 @@
-"""Update coordinator for the Bang & Olufsen Mozart integration."""
+"""Update coordinator for the Bang & Olufsen integration."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -31,11 +31,11 @@ class CoordinatorData(TypedDict):
     queue_settings: PlayQueueSettings
 
 
-class MozartCoordinator(DataUpdateCoordinator):
-    """The Mozart entity coordinator."""
+class BangOlufsenCoordinator(DataUpdateCoordinator):
+    """The entity coordinator."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize the Mozart entity coordinator."""
+        """Initialize the entity coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -44,7 +44,7 @@ class MozartCoordinator(DataUpdateCoordinator):
         )
 
         self.entry = entry
-        self._mozart_client = MozartClient(host=self.entry.data[CONF_HOST])
+        self._client = MozartClient(host=self.entry.data[CONF_HOST])
         self._dispatchers = []
 
         self._coordinator_data: CoordinatorData = {
@@ -105,11 +105,9 @@ class MozartCoordinator(DataUpdateCoordinator):
     async def _update_variables(self) -> None:
         """Update the coordinator data."""
 
-        favourites = self._mozart_client.get_presets(
-            async_req=True, _request_timeout=5
-        ).get()
+        favourites = self._client.get_presets(async_req=True, _request_timeout=5).get()
 
-        queue_settings = self._mozart_client.get_settings_queue(
+        queue_settings = self._client.get_settings_queue(
             async_req=True, _request_timeout=5
         ).get()
 

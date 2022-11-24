@@ -1,4 +1,4 @@
-"""Config flow for the Bang & Olufsen Mozart integration."""
+"""Config flow for the Bang & Olufsen integration."""
 from __future__ import annotations
 
 import ipaddress
@@ -36,9 +36,9 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_VOLUME_RANGE,
     DEFAULT_VOLUME_STEP,
+    DOMAIN,
     MAX_RETRY_ERROR,
     MAX_VOLUME_RANGE,
-    MOZART_DOMAIN,
     NEW_CONNECTION_ERROR,
     VALUE_ERROR,
     VOLUME_STEP_RANGE,
@@ -53,7 +53,7 @@ def _config_schema(
     default_volume: int = DEFAULT_DEFAULT_VOLUME,
     max_volume: int = DEFAULT_MAX_VOLUME,
 ) -> dict:
-    """Create a schema for configuring the Mozart device with adjustable default values."""
+    """Create a schema for configuring the device with adjustable default values."""
     return {
         vol.Optional(CONF_NAME, default=name): cv.string,
         vol.Required(CONF_VOLUME_STEP, default=volume_step): vol.All(
@@ -81,17 +81,15 @@ def _config_schema(
 
 
 async def _validate_host(host: str) -> tuple[str, str, str]:
-    """Validate that a connection can be made to the Mozart product and return jid, friendly name and serial number."""
+    """Validate that a connection can be made to the device and return jid, friendly name and serial number."""
     try:
         # Check if the IP address is a valid address.
         ipaddress.ip_address(host)
 
-        # Get information from Beolink self endpoint.
-        mozart_client = MozartClient(host)
+        # Get information from Beolink self method.
+        client = MozartClient(host)
 
-        beolink_self = mozart_client.get_beolink_self(
-            async_req=True, _request_timeout=3
-        ).get()
+        beolink_self = client.get_beolink_self(async_req=True, _request_timeout=3).get()
 
         beolink_jid = beolink_self.jid
         name = beolink_self.friendly_name
@@ -124,8 +122,8 @@ class UserInput(TypedDict):
     jid: str
 
 
-class MozartConfigFlowHandler(ConfigFlow, domain=MOZART_DOMAIN):
-    """Handle a config flow for mozart."""
+class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow."""
 
     def __init__(self) -> None:
         """Init the config flow."""
@@ -188,7 +186,7 @@ class MozartConfigFlowHandler(ConfigFlow, domain=MOZART_DOMAIN):
     async def async_step_confirm(
         self, user_input: UserInput | None = None
     ) -> FlowResult:
-        """Confirm the configuration of the discovered Mozart device."""
+        """Confirm the configuration of the discovered device."""
         if user_input is not None:
             # Make sure that information from the zeroconf discovery is included
             data = user_input
@@ -198,8 +196,8 @@ class MozartConfigFlowHandler(ConfigFlow, domain=MOZART_DOMAIN):
 
             return self.async_create_entry(title=data[CONF_NAME], data=data)
 
-        mozart_client = MozartClient(self._host)
-        volume_settings = mozart_client.get_volume_settings(async_req=True).get()
+        client = MozartClient(self._host)
+        volume_settings = client.get_volume_settings(async_req=True).get()
 
         data_schema = _config_schema(
             name=self._name,
@@ -224,10 +222,10 @@ class MozartConfigFlowHandler(ConfigFlow, domain=MOZART_DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow handler."""
-        return MozartOptionsFlowHandler(config_entry)
+        return BangOlufsenOptionsFlowHandler(config_entry)
 
 
-class MozartOptionsFlowHandler(OptionsFlow):
+class BangOlufsenOptionsFlowHandler(OptionsFlow):
     """Handle an options flow."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:

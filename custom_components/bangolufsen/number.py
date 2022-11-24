@@ -1,4 +1,4 @@
-"""Number entities for the Bang & Olufsen Mozart integration."""
+"""Number entities for the Bang & Olufsen integration."""
 from __future__ import annotations
 
 from mozart_api.models import Bass, SoundSettings, Treble
@@ -12,10 +12,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONNECTION_STATUS,
+    DOMAIN,
     HASS_NUMBERS,
-    MOZART_DOMAIN,
     SOUND_SETTINGS_NOTIFICATION,
-    MozartVariables,
+    BangOlufsenVariables,
 )
 
 
@@ -24,30 +24,28 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Mozart number entities from config entry."""
+    """Set up Number entities from config entry."""
     entities = []
 
     # Add number entities.
-    for number in hass.data[MOZART_DOMAIN][config_entry.unique_id][HASS_NUMBERS]:
+    for number in hass.data[DOMAIN][config_entry.unique_id][HASS_NUMBERS]:
         entities.append(number)
 
     async_add_entities(new_entities=entities, update_before_add=True)
 
 
-class MozartNumber(MozartVariables, NumberEntity):
-    """Number for Mozart settings."""
+class BangOlufsenNumber(BangOlufsenVariables, NumberEntity):
+    """Base Number class."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Init the Mozart number."""
+        """Init the Number."""
         super().__init__(entry)
 
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_available = True
         self._attr_should_poll = False
         self._attr_mode = NumberMode.AUTO
-        self._attr_device_info = DeviceInfo(
-            identifiers={(MOZART_DOMAIN, self._unique_id)}
-        )
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
         self._attr_native_value = 0.0
 
     async def async_added_to_hass(self) -> None:
@@ -72,11 +70,11 @@ class MozartNumber(MozartVariables, NumberEntity):
         self.async_write_ha_state()
 
 
-class MozartNumberTreble(MozartNumber):
-    """Treble number for Mozart settings."""
+class BangOlufsenNumberTreble(BangOlufsenNumber):
+    """Treble Number."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Init the treble number."""
+        """Init the treble Number."""
         super().__init__(entry)
 
         number_range: range = range(-6, 6, 1)
@@ -89,7 +87,7 @@ class MozartNumberTreble(MozartNumber):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the treble value."""
-        self._mozart_client.set_sound_settings_adjustments_treble(
+        self._client.set_sound_settings_adjustments_treble(
             treble=Treble(value=value), async_req=True
         )
 
@@ -118,11 +116,11 @@ class MozartNumberTreble(MozartNumber):
         self.async_write_ha_state()
 
 
-class MozartNumberBass(MozartNumber):
-    """Bass number for Mozart settings."""
+class BangOlufsenNumberBass(BangOlufsenNumber):
+    """Bass Number."""
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Init the bass number."""
+        """Init the bass Number."""
         super().__init__(entry)
 
         number_range: range = range(-6, 6, 1)
@@ -135,7 +133,7 @@ class MozartNumberBass(MozartNumber):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the bass value."""
-        self._mozart_client.set_sound_settings_adjustments_bass(
+        self._client.set_sound_settings_adjustments_bass(
             bass=Bass(value=value), async_req=True
         )
 

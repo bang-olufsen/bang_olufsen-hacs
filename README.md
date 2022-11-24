@@ -1,12 +1,12 @@
-# Home assistant integration for Mozart products
+# Home Assistant integration for Bang & Olufsen products
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/bang-olufsen/Mozart-HACS)
 
-This integration enables control of some of the features of a Bang & Olufsen Mozart device through Home Assistant.
+This integration enables control of some of the features of a Bang & Olufsen device through Home Assistant.
 
 ## Compatible devices
 
-Mozart devices that have been tested and _should_ work without any trouble are:
+Devices that have been tested and _should_ work without any trouble are:
 
 - [Beoab 28](https://www.bang-olufsen.com/en/dk/speakers/beolab-28)
 - [Beosound Balance](https://www.bang-olufsen.com/en/dk/speakers/beosound-balance)
@@ -20,7 +20,7 @@ This device can be added to your Home Assistant installation manually by using t
 
 ## Entities
 
-The mozart integration adds an array of different useful entities that are generated and added automatically upon setup, customized for the supported features of the Mozart device.
+This integration adds an array of different useful entities that are generated and added automatically upon setup, customized for the supported features of the device.
 
 ```python
 SUPPORTS_PROXIMITY_SENSOR = (
@@ -42,7 +42,7 @@ SUPPORTS_PROXIMITY_SENSOR = (
 - Displaying currently playing artist and track
 - Displaying playback progress
 - Media seeking (Currently only when using Deezer)
-- Device triggers for automations by using mozart buttons such as Preset1, Bluetooth etc.
+- Device triggers for automations by using device buttons such as Preset1, Bluetooth etc.
 - Device triggers for automations by using the Beoremote One Control and Light events
 - Events fired upon WebSocket events received
 - Media browsing:
@@ -125,13 +125,13 @@ Some entities are added according to lists of supported devices. These are curre
 
 ## Device triggers and events
 
-The mozart integration provides device triggers for the physical controls such as Preset1, Bluetooth etc.
+This integration provides device triggers for the physical controls such as Preset1, Bluetooth etc.
 
-Device triggers for the [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one) are supported and will be available once the integration detects that it has been paired with the Mozart device. To trigger these triggers, enter the "Control" or "Light" submenu, and press any of the compatible buttons, each button press will send a "press" and a "release" event and therefore also a "press" and a "release" device trigger.
+Device triggers for the [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one) are supported and will be available once the integration detects that it has been paired with the device. To trigger these triggers, enter the "Control" or "Light" submenu, and press any of the compatible buttons, each button press will send a "press" and a "release" event and therefore also a "press" and a "release" device trigger.
 
-These can be received by listening to "mozart_event" event types.
+These can be received by listening to "bangolufsen_event" event types.
 
-Additionally the "raw" WebSocket notifications received from the Mozart device are fired as events in Home Assistant. These can be received by listening to "mozart_websocket_event" event types.
+Additionally the "raw" WebSocket notifications received from the device are fired as events in Home Assistant. These can be received by listening to "bangolufsen_websocket_event" event types.
 
 ## Getting Deezer URIs
 
@@ -145,7 +145,7 @@ Deezer track IDs can currently only easily be found by playing the track on the 
 
 ### play_media services
 
-The Bang & Olufsen Mozart integration supports different playback types in the `media_player.play_media` service: playback from URI, activating a favourite, activating a Deezer flow and Deezer playlists, albums and tracks.
+The Bang & Olufsen integration supports different playback types in the `media_player.play_media` service: playback from URI, activating a favourite, activating a Deezer flow and Deezer playlists, albums and tracks.
 
 #### Examples
 
@@ -176,7 +176,7 @@ Playing a Deezer flow. Optionally define a Deezer user ID:
 ```yaml
 service: media_player.play_media
 target:
-  entity_id: media_player.mozart
+  entity_id: media_player.bangolufsen
 data:
   media_content_type: deezer
   media_content_id: flow
@@ -223,9 +223,9 @@ data:
 
 ### Custom services
 
-The Bang & Olufsen Mozart integration additionally supports different custom services
+The Bang & Olufsen integration additionally supports different custom services
 
-### Service `mozart.beolink_join`
+### Service `bangolufsen.beolink_join`
 
 Join a Beolink experience.
 
@@ -233,7 +233,7 @@ Join a Beolink experience.
 | ---------------------- | -------- | ------------------------------------- |
 | `beolink_jid`          | yes      | Manually specify Beolink JID to join. |
 
-### Service `mozart.beolink_expand`
+### Service `bangolufsen.beolink_expand`
 
 Expand current Beolink experience.
 
@@ -241,7 +241,7 @@ Expand current Beolink experience.
 | ---------------------- | -------- | ---------------------------------------------------------------- |
 | `beolink_jids`         | no       | Specify which Beolink JIDs will join current Beolink experience. |
 
-### Service `mozart.beolink_unexpand`
+### Service `bangolufsen.beolink_unexpand`
 
 Unexpand from current Beolink experience.
 
@@ -249,15 +249,15 @@ Unexpand from current Beolink experience.
 | ---------------------- | -------- | ---------------------------------------------------------------------- |
 | `beolink_jids`         | no       | Specify which Beolink JIDs will leave from current Beolink experience. |
 
-### Service `mozart.beolink_leave`
+### Service `bangolufsen.beolink_leave`
 
 Leave a Beolink experience.
 
-### Service `mozart.beolink_allstandby`
+### Service `bangolufsen.beolink_allstandby`
 
 Set all Connected Beolink devices to standby.
 
-### Service `mozart.beolink_set_volume`
+### Service `bangolufsen.beolink_set_volume`
 
 Set a volume level for all connected Beolink devices.
 
@@ -265,7 +265,7 @@ Set a volume level for all connected Beolink devices.
 | ---------------------- | -------- | ------------------------- |
 | `volume_level`         | no       | Specify the volume level. |
 
-### Service `mozart.beolink_leader_command`
+### Service `bangolufsen.beolink_leader_command`
 
 Send a media_player command to Beolink leader.
 
@@ -274,7 +274,7 @@ Send a media_player command to Beolink leader.
 | `command`              | no       | Specify the media_player command.             |
 | `parameter`            | yes      | Specify the media_player command's parameter. |
 
-### Service `mozart.overlay_audio`
+### Service `bangolufsen.overlay_audio`
 
 Overlay audio over any currently playing audio.
 
