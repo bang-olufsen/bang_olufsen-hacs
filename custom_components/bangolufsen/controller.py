@@ -292,5 +292,5 @@ class BangOlufsenController(BangOlufsenVariables):
 
     def on_all_notifications_raw(self, notification: dict) -> None:
         """Receive all notifications."""
-        _LOGGER.warning("%s", notification)
+        _LOGGER.debug("%s", notification)
         self.hass.bus.async_fire(BANGOLUFSEN_WEBSOCKET_EVENT, notification)
