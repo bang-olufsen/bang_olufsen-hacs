@@ -55,7 +55,7 @@ SUPPORTS_PROXIMITY_SENSOR = (
     - Beolink leader (if available)
     - Beolink listeners (if available)
     - Beolink peers (if available)
-  - Presets
+  - Favourites
   - Current netradio station:
     - Station name
     - Station ID
@@ -64,7 +64,7 @@ SUPPORTS_PROXIMITY_SENSOR = (
     - Currently connected bluetooth devices such as phones (if available)
     - Paired remotes (if available)
 - Using the play_media service:
-  - Activate a preset
+  - Activate a favourite
   - Play from a URI
   - Play a Deezer flow
   - Play an album from Deezer (with optional starting position)
@@ -106,7 +106,7 @@ Some entities are added according to lists of supported devices. These are curre
 
 ### Button entity
 
-- Preset entities
+- Favourite entities
 
 ### Number entity
 
@@ -145,7 +145,7 @@ Deezer track IDs can currently only easily be found by playing the track on the 
 
 ### play_media services
 
-The Bang & Olufsen Mozart integration supports different playback types in the `media_player.play_media` service: playback from URI, activating a preset, activating a Deezer flow and Deezer playlists, albums and tracks.
+The Bang & Olufsen Mozart integration supports different playback types in the `media_player.play_media` service: playback from URI, activating a favourite, activating a Deezer flow and Deezer playlists, albums and tracks.
 
 #### Examples
 
@@ -160,14 +160,14 @@ data:
   media_content_id: http://live-icy.dr.dk/A/A03H.mp3
 ```
 
-Activating the first preset:
+Activating the first favourite:
 
 ```yaml
 service: media_player.play_media
 target:
   entity_id: media_player.beosound_balance_12345678
 data:
-  media_content_type: preset
+  media_content_type: favourite
   media_content_id: 1
 ```
 
