@@ -12,7 +12,7 @@ Mozart devices that have been tested and _should_ work without any trouble are:
 - [Beosound Balance](https://www.bang-olufsen.com/en/dk/speakers/beosound-balance)
 - [Beosound Emerge](https://www.bang-olufsen.com/en/dk/speakers/beosound-emerge)
 - [Beosound Level](https://www.bang-olufsen.com/en/dk/speakers/beosound-level)
-- [Beosound Theatre](https://www.bang-olufsen.com/en/dk/soundbars/beosound-theatre)
+- [Beosound Theatre](https://www.bang-olufsen.com/en/dk/soundbars/beosound-theatre) (Audio only for now)
 
 ## Configuration
 
