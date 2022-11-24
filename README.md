@@ -1,6 +1,6 @@
 # Home Assistant integration for Bang & Olufsen products
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/bang-olufsen/Mozart-HACS)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/bang-olufsen/BangOlufsen-HACS)
 
 This integration enables control of some of the features of a Bang & Olufsen device through Home Assistant.
 
