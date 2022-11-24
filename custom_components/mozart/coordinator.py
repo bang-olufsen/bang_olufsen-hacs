@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 class CoordinatorData(TypedDict):
     """TypedDict for coordinator data."""
 
-    presets: dict[str, Preset]
+    favourites: dict[str, Preset]
     queue_settings: PlayQueueSettings
 
 
@@ -48,7 +48,7 @@ class MozartCoordinator(DataUpdateCoordinator):
         self._dispatchers = []
 
         self._coordinator_data: CoordinatorData = {
-            "presets": {},
+            "favourites": {},
             "queue_settings": PlayQueueSettings(),
         }
 
@@ -105,7 +105,7 @@ class MozartCoordinator(DataUpdateCoordinator):
     async def _update_variables(self) -> None:
         """Update the coordinator data."""
 
-        presets = self._mozart_client.get_presets(
+        favourites = self._mozart_client.get_presets(
             async_req=True, _request_timeout=5
         ).get()
 
@@ -113,4 +113,7 @@ class MozartCoordinator(DataUpdateCoordinator):
             async_req=True, _request_timeout=5
         ).get()
 
-        self._coordinator_data = {"presets": presets, "queue_settings": queue_settings}
+        self._coordinator_data = {
+            "favourites": favourites,
+            "queue_settings": queue_settings,
+        }

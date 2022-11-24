@@ -14,14 +14,14 @@ from .binary_sensor import (
     MozartBinarySensorBatteryCharging,
     MozartBinarySensorProximity,
 )
-from .button import MozartButtonPreset
+from .button import MozartButtonFavourite
 from .const import (
     HASS_BINARY_SENSORS,
     HASS_CONTROLLER,
     HASS_COORDINATOR,
+    HASS_FAVOURITES,
     HASS_MEDIA_PLAYER,
     HASS_NUMBERS,
-    HASS_PRESETS,
     HASS_SENSORS,
     HASS_SWITCHES,
     MOZART_DOMAIN,
@@ -119,15 +119,15 @@ async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create the Mozart options numbers.
     mozart_numbers = [MozartNumberBass(entry), MozartNumberTreble(entry)]
 
-    # Get available presets.
-    presets = mozart_client.get_presets(async_req=True).get()
+    # Get available favourites.
+    favourites = mozart_client.get_presets(async_req=True).get()
 
-    # Create the Mozart preset buttons
-    mozart_presets = []
+    # Create the Mozart favourites buttons
+    mozart_favourites = []
 
-    for preset_id in presets:
-        mozart_presets.append(
-            MozartButtonPreset(entry, mozart_coordinator, presets[preset_id])
+    for favourite_id in favourites:
+        mozart_favourites.append(
+            MozartButtonFavourite(entry, mozart_coordinator, favourites[favourite_id])
         )
 
     # Create the Mozart sensors.
@@ -159,7 +159,7 @@ async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         HASS_COORDINATOR: mozart_coordinator,
         HASS_MEDIA_PLAYER: mozart_media_player,
         HASS_NUMBERS: mozart_numbers,
-        HASS_PRESETS: mozart_presets,
+        HASS_FAVOURITES: mozart_favourites,
         HASS_SENSORS: mozart_sensors,
         HASS_SWITCHES: mozart_switches,
     }

@@ -94,7 +94,7 @@ class StateEnum(StrEnum):
 class MozartMediaType(StrEnum):
     """Mozart specific media types."""
 
-    PRESET = "preset"
+    FAVOURITE = "favourite"
     DEEZER = "deezer"
 
 
@@ -152,7 +152,7 @@ HASS_CONTROLLER: Final = "controller"
 HASS_COORDINATOR: Final = "coordinator"
 HASS_MEDIA_PLAYER: Final = "media_player"
 HASS_NUMBERS: Final = "numbers"
-HASS_PRESETS: Final = "presets"
+HASS_FAVOURITES: Final = "favourites"
 HASS_SENSORS: Final = "sensors"
 HASS_SWITCHES: Final = "switches"
 
@@ -169,7 +169,7 @@ MOZART_NETWORK_STANDBY: Final[str] = "networkStandby"
 
 
 VALID_MEDIA_TYPES: Final[tuple] = (
-    MozartMediaType.PRESET,
+    MozartMediaType.FAVOURITE,
     MozartMediaType.DEEZER,
     MediaType.MUSIC,
     MediaType.URL,
@@ -225,21 +225,6 @@ BEOLINK_VOLUME: Final[str] = "BEOLINK_VOLUME"
 
 # Misc.
 NO_METADATA: Final[tuple] = (None, "", 0)
-
-# Valid repeat types for save_preset service
-VALID_REPEAT_TYPES: Final[tuple] = (
-    "all",
-    "none",
-    "track",
-)
-
-# Valid preset types for save_preset service
-VALID_PRESET_TYPES: Final[tuple] = (
-    "deezer_flow",
-    "deezer_playlist",
-    "deezer_track",
-)
-
 
 # Valid commands and their expected parameter type for beolink_command service
 FLOAT_PARAMETERS: Final[tuple] = ("set_volume_level", "media_seek", float)
@@ -349,62 +334,64 @@ class MozartVariables:
         self._volume: VolumeState = VolumeState()
 
     @staticmethod
-    def generate_preset_attributes(
-        preset: Preset,
+    def generate_favourite_attributes(
+        favourite: Preset,
     ) -> dict[str, str | int | dict[str, str | bool]]:
-        """Generate extra state attributes for a preset."""
-        preset_attribute: dict[str, str | int | dict[str, str | bool]] = {}
+        """Generate extra state attributes for a favourite."""
+        favourite_attribute: dict[str, str | int | dict[str, str | bool]] = {}
 
-        # Ensure that presets with volume are properly shown.
-        for action in preset.action_list:
+        # Ensure that favourites with volume are properly shown.
+        for action in favourite.action_list:
 
             if action.type == "volume":
-                preset_attribute["volume"] = action.volume_level
+                favourite_attribute["volume"] = action.volume_level
 
             else:
                 deezer_user_id = action.deezer_user_id
-                preset_type = action.type
-                preset_queue = action.queue_item
+                favourite_type = action.type
+                favourite_queue = action.queue_item
 
                 # Add Deezer as "source".
                 if (
-                    preset_type == "deezerFlow"
-                    or preset_type == "playQueue"
-                    and preset_queue.provider.value == "deezer"
+                    favourite_type == "deezerFlow"
+                    or favourite_type == "playQueue"
+                    and favourite_queue.provider.value == "deezer"
                 ):
-                    preset_attribute["source"] = SourceEnum.deezer
+                    favourite_attribute["source"] = SourceEnum.deezer
 
                 # Add netradio as "source".
-                elif preset_type == "radio":
-                    preset_attribute["source"] = SourceEnum.netRadio
+                elif favourite_type == "radio":
+                    favourite_attribute["source"] = SourceEnum.netRadio
 
                 # Add the source name if it is not none.
-                elif preset.source is not None:
-                    preset_attribute["source"] = SourceEnum[preset.source.value].value
+                elif favourite.source is not None:
+                    favourite_attribute["source"] = SourceEnum[
+                        favourite.source.value
+                    ].value
 
                 # Add title if available.
-                if preset.title is not None:
-                    preset_attribute["name"] = preset.title
+                if favourite.title is not None:
+                    favourite_attribute["name"] = favourite.title
 
-                # Ensure that all presets have a "name".
-                if "name" not in preset_attribute:
-                    preset_attribute["name"] = preset_attribute["source"]
+                # Ensure that all favourites have a "name".
+                if "name" not in favourite_attribute:
+                    favourite_attribute["name"] = favourite_attribute["source"]
 
                 # Add Deezer flow.
-                if preset_type == "deezerFlow":
+                if favourite_type == "deezerFlow":
                     if deezer_user_id is not None:
-                        preset_attribute["id"] = int(deezer_user_id)
+                        favourite_attribute["id"] = int(deezer_user_id)
 
                 # Add Deezer playlist "uri" and name
-                elif preset_type == "playQueue":
-                    preset_attribute["id"] = preset_queue.uri
+                elif favourite_type == "playQueue":
+                    favourite_attribute["id"] = favourite_queue.uri
 
                     # Add queue settings for Deezer queues.
                     queue_settings = action.queue_settings
 
-                    preset_attribute["queue_settings"] = {
+                    favourite_attribute["queue_settings"] = {
                         "repeat": queue_settings.repeat,
                         "shuffle": queue_settings.shuffle,
                     }
 
-        return preset_attribute
+        return favourite_attribute

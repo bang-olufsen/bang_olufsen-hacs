@@ -102,6 +102,7 @@ Some entities are added according to lists of supported devices. These are curre
 ### Binary Sensor entity
 
 - Battery Charging (If available)
+- Proximity sensor (If available)
 
 ### Button entity
 

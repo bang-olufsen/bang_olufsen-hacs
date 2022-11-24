@@ -255,7 +255,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
 
         # Extra state attributes.
         self._netradio_attribute: dict[str, dict] | None = None
-        self._presets_attribute: dict[str, dict] | None = None
+        self._favourites_attribute: dict[str, dict] | None = None
         self._beolink_attribute: dict[str, dict] | None = None
         self._deezer_track_id_attribute: dict[str, int] | None = None
         self._bluetooth_attribute: dict[str, dict] | None = None
@@ -527,30 +527,30 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
     def _update_coordinator_data(self) -> None:
         """Update data from coordinator."""
         self._queue_settings = self.coordinator.data["queue_settings"]
-        self._update_presets()
+        self._update_favourites()
 
         self.async_write_ha_state()
 
-    def _update_presets(self) -> None:
-        """Update presets attribute."""
-        presets = self.coordinator.data["presets"]
+    def _update_favourites(self) -> None:
+        """Update favourites attribute."""
+        favourites = self.coordinator.data["favourites"]
 
-        self._presets_attribute = {}
-        self._presets_attribute["presets"] = {}
+        self._favourites_attribute = {}
+        self._favourites_attribute["favourites"] = {}
 
-        preset_ids = []
+        favourite_ids = []
 
-        for preset in presets:
-            preset_ids.append(int(preset))
+        for favourite in favourites:
+            favourite_ids.append(int(favourite))
 
-        preset_ids.sort()
+        favourite_ids.sort()
 
-        for preset_id in preset_ids:
-            preset = presets[str(preset_id)]
+        for favourite_id in favourite_ids:
+            favourite = favourites[str(favourite_id)]
 
-            self._presets_attribute["presets"][
-                f"preset_{preset_id}"
-            ] = self.generate_preset_attributes(preset)
+            self._favourites_attribute["favourites"][
+                f"favourite_{favourite_id}"
+            ] = self.generate_favourite_attributes(favourite)
 
     def _update_netradio(self) -> None:
         """Check if the current source is netradio and update variable used for the property."""
@@ -845,8 +845,8 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         if self._beolink_attribute is not None:
             attributes.update(self._beolink_attribute)
 
-        if self._presets_attribute is not None:
-            attributes.update(self._presets_attribute)
+        if self._favourites_attribute is not None:
+            attributes.update(self._favourites_attribute)
 
         if self._netradio_attribute is not None:
             attributes.update(self._netradio_attribute)
@@ -977,7 +977,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
         media_id: str,
         **kwargs: Any,
     ) -> None:
-        """Play from: netradio station id, URI, preset or Deezer."""
+        """Play from: netradio station id, URI, favourite or Deezer."""
 
         if media_source.is_media_source_id(media_id):
             media_type = MediaType.URL
@@ -1006,7 +1006,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
                 uri=Uri(location=media_id), async_req=True
             )
 
-        elif media_type == MozartMediaType.PRESET:
+        elif media_type == MozartMediaType.FAVOURITE:
             self._mozart_client.activate_preset(id=media_id, async_req=True)
 
         elif media_type == MozartMediaType.DEEZER:
@@ -1199,7 +1199,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartVariables, CoordinatorEntity):
     async def async_overlay_audio(
         self, uri: str, absolute_volume: int | None = None
     ) -> None:
-        """Play audio overlayed over any currently playing audio."""
+        """Overlay audio over any currently playing audio."""
         self._mozart_client.post_overlay_play(
             overlay_play_request=OverlayPlayRequest(
                 uri=Uri(location=uri), volume_absolute=absolute_volume

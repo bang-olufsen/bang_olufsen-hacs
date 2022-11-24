@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONNECTION_STATUS,
-    HASS_PRESETS,
+    HASS_FAVOURITES,
     MOZART_DOMAIN,
     MOZART_EVENT,
     MozartVariables,
@@ -37,8 +37,8 @@ async def async_setup_entry(
     entities = []
     configuration = hass.data[MOZART_DOMAIN][config_entry.unique_id]
 
-    # Add preset button entities.
-    for button in configuration[HASS_PRESETS]:
+    # Add favourite button entities.
+    for button in configuration[HASS_FAVOURITES]:
         entities.append(button)
 
     async_add_entities(new_entities=entities, update_before_add=True)
@@ -80,29 +80,29 @@ class MozartButton(ButtonEntity, MozartVariables):
         self.async_write_ha_state()
 
 
-class MozartButtonPreset(CoordinatorEntity, MozartButton):
-    """Preset button."""
+class MozartButtonFavourite(CoordinatorEntity, MozartButton):
+    """Favourite button."""
 
     def __init__(
         self,
         entry: ConfigEntry,
         coordinator: MozartCoordinator,
-        preset: Preset,
+        favourite: Preset,
     ) -> None:
-        """Init a preset button."""
+        """Init a favourite button."""
         CoordinatorEntity.__init__(self, coordinator)
         MozartButton.__init__(self, entry)
 
-        self._preset_id: int = int(preset.name[6:])
-        self._preset: Preset = preset
+        self._favourite_id: int = int(favourite.name[6:])
+        self._favourite: Preset = favourite
         self._device: DeviceEntry | None = get_device(self.hass, self._unique_id)
-        self._attr_name = f"{self._name} Preset {self._preset_id}"
+        self._attr_name = f"{self._name} Favourite {self._favourite_id}"
 
-        self._attr_unique_id = f"{self._unique_id}-preset-{self._preset_id}"
+        self._attr_unique_id = f"{self._unique_id}-favourite-{self._favourite_id}"
         self._attr_device_class = None
 
-        if self._preset_id in range(10):
-            self._attr_icon = f"mdi:numeric-{self._preset_id}-box"
+        if self._favourite_id in range(10):
+            self._attr_icon = f"mdi:numeric-{self._favourite_id}-box"
         else:
             self._attr_icon = "mdi:numeric-9-plus-box"
 
@@ -116,18 +116,20 @@ class MozartButtonPreset(CoordinatorEntity, MozartButton):
 
         self._dispatchers.append(connection_dispatcher)
 
-        self.async_on_remove(self.coordinator.async_add_listener(self._update_preset))
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self._update_favourite)
+        )
 
-        self._attr_extra_state_attributes = self.generate_preset_attributes(
-            self._preset
+        self._attr_extra_state_attributes = self.generate_favourite_attributes(
+            self._favourite
         )
 
     async def async_press(self) -> None:
         """Handle the action."""
-        self._mozart_client.activate_preset(id=self._preset_id, async_req=True)
+        self._mozart_client.activate_preset(id=self._favourite_id, async_req=True)
 
-        # Trigger the trigger for the physical button presets.
-        if 0 < self._preset_id < 5:
+        # Trigger the trigger for the physical favourite button.
+        if 0 < self._favourite_id < 5:
             if not isinstance(self._device, DeviceEntry):
                 self._device = get_device(self.hass, self._unique_id)
 
@@ -136,20 +138,20 @@ class MozartButtonPreset(CoordinatorEntity, MozartButton):
             self.hass.bus.async_fire(
                 MOZART_EVENT,
                 event_data={
-                    CONF_TYPE: f"{self._preset.name}_shortPress",
+                    CONF_TYPE: f"{self._favourite.name}_shortPress",
                     CONF_DEVICE_ID: self._device.id,
                 },
             )
 
     @callback
-    def _update_preset(self) -> None:
-        """Update preset attribute."""
-        old_preset = self._preset
-        self._preset = self.coordinator.data["presets"][str(self._preset_id)]
+    def _update_favourite(self) -> None:
+        """Update favourite attribute."""
+        old_favourite = self._favourite
+        self._favourite = self.coordinator.data["favourites"][str(self._favourite_id)]
 
-        if old_preset != self._preset:
-            self._attr_extra_state_attributes = self.generate_preset_attributes(
-                self._preset
+        if old_favourite != self._favourite:
+            self._attr_extra_state_attributes = self.generate_favourite_attributes(
+                self._favourite
             )
 
             self.async_write_ha_state()
