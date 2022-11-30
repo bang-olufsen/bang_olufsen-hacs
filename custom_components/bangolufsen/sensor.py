@@ -119,7 +119,8 @@ class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
 
         self._attr_name = f"{self._name} Battery charging time"
         self._attr_unique_id = f"{self._unique_id}-battery-charging-time"
-        self._attr_device_class = SensorDeviceClass.TIMESTAMP
+        self._attr_device_class = SensorDeviceClass.DURATION
+        self._attr_native_unit_of_measurement = "min"
         self._attr_icon = "mdi:battery-arrow-up"
         self._attr_entity_registry_enabled_default = False
 
@@ -144,10 +145,14 @@ class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
 
         self._attr_available = True
 
-        current_time = utcnow()
-        time_to_add = timedelta(minutes=self._battery.remaining_charging_time_minutes)
+        charging_time = self._battery.remaining_charging_time_minutes
 
-        self._attr_native_value = current_time + time_to_add
+        # The charging time is 65535 if the device is not charging.
+        if charging_time == 65535:
+            self._attr_native_value = 0
+
+        else:
+            self._attr_native_value = charging_time
 
         self.async_write_ha_state()
 
@@ -161,7 +166,9 @@ class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
 
         self._attr_name = f"{self._name} Battery playing time"
         self._attr_unique_id = f"{self._unique_id}-battery-playing-time"
-        self._attr_device_class = SensorDeviceClass.TIMESTAMP
+        self._attr_device_class = SensorDeviceClass.DURATION
+        self._attr_native_unit_of_measurement = "min"
+
         self._attr_icon = "mdi:battery-arrow-down"
         self._attr_entity_registry_enabled_default = False
 
@@ -186,8 +193,13 @@ class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
 
         self._attr_available = True
 
-        current_time = utcnow()
-        time_to_add = timedelta(minutes=self._battery.remaining_playing_time_minutes)
-        self._attr_native_value = current_time + time_to_add
+        playing_time = self._battery.remaining_playing_time_minutes
+
+        # The playing time is 65535 if the device is charging
+        if playing_time == 65535:
+            self._attr_native_value = 0
+
+        else:
+            self._attr_native_value = playing_time
 
         self.async_write_ha_state()

@@ -99,7 +99,7 @@ async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     # Get whether or not the device has a battery.
-    if battery_state.battery_level > 0 and battery_state.is_charging is True:
+    if battery_state.battery_level > 0:
         supports_battery = True
 
     # Create the coordinator.
