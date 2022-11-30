@@ -1,8 +1,6 @@
 """Sensor entities for the Bang & Olufsen integration."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 from mozart_api.models import BatteryState
 
 from homeassistant.components.sensor import (
@@ -15,7 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.dt import utcnow
 
 from .const import (
     CONNECTION_STATUS,
