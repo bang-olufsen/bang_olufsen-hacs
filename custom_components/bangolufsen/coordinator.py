@@ -52,20 +52,18 @@ class BangOlufsenCoordinator(DataUpdateCoordinator):
             "queue_settings": PlayQueueSettings(),
         }
 
-        cleanup_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self.entry.unique_id}_{CLEANUP}",
-            self._disconnect,
-        )
-
-        connection_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self.entry.unique_id}_{CONNECTION_STATUS}",
-            self._update_connection_state,
-        )
-
-        self._dispatchers.append(cleanup_dispatcher)
-        self._dispatchers.append(connection_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self.entry.unique_id}_{CLEANUP}",
+                self._disconnect,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self.entry.unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            ),
+        ]
 
     async def _update_connection_state(self, connection_state: bool) -> None:
         """Update entity connection state."""

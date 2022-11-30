@@ -13,16 +13,16 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import (
-    BATTERY_NOTIFICATION,
     CONNECTION_STATUS,
     DOMAIN,
     HASS_SENSORS,
     BangOlufsenVariables,
+    WebSocketNotification,
 )
 
 
@@ -48,7 +48,6 @@ class BangOlufsenSensor(BangOlufsenVariables, SensorEntity):
         """Init the Sensor."""
         super().__init__(entry)
 
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_available = True
         self._attr_should_poll = False
@@ -56,13 +55,13 @@ class BangOlufsenSensor(BangOlufsenVariables, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        connection_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
-            self._update_connection_state,
-        )
-
-        self._dispatchers.append(connection_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        ]
 
     async def async_will_remove_from_hass(self) -> None:
         """Turn off the dispatchers."""
@@ -86,24 +85,23 @@ class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
         self._attr_name = f"{self._name} Battery level"
         self._attr_unique_id = f"{self._unique_id}-battery-level"
         self._attr_device_class = SensorDeviceClass.BATTERY
+        self._attr_native_unit_of_measurement = "%"
         self._attr_icon = "mdi:battery"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        sensor_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{BATTERY_NOTIFICATION}",
-            self._update_battery,
-        )
-
-        connection_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
-            self._update_connection_state,
-        )
-
-        self._dispatchers.append(sensor_dispatcher)
-        self._dispatchers.append(connection_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebSocketNotification.BATTERY}",
+                self._update_battery,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            ),
+        ]
 
     async def _update_battery(self, data: BatteryState) -> None:
         """Update sensor value."""
@@ -127,20 +125,18 @@ class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        sensor_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{BATTERY_NOTIFICATION}",
-            self._update_battery,
-        )
-
-        connection_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
-            self._update_connection_state,
-        )
-
-        self._dispatchers.append(sensor_dispatcher)
-        self._dispatchers.append(connection_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebSocketNotification.BATTERY}",
+                self._update_battery,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            ),
+        ]
 
     async def _update_battery(self, data: BatteryState) -> None:
         """Update sensor value."""
@@ -171,20 +167,18 @@ class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        sensor_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{BATTERY_NOTIFICATION}",
-            self._update_battery,
-        )
-
-        connection_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
-            self._update_connection_state,
-        )
-
-        self._dispatchers.append(sensor_dispatcher)
-        self._dispatchers.append(connection_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebSocketNotification.BATTERY}",
+                self._update_battery,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            ),
+        ]
 
     async def _update_battery(self, data: BatteryState) -> None:
         """Update sensor value."""

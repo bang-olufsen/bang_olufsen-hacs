@@ -30,20 +30,11 @@ from homeassistant.helpers.dispatcher import (
 from .const import (
     BANGOLUFSEN_EVENT,
     BANGOLUFSEN_WEBSOCKET_EVENT,
-    BATTERY_NOTIFICATION,
     CLEANUP,
     CONNECTION_STATUS,
-    NOTIFICATION_NOTIFICATION,
-    NOTIFICATION_NOTIFICATION_PROXIMITY,
-    PLAYBACK_ERROR_NOTIFICATION,
-    PLAYBACK_METADATA_NOTIFICATION,
-    PLAYBACK_PROGRESS_NOTIFICATION,
-    PLAYBACK_STATE_NOTIFICATION,
-    SOUND_SETTINGS_NOTIFICATION,
-    SOURCE_CHANGE_NOTIFICATION,
-    VOLUME_NOTIFICATION,
     WS_REMOTE_CONTROL_AVAILABLE,
     BangOlufsenVariables,
+    WebSocketNotification,
     get_device,
 )
 
@@ -93,20 +84,18 @@ class BangOlufsenController(BangOlufsenVariables):
         self._client.get_all_notifications_raw(self.on_all_notifications_raw)
 
         # Register dispatchers.
-        cleanup_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{CLEANUP}",
-            self._disconnect,
-        )
-
-        remote_control_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{WS_REMOTE_CONTROL_AVAILABLE}",
-            self.start_notification_listener,
-        )
-
-        self._dispatchers.append(cleanup_dispatcher)
-        self._dispatchers.append(remote_control_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CLEANUP}",
+                self._disconnect,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WS_REMOTE_CONTROL_AVAILABLE}",
+                self.start_notification_listener,
+            ),
+        ]
 
     async def start_notification_listener(self) -> bool:
         """Start the notification WebSocket listener."""
@@ -177,7 +166,7 @@ class BangOlufsenController(BangOlufsenVariables):
         """Send battery dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{BATTERY_NOTIFICATION}",
+            f"{self._unique_id}_{WebSocketNotification.BATTERY}",
             notification,
         )
 
@@ -221,13 +210,13 @@ class BangOlufsenController(BangOlufsenVariables):
         if "proximity" in notification.value:
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{NOTIFICATION_NOTIFICATION_PROXIMITY}",
+                f"{self._unique_id}_{WebSocketNotification.PROXIMITY}",
                 notification,
             )
         else:
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{NOTIFICATION_NOTIFICATION}",
+                f"{self._unique_id}_{WebSocketNotification.NOTIFICATION}",
                 notification,
             )
 
@@ -235,7 +224,7 @@ class BangOlufsenController(BangOlufsenVariables):
         """Send playback_error dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{PLAYBACK_ERROR_NOTIFICATION}",
+            f"{self._unique_id}_{WebSocketNotification.PLAYBACK_ERROR}",
             notification,
         )
 
@@ -246,7 +235,7 @@ class BangOlufsenController(BangOlufsenVariables):
 
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{PLAYBACK_METADATA_NOTIFICATION}",
+            f"{self._unique_id}_{WebSocketNotification.PLAYBACK_METADATA}",
             notification,
         )
 
@@ -254,7 +243,7 @@ class BangOlufsenController(BangOlufsenVariables):
         """Send playback_progress dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{PLAYBACK_PROGRESS_NOTIFICATION}",
+            f"{self._unique_id}_{WebSocketNotification.PLAYBACK_PROGRESS}",
             notification,
         )
 
@@ -262,7 +251,7 @@ class BangOlufsenController(BangOlufsenVariables):
         """Send playback_state dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{PLAYBACK_STATE_NOTIFICATION}",
+            f"{self._unique_id}_{WebSocketNotification.PLAYBACK_STATE}",
             notification,
         )
 
@@ -270,7 +259,7 @@ class BangOlufsenController(BangOlufsenVariables):
         """Send sound_settings dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{SOUND_SETTINGS_NOTIFICATION}",
+            f"{self._unique_id}_{WebSocketNotification.SOUND_SETTINGS}",
             notification,
         )
 
@@ -278,7 +267,7 @@ class BangOlufsenController(BangOlufsenVariables):
         """Send source_change dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{SOURCE_CHANGE_NOTIFICATION}",
+            f"{self._unique_id}_{WebSocketNotification.SOURCE_CHANGE}",
             notification,
         )
 
@@ -286,7 +275,7 @@ class BangOlufsenController(BangOlufsenVariables):
         """Send volume dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{VOLUME_NOTIFICATION}",
+            f"{self._unique_id}_{WebSocketNotification.VOLUME}",
             notification,
         )
 

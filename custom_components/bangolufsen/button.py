@@ -54,13 +54,13 @@ class BangOlufsenButton(ButtonEntity, BangOlufsenVariables):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        connection_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
-            self._update_connection_state,
-        )
-
-        self._dispatchers.append(connection_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        ]
 
     async def async_will_remove_from_hass(self) -> None:
         """Turn off the dispatchers."""
@@ -102,13 +102,13 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        connection_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self.entry.unique_id}_{CONNECTION_STATUS}",
-            self._update_connection_state,
-        )
-
-        self._dispatchers.append(connection_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self.entry.unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        ]
 
         self.async_on_remove(
             self.coordinator.async_add_listener(self._update_favourite)

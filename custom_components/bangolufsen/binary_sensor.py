@@ -10,16 +10,15 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    BATTERY_NOTIFICATION,
     CONNECTION_STATUS,
     DOMAIN,
     HASS_BINARY_SENSORS,
-    NOTIFICATION_NOTIFICATION_PROXIMITY,
     BangOlufsenVariables,
+    WebSocketNotification,
 )
 
 
@@ -46,19 +45,19 @@ class BangOlufsenBinarySensor(BangOlufsenVariables, BinarySensorEntity):
         """Init the Binary Sensor."""
         super().__init__(entry)
 
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_available = True
         self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        connection_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
-            self._update_connection_state,
-        )
-        self._dispatchers.append(connection_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        ]
 
     async def async_will_remove_from_hass(self) -> None:
         """Turn off the dispatchers."""
@@ -86,20 +85,19 @@ class BangOlufsenBinarySensorBatteryCharging(BangOlufsenBinarySensor):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        binary_sensor_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{BATTERY_NOTIFICATION}",
-            self._update_battery_charging,
-        )
 
-        connection_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
-            self._update_connection_state,
-        )
-
-        self._dispatchers.append(binary_sensor_dispatcher)
-        self._dispatchers.append(connection_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebSocketNotification.BATTERY}",
+                self._update_battery_charging,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            ),
+        ]
 
     async def _update_battery_charging(self, data: BatteryState) -> None:
         """Update binary sensor."""
@@ -124,20 +122,18 @@ class BangOlufsenBinarySensorProximity(BangOlufsenBinarySensor):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        binary_sensor_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{NOTIFICATION_NOTIFICATION_PROXIMITY}",
-            self._update_proximity,
-        )
-
-        connection_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
-            self._update_connection_state,
-        )
-
-        self._dispatchers.append(binary_sensor_dispatcher)
-        self._dispatchers.append(connection_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebSocketNotification.PROXIMITY}",
+                self._update_proximity,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            ),
+        ]
 
     async def _update_proximity(self, data: WebsocketNotificationTag) -> None:
         """Update binary sensor."""

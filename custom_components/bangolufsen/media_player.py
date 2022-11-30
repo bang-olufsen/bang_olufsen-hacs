@@ -78,15 +78,9 @@ from .const import (
     DOMAIN,
     HASS_CONTROLLER,
     HASS_MEDIA_PLAYER,
+    HIDDEN_SOURCE_IDS,
     NO_METADATA,
-    NOTIFICATION_NOTIFICATION,
-    PLAYBACK_ERROR_NOTIFICATION,
-    PLAYBACK_METADATA_NOTIFICATION,
-    PLAYBACK_PROGRESS_NOTIFICATION,
-    PLAYBACK_STATE_NOTIFICATION,
-    SOURCE_CHANGE_NOTIFICATION,
     VALID_MEDIA_TYPES,
-    VOLUME_NOTIFICATION,
     WS_REMOTE_CONTROL_AVAILABLE,
     ArtSizeEnum,
     BangOlufsenMediaType,
@@ -94,6 +88,7 @@ from .const import (
     RepeatEnum,
     SourceEnum,
     StateEnum,
+    WebSocketNotification,
 )
 from .coordinator import BangOlufsenCoordinator
 
@@ -265,82 +260,63 @@ class BangOlufsenMediaPlayer(
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
 
-        connection_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
-            self._update_connection_state,
-        )
-
-        playback_metadata_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{PLAYBACK_METADATA_NOTIFICATION}",
-            self._update_playback_metadata,
-        )
-
-        playback_error_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{PLAYBACK_ERROR_NOTIFICATION}",
-            self._update_playback_error,
-        )
-
-        playback_progress_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{PLAYBACK_PROGRESS_NOTIFICATION}",
-            self._update_playback_progress,
-        )
-
-        playback_state_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{PLAYBACK_STATE_NOTIFICATION}",
-            self._update_playback_state,
-        )
-
-        source_change_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{SOURCE_CHANGE_NOTIFICATION}",
-            self._update_source_change,
-        )
-        notification_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{NOTIFICATION_NOTIFICATION}",
-            self._update_notification,
-        )
-
-        volume_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{VOLUME_NOTIFICATION}",
-            self._update_volume,
-        )
-
-        beolink_leader_command_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._beolink_jid}_{BEOLINK_LEADER_COMMAND}",
-            self.async_beolink_leader_command,
-        )
-
-        beolink_listener_command_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._beolink_jid}_{BEOLINK_LISTENER_COMMAND}",
-            self.async_beolink_listener_command,
-        )
-
-        beolink_volume_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._beolink_jid}_{BEOLINK_VOLUME}",
-            self.async_beolink_set_volume,
-        )
-
-        self._dispatchers.append(beolink_leader_command_dispatcher)
-        self._dispatchers.append(beolink_listener_command_dispatcher)
-        self._dispatchers.append(beolink_volume_dispatcher)
-        self._dispatchers.append(connection_dispatcher)
-        self._dispatchers.append(playback_metadata_dispatcher)
-        self._dispatchers.append(playback_error_dispatcher)
-        self._dispatchers.append(playback_progress_dispatcher)
-        self._dispatchers.append(playback_state_dispatcher)
-        self._dispatchers.append(source_change_dispatcher)
-        self._dispatchers.append(notification_dispatcher)
-        self._dispatchers.append(volume_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebSocketNotification.PLAYBACK_METADATA}",
+                self._update_playback_metadata,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebSocketNotification.PLAYBACK_ERROR}",
+                self._update_playback_error,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebSocketNotification.PLAYBACK_PROGRESS}",
+                self._update_playback_progress,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebSocketNotification.PLAYBACK_STATE}",
+                self._update_playback_state,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebSocketNotification.SOURCE_CHANGE}",
+                self._update_source_change,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebSocketNotification.NOTIFICATION}",
+                self._update_notification,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebSocketNotification.VOLUME}",
+                self._update_volume,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._beolink_jid}_{BEOLINK_LEADER_COMMAND}",
+                self.async_beolink_leader_command,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._beolink_jid}_{BEOLINK_LISTENER_COMMAND}",
+                self.async_beolink_listener_command,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._beolink_jid}_{BEOLINK_VOLUME}",
+                self.async_beolink_set_volume,
+            ),
+        ]
 
         self.async_on_remove(
             self.coordinator.async_add_listener(self._update_coordinator_data)
@@ -389,9 +365,9 @@ class BangOlufsenMediaPlayer(
             target_remote=False, async_req=True
         ).get()
 
-        # Save all of the enabled sources, both the ID and the friendly name for displaying.
+        # Save all of the relevant enabled sources, both the ID and the friendly name for displaying.
         for source in sources.items:
-            if source.is_enabled is True:
+            if source.is_enabled is True and source.id not in HIDDEN_SOURCE_IDS:
                 self._source_list.append(source.id)
                 self._source_list_friendly.append(source.name)
 

@@ -177,6 +177,20 @@ VALID_MEDIA_TYPES: Final[tuple] = (
 PLAYING: Final[tuple] = ("started", "buffering", BANGOLUFSEN_ON)
 NOT_PLAYING: Final[tuple] = ("idle", "paused", "stopped", "ended", "unknown", "error")
 
+# Sources on the device that should not be selectable by the user
+HIDDEN_SOURCE_IDS = [
+    "airPlay",
+    "bluetooth",
+    "chromeCast",
+    "generator",
+    "local",
+    "dlna",
+    "qplay",
+    "wpl",
+    "pl",
+    "beolink",
+]
+
 # Product capabilities for creating entities
 SUPPORTS_PROXIMITY_SENSOR: Final[tuple] = (
     "Beosound Balance",
@@ -192,27 +206,32 @@ BANGOLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 # Device dispatcher events
 CLEANUP: Final[str] = "CLEANUP"
 
-ALARM_TRIGGERED_NOTIFICATION: Final[str] = "alarm_triggered"
-BATTERY_NOTIFICATION: Final[str] = "battery"
-BEOLINK_EXPERIENCES_RESULT_NOTIFICATION: Final[str] = "beolink_experiences_result"
-BEOLINK_JOIN_RESULT_NOTIFICATION: Final[str] = "beolink_join_result"
-BEO_REMOTE_BUTTON_NOTIFICATION: Final[str] = "beo_remote_button"
-BUTTON_NOTIFICATIONS: Final[str] = "button"
-CURTAINS_NOTIFICATION: Final[str] = "curtains"
-NOTIFICATION_NOTIFICATION: Final[str] = "notification_notification"
-NOTIFICATION_NOTIFICATION_PROXIMITY: Final[str] = "notification_notification_proximity"
-PLAYBACK_ERROR_NOTIFICATION: Final[str] = "playback_error"
-PLAYBACK_METADATA_NOTIFICATION: Final[str] = "playback_metadata"
-PLAYBACK_PROGRESS_NOTIFICATION: Final[str] = "playback_progress"
-PLAYBACK_SOURCE_NOTIFICATION: Final[str] = "playback_source"
-PLAYBACK_STATE_NOTIFICATION: Final[str] = "playback_state"
-POWER_STATE_NOTIFICATION: Final[str] = "power_state"
-ROLE_NOTIFICATION: Final[str] = "role"
-SOFTWARE_UPDATE_STATE_NOTIFICATION: Final[str] = "software_update_state"
-SOUND_SETTINGS_NOTIFICATION: Final[str] = "sound_settings"
-SOURCE_CHANGE_NOTIFICATION: Final[str] = "source_change"
-VOLUME_NOTIFICATION: Final[str] = "volume"
-ALL_NOTIFICATIONS: Final[str] = "all_notifications"
+
+class WebSocketNotification(StrEnum):
+    """Enum for WebSocket notification types."""
+
+    ALARM_TRIGGERED: Final[str] = "alarm_triggered"
+    BATTERY: Final[str] = "battery"
+    BEOLINK_EXPERIENCES_RESULT: Final[str] = "beolink_experiences_result"
+    BEOLINK_JOIN_RESULT: Final[str] = "beolink_join_result"
+    BEO_REMOTE_BUTTON: Final[str] = "beo_remote_button"
+    BUTTON: Final[str] = "button"
+    CURTAINS: Final[str] = "curtains"
+    NOTIFICATION: Final[str] = "notification"
+    PROXIMITY: Final[str] = "proximity"
+    PLAYBACK_ERROR: Final[str] = "playback_error"
+    PLAYBACK_METADATA: Final[str] = "playback_metadata"
+    PLAYBACK_PROGRESS: Final[str] = "playback_progress"
+    PLAYBACK_SOURCE: Final[str] = "playback_source"
+    PLAYBACK_STATE: Final[str] = "playback_state"
+    POWER_STATE: Final[str] = "power_state"
+    ROLE: Final[str] = "role"
+    SOFTWARE_UPDATE_STATE: Final[str] = "software_update_state"
+    SOUND_SETTINGS: Final[str] = "sound_settings"
+    SOURCE_CHANGE: Final[str] = "source_change"
+    VOLUME: Final[str] = "volume"
+    ALL: Final[str] = "all"
+
 
 WS_REMOTE_CONTROL_AVAILABLE: Final[str] = "WEBSOCKET_REMOTE_CONTROL_CHECK"
 

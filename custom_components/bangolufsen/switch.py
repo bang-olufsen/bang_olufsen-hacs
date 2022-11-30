@@ -17,8 +17,8 @@ from .const import (
     CONNECTION_STATUS,
     DOMAIN,
     HASS_SWITCHES,
-    SOUND_SETTINGS_NOTIFICATION,
     BangOlufsenVariables,
+    WebSocketNotification,
 )
 
 SCAN_INTERVAL = timedelta(seconds=120)
@@ -55,12 +55,13 @@ class BangOlufsenSwitch(BangOlufsenVariables, SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        connection_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
-            self._update_connection_state,
-        )
-        self._dispatchers.append(connection_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        ]
 
     async def async_will_remove_from_hass(self) -> None:
         """Turn off the dispatchers."""
@@ -108,20 +109,18 @@ class BangOlufsenSwitchLoudness(BangOlufsenSwitch):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        switch_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{SOUND_SETTINGS_NOTIFICATION}",
-            self._update_sound_settings,
-        )
-
-        connection_dispatcher = async_dispatcher_connect(
-            self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
-            self._update_connection_state,
-        )
-
-        self._dispatchers.append(switch_dispatcher)
-        self._dispatchers.append(connection_dispatcher)
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebSocketNotification.SOUND_SETTINGS}",
+                self._update_sound_settings,
+            ),
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            ),
+        ]
 
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""
