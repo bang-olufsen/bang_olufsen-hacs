@@ -126,10 +126,10 @@
             "Microphone_shortPress": "Short press of Microphone",
             "Next_shortPress": "Short press of Next",
             "PlayPause_shortPress": "Short press of Play/Pause",
-            "Preset1_shortPress": "Short press of Preset 1",
-            "Preset2_shortPress": "Short press of Preset 2",
-            "Preset3_shortPress": "Short press of Preset 3",
-            "Preset4_shortPress": "Short press of Preset 4",
+            "Preset1_shortPress": "Short press of Favourite 1",
+            "Preset2_shortPress": "Short press of Favourite 2",
+            "Preset3_shortPress": "Short press of Favourite 3",
+            "Preset4_shortPress": "Short press of Favourite 4",
             "Previous_shortPress": "Short press of Previous"
         }
     },
