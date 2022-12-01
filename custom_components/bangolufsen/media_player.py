@@ -13,6 +13,7 @@ from mozart_api.models import (
     BeolinkLeader,
     BeolinkListener,
     OverlayPlayRequest,
+    OverlayPlayRequestTextToSpeechTextToSpeech,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
@@ -30,7 +31,6 @@ from mozart_api.models import (
     VolumeSettings,
     VolumeState,
     WebsocketNotificationTag,
-    OverlayPlayRequestTextToSpeechTextToSpeech,
 )
 from mozart_api.mozart_client import check_valid_jid
 import voluptuous as vol
@@ -1205,13 +1205,20 @@ class BangOlufsenMediaPlayer(
         elif volume_offset:
             volume = self._volume.level.level + volume_offset
 
-        self._client.post_overlay_play(
-            overlay_play_request=OverlayPlayRequest(
-                uri=Uri(location=uri),
-                text_to_speech=OverlayPlayRequestTextToSpeechTextToSpeech(
-                    lang=tts_language, text=tts
+        if uri:
+            self._client.post_overlay_play(
+                overlay_play_request=OverlayPlayRequest(
+                    uri=Uri(location=uri), volume_absolute=volume
                 ),
-                volume_absolute=volume,
-            ),
-            async_req=True,
-        )
+                async_req=True,
+            )
+        elif tts:
+            self._client.post_overlay_play(
+                overlay_play_request=OverlayPlayRequest(
+                    text_to_speech=OverlayPlayRequestTextToSpeechTextToSpeech(
+                        lang=tts_language, text=tts
+                    ),
+                    volume_absolute=volume,
+                ),
+                async_req=True,
+            )
