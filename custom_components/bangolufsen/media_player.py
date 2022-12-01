@@ -30,6 +30,7 @@ from mozart_api.models import (
     VolumeSettings,
     VolumeState,
     WebsocketNotificationTag,
+    OverlayPlayRequestTextToSpeechTextToSpeech,
 )
 from mozart_api.mozart_client import check_valid_jid
 import voluptuous as vol
@@ -201,11 +202,17 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         name="overlay_audio",
         schema={
-            vol.Required("uri"): cv.string,
+            vol.Optional("uri"): cv.string,
             vol.Optional("absolute_volume"): vol.All(
                 vol.Coerce(int),
                 vol.Range(min=0, max=100),
             ),
+            vol.Optional("volume_offset"): vol.All(
+                vol.Coerce(int),
+                vol.Range(min=0, max=100),
+            ),
+            vol.Optional("tts"): cv.string,
+            vol.Optional("tts_language"): cv.string,
         },
         func="async_overlay_audio",
     )
@@ -1172,12 +1179,39 @@ class BangOlufsenMediaPlayer(
                 )
 
     async def async_overlay_audio(
-        self, uri: str, absolute_volume: int | None = None
+        self,
+        uri: str | None = None,
+        absolute_volume: int | None = None,
+        volume_offset: int | None = None,
+        tts: str | None = None,
+        tts_language: str | None = None,
     ) -> None:
         """Overlay audio over any currently playing audio."""
+
+        if absolute_volume and volume_offset:
+            _LOGGER.error(
+                "Can't define absolute volume and volume offset at the same time"
+            )
+            return
+
+        if tts and uri:
+            _LOGGER.error("Can't define URI and TTS message at the same time")
+            return
+
+        volume = None
+
+        if absolute_volume:
+            volume = absolute_volume
+        elif volume_offset:
+            volume = self._volume.level.level + volume_offset
+
         self._client.post_overlay_play(
             overlay_play_request=OverlayPlayRequest(
-                uri=Uri(location=uri), volume_absolute=absolute_volume
+                uri=Uri(location=uri),
+                text_to_speech=OverlayPlayRequestTextToSpeechTextToSpeech(
+                    lang=tts_language, text=tts
+                ),
+                volume_absolute=volume,
             ),
             async_req=True,
         )
