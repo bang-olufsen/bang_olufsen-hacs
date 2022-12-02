@@ -1203,15 +1203,27 @@ class BangOlufsenMediaPlayer(
         if absolute_volume:
             volume = absolute_volume
         elif volume_offset:
-            volume = self._volume.level.level + volume_offset
+            # Ensure that the volume is not above 100
+            volume = min(self._volume.level.level + volume_offset, 100)
 
         if uri:
+            media_id = uri
+
+            # Play local HA file.
+            if media_source.is_media_source_id(media_id):
+                sourced_media = await media_source.async_resolve_media(
+                    self.hass, uri, self.entity_id
+                )
+
+                media_id = async_process_play_media_url(self.hass, sourced_media.url)
+
             self._client.post_overlay_play(
                 overlay_play_request=OverlayPlayRequest(
-                    uri=Uri(location=uri), volume_absolute=volume
+                    uri=Uri(location=media_id), volume_absolute=volume
                 ),
                 async_req=True,
             )
+
         elif tts:
             self._client.post_overlay_play(
                 overlay_play_request=OverlayPlayRequest(
