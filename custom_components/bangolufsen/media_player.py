@@ -1212,7 +1212,7 @@ class BangOlufsenMediaPlayer(
             # Play local HA file.
             if media_source.is_media_source_id(media_id):
                 sourced_media = await media_source.async_resolve_media(
-                    self.hass, uri, self.entity_id
+                    self.hass, media_id, self.entity_id
                 )
 
                 media_id = async_process_play_media_url(self.hass, sourced_media.url)

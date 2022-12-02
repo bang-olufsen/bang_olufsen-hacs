@@ -2,7 +2,11 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/bang-olufsen/BangOlufsen-HACS)
 
+[![Balance stereo](https://raw.githubusercontent.com/bang-olufsen/mozart-open-api/main/docs/media/balance_stereo.png)](https://www.bang-olufsen.com/en/dk/speakers/beosound-balance-stereo-set?variant=beosound-balance-gva-naturaloak-bundle)
+
 This integration enables control of some of the features of a Bang & Olufsen device through Home Assistant.
+
+This integration uses the [Mozart open API](https://github.com/bang-olufsen/mozart-open-api)
 
 ## Compatible devices
 
@@ -141,15 +145,72 @@ Additionally a Deezer user ID can be found at "https://www.deezer.com/en/profile
 
 Deezer track IDs can currently only easily be found by playing the track on the speaker and looking at the extra state attributes, where it is shown with the key "deezer_track_id". Tracks do not have a prefix so the ID needs to be used directly.
 
+## Automation
+
+An array of automations can be defined using the integration.
+
+### Physical buttons and sensors
+
+The "shortPress" of all the buttons, except for the volume control, are available as device triggers.
+
+If the device has a proximity sensor, then a proximity sensor binary sensor will be available in Home Assistant.
+
+### Beoremote One
+
+The `Control` and `Light` menus in the [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one) can be used as a device triggers once it has been paired with a device that has been added to Home Assistant.
+
+The favourite buttons correspond to the physical favourite buttons on the device.
+
+Each of the available buttons will send a device trigger upon keypress and release.
+
+### Automation examples
+
+#### Using the overlay custom service as doorbell
+
+```yaml
+description: Play doorbell sound overlay on doorbell press.
+mode: single
+trigger:
+  - platform: device
+    device_id: 1234567890abcdef1234567890abcdef
+    domain: example
+    type: doorbell
+condition: []
+action:
+  - service: bangolufsen.overlay_audio
+    data:
+      uri: media-source://media_source/local/doorbell.mp3
+      absolute_volume: 60
+    target:
+      entity_id: media_player.beosound_balance_12345678
+```
+
+#### Using the Beoremote One to control lights
+
+```yaml
+description: Use the Beoremote One to control living room lights.
+mode: single
+trigger:
+  - platform: device
+    device_id: 234567890abcdef1234567890abcdef1
+    domain: bangolufsen
+    type: Light/Digit1_KeyPress
+condition: []
+action:
+  - service: light.toggle
+    target:
+      entity_id: light.living_room
+```
+
 ## Services
 
 ### play_media services
 
-The Bang & Olufsen integration supports different playback types in the `media_player.play_media` service: playback from URI, activating a favourite, activating a Deezer flow and Deezer playlists, albums and tracks.
+The Bang & Olufsen integration supports different playback types in the `media_player.play_media` service: playback from URL, activating a favourite, playback from a local file, activating a Deezer flow and Deezer playlists, albums and tracks.
 
-#### Examples
+#### play_media examples
 
-Playing [DR P1](https://www.dr.dk/lyd/p1) from a URI:
+Playing [DR P1](https://www.dr.dk/lyd/p1) from a URL:
 
 ```yaml
 service: media_player.play_media
@@ -169,6 +230,17 @@ target:
 data:
   media_content_type: favourite
   media_content_id: 1
+```
+
+Playing a local file:
+
+```yaml
+service: media_player.play_media
+target:
+  entity_id: media_player.beosound_balance_12345678
+data:
+  media_content_id: media-source://media_source/local/example.mp3
+  media_content_type: music
 ```
 
 Playing a Deezer flow. Optionally define a Deezer user ID:

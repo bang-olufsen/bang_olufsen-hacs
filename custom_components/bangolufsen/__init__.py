@@ -92,7 +92,7 @@ async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Check connection and try to initialize it.
     if not (
         battery_state := client.get_battery_state(
-            async_req=True, _request_timeout=5
+            async_req=True, _request_timeout=3
         ).get()
     ):
         _LOGGER.error("Unable to connect to %s", entry.data[CONF_NAME])
