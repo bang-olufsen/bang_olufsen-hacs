@@ -6,7 +6,7 @@
 
 This integration enables control of some of the features of a Bang & Olufsen device through Home Assistant.
 
-This integration uses the [Mozart open API](https://github.com/bang-olufsen/mozart-open-api)
+This integration uses the [Mozart open API](https://bang-olufsen.github.io/mozart-open-api/)
 
 ## Compatible devices
 
