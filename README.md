@@ -127,45 +127,35 @@ Some entities are added according to lists of supported devices. These are curre
 
 - Loudness
 
-## Device triggers and events
-
-This integration provides device triggers for the physical controls such as Preset1, Bluetooth etc.
-
-Device triggers for the [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one) are supported and will be available once the integration detects that it has been paired with the device. To trigger these triggers, enter the "Control" or "Light" submenu, and press any of the compatible buttons, each button press will send a "press" and a "release" event and therefore also a "press" and a "release" device trigger.
-
-These can be received by listening to "bangolufsen_event" event types.
-
-Additionally the "raw" WebSocket notifications received from the device are fired as events in Home Assistant. These can be received by listening to "bangolufsen_websocket_event" event types.
-
 ## Getting Deezer URIs
 
-In order to find Deezer playlist, album URIs and user IDs for Deezer flows, the Deezer website has to be accessed. When navigating to an album, the URL will look something like: "https://www.deezer.com/en/album/ALBUM_ID", and this simply needs to be converted to: "album:ALBUM_ID" and the same applies to playlist, which have the format: "playlist:PLAYLIST_ID".
+In order to find Deezer playlist, album URIs and user IDs for Deezer flows, the Deezer website has to be accessed. When navigating to an album, the URL will look something like: "https://www.deezer.com/en/album/ALBUM_ID", and this simply needs to be converted to: `album:ALBUM_ID` and the same applies to playlist, which have the format: `playlist:PLAYLIST_ID`.
 
-Additionally a Deezer user ID can be found at "https://www.deezer.com/en/profile/USER_ID" by selecting the active user in a web browser.
+Additionally a Deezer user ID can be found at https://www.deezer.com/en/profile/USER_ID by selecting the active user in a web browser.
 
-Deezer track IDs can currently only easily be found by playing the track on the speaker and looking at the extra state attributes, where it is shown with the key "deezer_track_id". Tracks do not have a prefix so the ID needs to be used directly.
+Deezer track IDs can currently only easily be found by playing the track on the device and looking at the extra state attributes, where it is shown with the key "deezer_track_id". Tracks do not have a prefix so the ID needs to be used directly.
 
-## Automation
+## Automations
 
-An array of automations can be defined using the integration.
+All device triggers can be received by listinging to `bangolufsen_event` event types.
+
+Additionally the "raw" WebSocket notifications received from the device are fired as events in Home Assistant. These can be received by listening to `bangolufsen_websocket_event` event types.
 
 ### Physical buttons and sensors
 
-The "shortPress" of all the buttons, except for the volume control, are available as device triggers.
+The "shortPress" of all the buttons, except for volume control, are available as device triggers.
 
 If the device has a proximity sensor, then a proximity sensor binary sensor will be available in Home Assistant.
 
 ### Beoremote One
 
-The `Control` and `Light` menus in the [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one) can be used as a device triggers once it has been paired with a device that has been added to Home Assistant.
+Device triggers for the [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one) are supported and will be available once the integration detects that it has been paired with the device. To trigger these triggers, enter the "Control" or "Light" submenu, and press any of the compatible buttons. Each button press will send a "press" and a "release" event and therefore also a "press" and a "release" device trigger.
 
 The favourite buttons correspond to the physical favourite buttons on the device.
 
-Each of the available buttons will send a device trigger upon keypress and release.
-
 ### Automation examples
 
-#### Using the overlay custom service as doorbell
+#### Using the overlay as doorbell
 
 ```yaml
 description: Play doorbell sound overlay on doorbell press.
@@ -185,6 +175,24 @@ action:
       entity_id: media_player.beosound_balance_12345678
 ```
 
+#### Using the overlay TTS as a bedtime reminder
+
+```yaml
+description: "Daily bedtime reminder using overlay TTS."
+mode: single
+trigger:
+  - platform: time
+    at: "22:00:00"
+condition: []
+action:
+  - service: bangolufsen.overlay_audio
+    data:
+      absolute_volume: 70
+      tts: It is 22:00. Time to go to bed!
+    target:
+      entity_id: media_player.beosound_balance_12345678
+```
+
 #### Using the Beoremote One to control lights
 
 ```yaml
@@ -200,6 +208,24 @@ action:
   - service: light.toggle
     target:
       entity_id: light.living_room
+```
+
+#### Setting all devices to standby when leaving home
+
+```yaml
+description: Set all Bang & Olufsen devices to standby when leaving home.
+mode: single
+trigger:
+  - platform: zone
+    entity_id: person.example
+    zone: zone.home
+    event: leave
+condition: []
+action:
+  - service: bangolufsen.beolink_allstandby
+    data: {}
+    target:
+      entity_id: media_player.beosound_balance_32836899
 ```
 
 ## Services
