@@ -77,6 +77,7 @@ from .const import (
     CONF_VOLUME_STEP,
     CONNECTION_STATUS,
     DOMAIN,
+    FALLBACK_SOURCES,
     HASS_CONTROLLER,
     HASS_MEDIA_PLAYER,
     HIDDEN_SOURCE_IDS,
@@ -367,10 +368,19 @@ class BangOlufsenMediaPlayer(
             self._software_status.software_version,
         )
 
-        # Get all available sources.
-        sources = self._client.get_available_sources(
-            target_remote=False, async_req=True
-        ).get()
+        # If the device has been updated with new sources, then the API will fail here.
+        try:
+            # Get all available sources.
+            sources = self._client.get_available_sources(
+                target_remote=False, async_req=True
+            ).get()
+
+        # Use a fallback list of sources
+        except ValueError:
+            _LOGGER.warning(
+                "The API is outdated compared to the device software version. Using fallback sources"
+            )
+            sources = FALLBACK_SOURCES
 
         # Save all of the relevant enabled sources, both the ID and the friendly name for displaying.
         for source in sources.items:

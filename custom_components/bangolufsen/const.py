@@ -22,6 +22,8 @@ from mozart_api.models import (
     SoftwareUpdateState,
     SoundSettings,
     Source,
+    SourceArray,
+    SourceTypeEnum,
     SpeakerRoleEnum,
     VolumeState,
     WebsocketNotificationTag,
@@ -178,7 +180,7 @@ PLAYING: Final[tuple] = ("started", "buffering", BANGOLUFSEN_ON)
 NOT_PLAYING: Final[tuple] = ("idle", "paused", "stopped", "ended", "unknown", "error")
 
 # Sources on the device that should not be selectable by the user
-HIDDEN_SOURCE_IDS = [
+HIDDEN_SOURCE_IDS: Final[tuple] = (
     "airPlay",
     "bluetooth",
     "chromeCast",
@@ -189,7 +191,56 @@ HIDDEN_SOURCE_IDS = [
     "wpl",
     "pl",
     "beolink",
-]
+)
+
+# Fallback sources to use in case of API failure.
+FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
+    items=[
+        Source(
+            id="uriStreamer",
+            is_enabled=True,
+            is_playable=True,
+            name="Audio Streamer",
+            type=SourceTypeEnum("uriStreamer"),
+        ),
+        Source(
+            id="spotify",
+            is_enabled=True,
+            is_playable=True,
+            name="Spotify Connect",
+            type=SourceTypeEnum("spotify"),
+        ),
+        Source(
+            id="lineIn",
+            is_enabled=True,
+            is_playable=True,
+            name="Line-In",
+            type=SourceTypeEnum("lineIn"),
+        ),
+        Source(
+            id="spdif",
+            is_enabled=True,
+            is_playable=True,
+            name="Optical",
+            type=SourceTypeEnum("spdif"),
+        ),
+        Source(
+            id="netRadio",
+            is_enabled=True,
+            is_playable=True,
+            name="B&O Radio",
+            type=SourceTypeEnum("netRadio"),
+        ),
+        Source(
+            id="deezer",
+            is_enabled=True,
+            is_playable=True,
+            name="Deezer",
+            type=SourceTypeEnum("deezer"),
+        ),
+    ]
+)
+
 
 # Product capabilities for creating entities
 SUPPORTS_PROXIMITY_SENSOR: Final[tuple] = (
