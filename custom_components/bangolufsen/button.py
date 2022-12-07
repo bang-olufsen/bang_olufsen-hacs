@@ -122,21 +122,6 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
         """Handle the action."""
         self._client.activate_preset(id=self._favourite_id, async_req=True)
 
-        # Trigger the trigger for the physical favourite button.
-        if 0 < self._favourite_id < 5:
-            if not isinstance(self._device, DeviceEntry):
-                self._device = get_device(self.hass, self._unique_id)
-
-            assert isinstance(self._device, DeviceEntry)
-
-            self.hass.bus.async_fire(
-                BANGOLUFSEN_EVENT,
-                event_data={
-                    CONF_TYPE: f"{self._favourite.name}_shortPress",
-                    CONF_DEVICE_ID: self._device.id,
-                },
-            )
-
     @callback
     def _update_favourite(self) -> None:
         """Update favourite attribute."""
