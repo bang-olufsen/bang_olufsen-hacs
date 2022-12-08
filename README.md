@@ -59,11 +59,6 @@ SUPPORTS_PROXIMITY_SENSOR = (
     - Beolink leader (if available)
     - Beolink listeners (if available)
     - Beolink peers (if available)
-  - Favourites
-  - Current netradio station:
-    - Station name
-    - Station ID
-  - Current Deezer track ID (if available)
   - Bluetooth devices:
     - Currently connected bluetooth devices such as phones (if available)
     - Paired remotes (if available)
@@ -126,6 +121,10 @@ Some entities are added according to lists of supported devices. These are curre
 ### Switch entity
 
 - Loudness
+
+### Text entity
+
+- Media ID (If available)
 
 ## Getting Deezer URIs
 
