@@ -109,8 +109,7 @@ class BangOlufsenController(BangOlufsenVariables):
         # Check if the remote control listener should be activated.
         bluetooth_remote_list = self._client.get_bluetooth_remotes(async_req=True).get()
 
-        if len(bluetooth_remote_list.items) > 0:
-            self.websocket_remote_control = True
+        self.websocket_remote_control = bool(len(bluetooth_remote_list.items))
 
         status = await self._async_receive_notifications()
         return status
