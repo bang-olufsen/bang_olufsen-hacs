@@ -259,7 +259,6 @@ class BangOlufsenMediaPlayer(
         )
 
         # Extra state attributes.
-        self._favourites_attribute: dict[str, dict] | None = None
         self._beolink_attribute: dict[str, dict] | None = None
         self._bluetooth_attribute: dict[str, dict] | None = None
 
@@ -787,9 +786,6 @@ class BangOlufsenMediaPlayer(
 
         if self._beolink_attribute is not None:
             attributes.update(self._beolink_attribute)
-
-        if self._favourites_attribute is not None:
-            attributes.update(self._favourites_attribute)
 
         if self._bluetooth_attribute is not None:
             attributes.update(self._bluetooth_attribute)
