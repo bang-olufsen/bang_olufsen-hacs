@@ -25,6 +25,7 @@ from .const import (
     HASS_NUMBERS,
     HASS_SENSORS,
     HASS_SWITCHES,
+    HASS_TEXT,
     SUPPORTS_PROXIMITY_SENSOR,
 )
 from .controller import BangOlufsenController
@@ -37,6 +38,7 @@ from .sensor import (
     BangOlufsenSensorBatteryPlayingTime,
 )
 from .switch import BangOlufsenSwitchLoudness
+from .text import BangOlufsenTextMediaId
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -45,6 +47,7 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
 ]
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,6 +148,9 @@ async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create the Switch entities.
     switches = [BangOlufsenSwitchLoudness(entry)]
 
+    # Create the Text entities.
+    texts = [BangOlufsenTextMediaId(entry)]
+
     # Create the Media Player entity.
     media_player = BangOlufsenMediaPlayer(entry, coordinator)
 
@@ -161,6 +167,7 @@ async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         HASS_FAVOURITES: favourite_buttons,
         HASS_SENSORS: sensors,
         HASS_SWITCHES: switches,
+        HASS_TEXT: texts,
     }
 
     return True

@@ -32,8 +32,10 @@ from .const import (
     BANGOLUFSEN_WEBSOCKET_EVENT,
     CLEANUP,
     CONNECTION_STATUS,
+    MEDIA_ID,
     WS_REMOTE_CONTROL_AVAILABLE,
     BangOlufsenVariables,
+    SourceEnum,
     WebSocketNotification,
     get_device,
 )
@@ -232,6 +234,20 @@ class BangOlufsenController(BangOlufsenVariables):
         self, notification: PlaybackContentMetadata
     ) -> None:
         """Send playback_metadata dispatch."""
+
+        # Send MEDIA_ID dispatch if media_id is available for the source
+        if notification.source in (SourceEnum.deezer.name, SourceEnum.netRadio.name):
+            async_dispatcher_send(
+                self.hass,
+                f"{self._unique_id}_{MEDIA_ID}",
+                notification.source_internal_id,
+            )
+        else:
+            async_dispatcher_send(
+                self.hass,
+                f"{self._unique_id}_{MEDIA_ID}",
+                "None",
+            )
 
         async_dispatcher_send(
             self.hass,

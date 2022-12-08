@@ -259,10 +259,8 @@ class BangOlufsenMediaPlayer(
         )
 
         # Extra state attributes.
-        self._netradio_attribute: dict[str, dict] | None = None
         self._favourites_attribute: dict[str, dict] | None = None
         self._beolink_attribute: dict[str, dict] | None = None
-        self._deezer_track_id_attribute: dict[str, int] | None = None
         self._bluetooth_attribute: dict[str, dict] | None = None
 
     async def async_added_to_hass(self) -> None:
@@ -414,14 +412,8 @@ class BangOlufsenMediaPlayer(
 
         self._last_update = utcnow()
 
-        # Get current netradio station.
-        self._update_netradio()
-
         # Get the highest resolution available of the given images.
         self._update_artwork()
-
-        # Get Deezer track ID if available.
-        self._update_deezer_track_id()
 
         # Get playback queue settings
         self._queue_settings = self._client.get_settings_queue(async_req=True).get()
@@ -513,9 +505,13 @@ class BangOlufsenMediaPlayer(
 
             # Check if the device is a leader.
             if len(self._beolink_listeners) > 0:
-                beolink_listeners = set()
+                # Get the friendly names from listeners from the peers
+                beolink_listeners = {}
                 for beolink_listener in self._beolink_listeners:
-                    beolink_listeners.add(beolink_listener.jid)
+                    for peer in peers:
+                        if peer.jid == beolink_listener.jid:
+                            beolink_listeners[peer.friendly_name] = beolink_listener.jid
+                            break
 
                 self._beolink_attribute["beolink"]["listeners"] = beolink_listeners
 
@@ -523,53 +519,8 @@ class BangOlufsenMediaPlayer(
     def _update_coordinator_data(self) -> None:
         """Update data from coordinator."""
         self._queue_settings = self.coordinator.data["queue_settings"]
-        self._update_favourites()
 
         self.async_write_ha_state()
-
-    def _update_favourites(self) -> None:
-        """Update favourites attribute."""
-        favourites = self.coordinator.data["favourites"]
-
-        self._favourites_attribute = {}
-        self._favourites_attribute["favourites"] = {}
-
-        favourite_ids = []
-
-        for favourite in favourites:
-            favourite_ids.append(int(favourite))
-
-        favourite_ids.sort()
-
-        for favourite_id in favourite_ids:
-            favourite = favourites[str(favourite_id)]
-
-            self._favourites_attribute["favourites"][
-                f"favourite_{favourite_id}"
-            ] = self.generate_favourite_attributes(favourite)
-
-    def _update_netradio(self) -> None:
-        """Check if the current source is netradio and update variable used for the property."""
-        # The netradio id can't currently be used for anything.
-        if self.source == SourceEnum.netRadio:
-            self._netradio_attribute = {
-                "netradio_station": {
-                    "name": self._playback_metadata.organization,
-                    "id": int(self._playback_metadata.source_internal_id),
-                },
-            }
-        else:
-            self._netradio_attribute = None
-
-    def _update_deezer_track_id(self) -> None:
-        """Check if the current source is Deezer and update variable used for the property."""
-        if self.source == SourceEnum.deezer:
-            self._deezer_track_id_attribute = {
-                "deezer_track_id": int(self._playback_metadata.source_internal_id)
-            }
-
-        else:
-            self._deezer_track_id_attribute = None
 
     async def _update_bluetooth(self) -> None:
         """Update the current bluetooth devices that are connected and paired remotes."""
@@ -609,11 +560,9 @@ class BangOlufsenMediaPlayer(
 
     async def _update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
         """Update _playback_metadata and related."""
-        # Update current artwork and current netradio station, deezer track ID and remote leader.
         self._playback_metadata = data
 
-        self._update_deezer_track_id()
-        self._update_netradio()
+        # Update current artwork and remote leader.
         self._update_artwork()
         await self._update_beolink()
 
@@ -842,12 +791,6 @@ class BangOlufsenMediaPlayer(
         if self._favourites_attribute is not None:
             attributes.update(self._favourites_attribute)
 
-        if self._netradio_attribute is not None:
-            attributes.update(self._netradio_attribute)
-
-        if self._deezer_track_id_attribute is not None:
-            attributes.update(self._deezer_track_id_attribute)
-
         if self._bluetooth_attribute is not None:
             attributes.update(self._bluetooth_attribute)
 
@@ -911,7 +854,7 @@ class BangOlufsenMediaPlayer(
 
     async def async_media_seek(self, position: float) -> None:
         """Seek to position in ms."""
-        if self.source == "Deezer":
+        if self.source == SourceEnum.deezer:
             self._client.seek_to_position(
                 position_ms=int(position * 1000), async_req=True
             )

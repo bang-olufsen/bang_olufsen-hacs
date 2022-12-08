@@ -157,6 +157,7 @@ HASS_NUMBERS: Final = "numbers"
 HASS_FAVOURITES: Final = "favourites"
 HASS_SENSORS: Final = "sensors"
 HASS_SWITCHES: Final = "switches"
+HASS_TEXT: Final = "text"
 
 
 # Attribute names for zeroconf discovery.
@@ -257,7 +258,7 @@ BANGOLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 # Device dispatcher events
 CLEANUP: Final[str] = "CLEANUP"
 
-
+# Dispatcher events
 class WebSocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
@@ -290,6 +291,7 @@ CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
 BEOLINK_LEADER_COMMAND: Final[str] = "BEOLINK_LEADER_COMMAND"
 BEOLINK_LISTENER_COMMAND: Final[str] = "BEOLINK_LISTENER_COMMAND"
 BEOLINK_VOLUME: Final[str] = "BEOLINK_VOLUME"
+MEDIA_ID: Final[str] = "MEDIA_ID"
 
 # Misc.
 NO_METADATA: Final[tuple] = (None, "", 0)
