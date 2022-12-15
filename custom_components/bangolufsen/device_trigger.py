@@ -21,10 +21,12 @@ BUTTON_TRIGGERS = (
     "Preset3_shortPress",
     "Preset4_shortPress",
     "PlayPause_shortPress",
+    "PlayPause_longPress",
     "Next_shortPress",
     "Previous_shortPress",
     "Microphone_shortPress",
     "Bluetooth_shortPress",
+    "Bluetooth_longPress",
 )
 
 ALL_TRIGGERS = (

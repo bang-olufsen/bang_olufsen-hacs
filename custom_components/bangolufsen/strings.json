@@ -31,6 +31,7 @@
   "device_automation": {
     "trigger_type": {
       "Bluetooth_shortPress": "Short press of Bluetooth",
+      "Bluetooth_longPress": "Long press of Bluetooth",
       "Control/Blue_KeyPress": "Press of Beoremote One Control: Blue",
       "Control/Blue_KeyRelease": "Release of Beoremote One Control: Blue",
       "Control/Digit0_KeyPress": "Press of Beoremote One Control: 0",
@@ -126,6 +127,7 @@
       "Microphone_shortPress": "Short press of Microphone",
       "Next_shortPress": "Short press of Next",
       "PlayPause_shortPress": "Short press of Play/Pause",
+      "PlayPause_longPress": "Long press of Play/Pause",
       "Preset1_shortPress": "Short press of Favourite 1",
       "Preset2_shortPress": "Short press of Favourite 2",
       "Preset3_shortPress": "Short press of Favourite 3",

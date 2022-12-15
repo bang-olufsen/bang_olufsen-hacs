@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Final
+from typing import Final, cast
 
 from mozart_api.models import (
     AlarmTriggeredInfo,
@@ -336,7 +336,7 @@ def get_device(hass: HomeAssistant | None, unique_id: str) -> DeviceEntry | None
         return None
 
     registry = device_registry.async_get(hass)
-    device = registry.async_get_device({(DOMAIN, unique_id)})
+    device = cast(DeviceEntry, registry.async_get_device({(DOMAIN, unique_id)}))
     return device
 
 
