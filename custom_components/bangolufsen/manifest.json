@@ -1,12 +1,12 @@
 {
-  "domain": "bangolufsen",
-  "name": "Bang & Olufsen",
-  "documentation": "https://github.com/bang-olufsen/bangolufsen-hacs",
-  "issue_tracker": "https://github.com/bang-olufsen/bangolufsen-hacs/issues",
-  "requirements": ["mozart-api==2.3.4.15123.5"],
-  "zeroconf": ["_bangolufsen._tcp.local."],
-  "version": "0.3.0",
-  "codeowners": ["@mj23000"],
-  "iot_class": "local_push",
-  "config_flow": true
+	"domain": "bangolufsen",
+	"name": "Bang & Olufsen",
+	"documentation": "https://github.com/bang-olufsen/bangolufsen-hacs",
+	"issue_tracker": "https://github.com/bang-olufsen/bangolufsen-hacs/issues",
+	"requirements": ["mozart-api==2.3.4.15123.5"],
+	"zeroconf": ["_bangolufsen._tcp.local."],
+	"version": "0.3.1",
+	"codeowners": ["@mj23000"],
+	"iot_class": "local_push",
+	"config_flow": true
 }
