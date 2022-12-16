@@ -48,7 +48,6 @@ class BangOlufsenSwitch(BangOlufsenVariables, SwitchEntity):
 
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_device_class = SwitchDeviceClass.SWITCH
-        self._attr_available = True
         self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
         self._attr_is_on = False

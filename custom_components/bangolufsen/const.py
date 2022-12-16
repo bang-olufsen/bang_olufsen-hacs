@@ -158,6 +158,7 @@ HASS_FAVOURITES: Final = "favourites"
 HASS_SENSORS: Final = "sensors"
 HASS_SWITCHES: Final = "switches"
 HASS_TEXT: Final = "text"
+HASS_SELECTS: Final = "selects"
 
 
 # Attribute names for zeroconf discovery.
@@ -262,6 +263,7 @@ CLEANUP: Final[str] = "CLEANUP"
 class WebSocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
+    ACTIVE_LISTENING_MODE: Final[str] = "active_listening_mode"
     ALARM_TRIGGERED: Final[str] = "alarm_triggered"
     BATTERY: Final[str] = "battery"
     BEOLINK_EXPERIENCES_RESULT: Final[str] = "beolink_experiences_result"

@@ -46,7 +46,6 @@ class BangOlufsenButton(ButtonEntity, BangOlufsenVariables):
         super().__init__(entry)
 
         self._attr_entity_category = None
-        self._attr_available = True
         self._attr_device_class = ButtonDeviceClass.UPDATE
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
 

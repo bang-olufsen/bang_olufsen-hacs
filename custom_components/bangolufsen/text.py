@@ -42,7 +42,6 @@ class BangOlufsenText(TextEntity, BangOlufsenVariables):
         super().__init__(entry)
 
         self._attr_entity_category = None
-        self._attr_available = True
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
 
     async def async_added_to_hass(self) -> None:

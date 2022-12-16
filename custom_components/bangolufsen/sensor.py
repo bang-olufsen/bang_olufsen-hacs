@@ -46,7 +46,6 @@ class BangOlufsenSensor(BangOlufsenVariables, SensorEntity):
         super().__init__(entry)
 
         self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_available = True
         self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
 

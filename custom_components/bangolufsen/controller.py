@@ -8,6 +8,7 @@ from mozart_api.models import (
     BatteryState,
     BeoRemoteButton,
     ButtonEvent,
+    ListeningModeProps,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
@@ -58,6 +59,9 @@ class BangOlufsenController(BangOlufsenVariables):
 
         self._client.get_on_connection(self.on_connection)
         self._client.get_on_connection_lost(self.on_connection_lost)
+        self._client.get_active_listening_mode_notifications(
+            self.on_active_listening_mode
+        )
         self._client.get_battery_notifications(self.on_battery_notification)
         self._client.get_beo_remote_button_notifications(
             self.on_beo_remote_button_notification
@@ -291,6 +295,14 @@ class BangOlufsenController(BangOlufsenVariables):
         async_dispatcher_send(
             self.hass,
             f"{self._unique_id}_{WebSocketNotification.VOLUME}",
+            notification,
+        )
+
+    def on_active_listening_mode(self, notification: ListeningModeProps) -> None:
+        """Send active_listening_mode dispatch."""
+        async_dispatcher_send(
+            self.hass,
+            f"{self._unique_id}_{WebSocketNotification.ACTIVE_LISTENING_MODE}",
             notification,
         )
 

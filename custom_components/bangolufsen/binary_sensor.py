@@ -45,7 +45,6 @@ class BangOlufsenBinarySensor(BangOlufsenVariables, BinarySensorEntity):
         """Init the Binary Sensor."""
         super().__init__(entry)
 
-        self._attr_available = True
         self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
 

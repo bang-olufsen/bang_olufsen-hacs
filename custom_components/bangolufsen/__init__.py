@@ -23,6 +23,7 @@ from .const import (
     HASS_FAVOURITES,
     HASS_MEDIA_PLAYER,
     HASS_NUMBERS,
+    HASS_SELECTS,
     HASS_SENSORS,
     HASS_SWITCHES,
     HASS_TEXT,
@@ -32,6 +33,7 @@ from .controller import BangOlufsenController
 from .coordinator import BangOlufsenCoordinator
 from .media_player import BangOlufsenMediaPlayer
 from .number import BangOlufsenNumberBass, BangOlufsenNumberTreble
+from .select import BangOlufsenSelectSoundMode
 from .sensor import (
     BangOlufsenSensorBatteryChargingTime,
     BangOlufsenSensorBatteryLevel,
@@ -48,6 +50,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.SELECT,
 ]
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,6 +154,14 @@ async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create the Text entities.
     texts = [BangOlufsenTextMediaId(entry)]
 
+    # Create the Select entities.
+    selects = []
+
+    # Create the sound mode select entity if supported
+    listening_modes = client.get_listening_mode_set(async_req=True).get()
+    if len(listening_modes) > 0:
+        selects.append(BangOlufsenSelectSoundMode(entry))
+
     # Create the Media Player entity.
     media_player = BangOlufsenMediaPlayer(entry, coordinator)
 
@@ -167,6 +178,7 @@ async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         HASS_FAVOURITES: favourite_buttons,
         HASS_SENSORS: sensors,
         HASS_SWITCHES: switches,
+        HASS_SELECTS: selects,
         HASS_TEXT: texts,
     }
 

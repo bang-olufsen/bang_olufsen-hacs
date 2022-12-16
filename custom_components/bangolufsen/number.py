@@ -42,7 +42,6 @@ class BangOlufsenNumber(BangOlufsenVariables, NumberEntity):
         super().__init__(entry)
 
         self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_available = True
         self._attr_should_poll = False
         self._attr_mode = NumberMode.AUTO
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
