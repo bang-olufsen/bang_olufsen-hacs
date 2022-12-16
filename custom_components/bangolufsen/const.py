@@ -83,13 +83,16 @@ class StateEnum(StrEnum):
     # Playback states
     started = MediaPlayerState.PLAYING
     buffering = MediaPlayerState.PLAYING
-    idle = MediaPlayerState.PAUSED
+    idle = MediaPlayerState.IDLE
     paused = MediaPlayerState.PAUSED
     stopped = MediaPlayerState.PAUSED
     ended = MediaPlayerState.PAUSED
     error = MediaPlayerState.IDLE
     # A devices initial state is "unknown" and should be treated as "idle"
     unknown = MediaPlayerState.IDLE
+
+    # Power states
+    networkStandby = MediaPlayerState.IDLE
 
 
 # Media types for play_media

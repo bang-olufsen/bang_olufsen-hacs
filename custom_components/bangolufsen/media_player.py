@@ -115,6 +115,7 @@ BANGOLUFSEN_FEATURES = (
     | MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.REPEAT_SET
     | MediaPlayerEntityFeature.GROUPING
+    | MediaPlayerEntityFeature.TURN_OFF
 )
 
 
@@ -646,6 +647,16 @@ class BangOlufsenMediaPlayer(
 
         self.async_write_ha_state()
 
+    async def _update_power_state(self, data: RenderingState) -> None:
+        """Update _power_state and related."""
+        self._power_state = data
+
+        # Update entity state based on the power state.
+        if self._power_state.value == "networkStandby":
+            self._state = cast(MediaPlayerState, StateEnum[self._power_state])
+
+        self.async_write_ha_state()
+
     async def _update_source_change(self, data: Source) -> None:
         """Update _source_change and related."""
         self._source_change = data
@@ -859,6 +870,10 @@ class BangOlufsenMediaPlayer(
             return attributes
 
         return None
+
+    async def async_turn_off(self) -> None:
+        """Set the device to "networkStandby"."""
+        self._client.post_standby(async_req=True)
 
     async def async_volume_up(self) -> None:
         """Volume up the on media player."""
