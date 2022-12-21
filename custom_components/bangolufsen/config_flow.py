@@ -5,7 +5,6 @@ import ipaddress
 import logging
 from typing import Any, TypedDict
 
-from inflection import underscore
 from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 from urllib3.exceptions import MaxRetryError, NewConnectionError
@@ -13,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_FRIENDLY_NAME, CONF_HOST, CONF_MODEL, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv, selector
@@ -115,7 +114,6 @@ class UserInput(TypedDict):
     """TypedDict for user_input."""
 
     name: str
-    friendly_name: str
     volume_step: int
     default_volume: int
     max_volume: int
@@ -190,7 +188,6 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm the configuration of the device."""
         if user_input is not None:
-            # Get the desired friendly name before changing it for generating entity_id
             self._name = user_input[CONF_NAME]
 
             # Make sure that all information is included
@@ -198,11 +195,6 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             data[CONF_HOST] = self._host
             data[CONF_MODEL] = self._model
             data[CONF_BEOLINK_JID] = self._beolink_jid
-            data[CONF_FRIENDLY_NAME] = self._name
-
-            # Manually define the entity_id
-            model_name = underscore(self._model.replace(" ", "_"))
-            data[CONF_NAME] = f"{model_name}_{self._serial_number}"
 
             return self.async_create_entry(
                 title=self._name,
@@ -253,7 +245,6 @@ class BangOlufsenOptionsFlowHandler(OptionsFlow):
 
             data[CONF_MODEL] = self._config_entry.data[CONF_MODEL]
             data[CONF_BEOLINK_JID] = self._config_entry.data[CONF_BEOLINK_JID]
-            data[CONF_FRIENDLY_NAME] = user_input[CONF_NAME]
             if not self.show_advanced_options:
                 data[CONF_HOST] = self._config_entry.data[CONF_HOST]
 
@@ -263,7 +254,7 @@ class BangOlufsenOptionsFlowHandler(OptionsFlow):
 
         # Create data schema with the last configuration as default values.
         data_schema = _config_schema(
-            name=self._config_entry.data[CONF_FRIENDLY_NAME],
+            name=self._config_entry.data[CONF_NAME],
             volume_step=self._config_entry.data[CONF_VOLUME_STEP],
             default_volume=self._config_entry.data[CONF_DEFAULT_VOLUME],
             max_volume=self._config_entry.data[CONF_MAX_VOLUME],

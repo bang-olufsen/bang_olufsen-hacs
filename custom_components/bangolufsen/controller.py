@@ -12,7 +12,6 @@ from mozart_api.models import (
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
-    PowerStateEnum,
     RenderingState,
     SoundSettings,
     Source,
@@ -81,7 +80,6 @@ class BangOlufsenController(BangOlufsenVariables):
         self._client.get_playback_state_notifications(
             self.on_playback_state_notification
         )
-        self._client.get_power_state_notifications(self.on_power_state_notification)
         self._client.get_sound_settings_notifications(
             self.on_sound_settings_notification
         )
@@ -273,14 +271,6 @@ class BangOlufsenController(BangOlufsenVariables):
         async_dispatcher_send(
             self.hass,
             f"{self._unique_id}_{WebSocketNotification.PLAYBACK_STATE}",
-            notification,
-        )
-
-    def on_power_state_notification(self, notification: PowerStateEnum) -> None:
-        """Send power_state dispatch."""
-        async_dispatcher_send(
-            self.hass,
-            f"{self._unique_id}_{WebSocketNotification.POWER_STATE}",
             notification,
         )
 

@@ -56,6 +56,7 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
 )
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -299,11 +300,6 @@ class BangOlufsenMediaPlayer(
             ),
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebSocketNotification.POWER_STATE}",
-                self._update_power_state,
-            ),
-            async_dispatcher_connect(
-                self.hass,
                 f"{self._unique_id}_{WebSocketNotification.SOURCE_CHANGE}",
                 self._update_source_change,
             ),
@@ -357,12 +353,13 @@ class BangOlufsenMediaPlayer(
 
         # Update the device sw version
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, self._unique_id)}
+        device = cast(
+            DeviceEntry,
+            device_registry.async_get_device(identifiers={(DOMAIN, self._unique_id)}),
         )
 
         # Update the HA device if the sw version does not match
-        if device and self._software_status.software_version != device.sw_version:
+        if self._software_status.software_version != device.sw_version:
 
             device_registry.async_update_device(
                 device_id=device.id,
@@ -647,22 +644,8 @@ class BangOlufsenMediaPlayer(
         """Update _playback_state and related."""
         self._playback_state = data
 
-        # Update entity state based on the playback and power state.
-        # The idle state has higher priority than any other playback state
-        if self._power_state.value == "networkStandby":
-            return
-
+        # Update entity state based on the playback state.
         self._state = self._playback_state.value
-
-        self.async_write_ha_state()
-
-    async def _update_power_state(self, data: RenderingState) -> None:
-        """Update _power_state and related."""
-        self._power_state = data
-
-        # Update entity state based on the power state.
-        if self._power_state.value == "networkStandby":
-            self._state = cast(MediaPlayerState, StateEnum[self._power_state.value])
 
         self.async_write_ha_state()
 
@@ -883,6 +866,7 @@ class BangOlufsenMediaPlayer(
     async def async_turn_off(self) -> None:
         """Set the device to "networkStandby"."""
         self._client.post_standby(async_req=True)
+        self._state = cast(MediaPlayerState, StateEnum.networkStandby)
 
     async def async_volume_up(self) -> None:
         """Volume up the on media player."""

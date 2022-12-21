@@ -357,9 +357,7 @@ class BangOlufsenVariables:
         # Set the configuration variables.
         self._host: str = self.entry.data[CONF_HOST]
         self._name: str = self.entry.data[CONF_NAME]
-
-        if isinstance(self.entry.unique_id, str):
-            self._unique_id: str = self.entry.unique_id
+        self._unique_id: str = cast(str, self.entry.unique_id)
 
         self._dispatchers: list = []
 
