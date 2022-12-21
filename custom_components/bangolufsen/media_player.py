@@ -299,6 +299,11 @@ class BangOlufsenMediaPlayer(
             ),
             async_dispatcher_connect(
                 self.hass,
+                f"{self._unique_id}_{WebSocketNotification.POWER_STATE}",
+                self._update_power_state,
+            ),
+            async_dispatcher_connect(
+                self.hass,
                 f"{self._unique_id}_{WebSocketNotification.SOURCE_CHANGE}",
                 self._update_source_change,
             ),
@@ -642,7 +647,11 @@ class BangOlufsenMediaPlayer(
         """Update _playback_state and related."""
         self._playback_state = data
 
-        # Update entity state based on the playback state.
+        # Update entity state based on the playback and power state.
+        # The idle state has higher priority than any other playback state
+        if self._power_state.value == "networkStandby":
+            return
+
         self._state = self._playback_state.value
 
         self.async_write_ha_state()
@@ -653,7 +662,7 @@ class BangOlufsenMediaPlayer(
 
         # Update entity state based on the power state.
         if self._power_state.value == "networkStandby":
-            self._state = cast(MediaPlayerState, StateEnum[self._power_state])
+            self._state = cast(MediaPlayerState, StateEnum[self._power_state.value])
 
         self.async_write_ha_state()
 
