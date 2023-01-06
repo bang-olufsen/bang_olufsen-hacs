@@ -65,6 +65,8 @@ SUPPORTS_PROXIMITY_SENSOR = (
 - Using the play_media service:
   - Activate a favourite
   - Play from a URI
+  - Play a local file
+  - Play a radio station
   - Play a Deezer flow
   - Play an album from Deezer (with optional starting position)
   - Play a playlist from Deezer (with optional starting position)
@@ -117,6 +119,10 @@ Some entities are added according to lists of supported devices. These are curre
 - Battery Level (If available)
 - Battery Charging Time (If available)
 - Battery Playing Time (If available)
+
+### Select entity
+
+- Sound mode (If available)
 
 ### Switch entity
 
@@ -231,7 +237,7 @@ action:
 
 ### play_media services
 
-The Bang & Olufsen integration supports different playback types in the `media_player.play_media` service: playback from URL, activating a favourite, playback from a local file, activating a Deezer flow and Deezer playlists, albums and tracks.
+The Bang & Olufsen integration supports different playback types in the `media_player.play_media` service: playback from URL, activating a favourite, playback from a local file, playing a radio station, activating a Deezer flow and Deezer playlists, albums and tracks.
 
 #### play_media examples
 
@@ -266,6 +272,17 @@ target:
 data:
   media_content_id: media-source://media_source/local/example.mp3
   media_content_type: music
+```
+
+Playing a radio station:
+
+```yaml
+service: media_player.play_media
+target:
+  entity_id: media_player.beosound_balance_12345678
+data:
+  media_content_id: 1234567890123456
+  media_content_type: radio
 ```
 
 Playing a Deezer flow. Optionally define a Deezer user ID:

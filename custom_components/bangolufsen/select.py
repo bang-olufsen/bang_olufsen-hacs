@@ -22,7 +22,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=120)
+
+SCAN_INTERVAL = timedelta(minutes=2)
 
 
 async def async_setup_entry(
@@ -83,26 +84,9 @@ class BangOlufsenSelectSoundMode(BangOlufsenSelect):
         self._attr_name = f"{self._name} Sound mode"
         self._attr_unique_id = f"{self._unique_id}-sound-mode"
         self._attr_icon = "mdi:sine-wave"
+        self._attr_should_poll = True
 
         self._sound_modes: dict[int, str] = {}
-        self._initial_setup()
-
-    def _initial_setup(self) -> None:
-        """Get the available sound modes and setup Select functionality."""
-        sound_modes = self._client.get_listening_mode_set(async_req=True).get()
-        active_sound_mode = self._client.get_active_listening_mode(async_req=True).get()
-
-        # Add the key to make the labels unique as well
-        self._sound_modes = {x["id"]: f"{x['name']} - {x['id']}" for x in sound_modes}
-
-        # Set available options and selected option.
-        self._attr_options = list(self._sound_modes.values())
-
-        # Temp fix for any invalid active sound mode
-        try:
-            self._attr_current_option = self._sound_modes[active_sound_mode.id]
-        except KeyError:
-            self._attr_current_option = None
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -131,3 +115,20 @@ class BangOlufsenSelectSoundMode(BangOlufsenSelect):
         self._attr_current_option = self._sound_modes[active_sound_mode.id]
 
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Get the available sound modes and setup Select functionality."""
+        sound_modes = self._client.get_listening_mode_set(async_req=True).get()
+        active_sound_mode = self._client.get_active_listening_mode(async_req=True).get()
+
+        # Add the key to make the labels unique as well
+        self._sound_modes = {x["id"]: f"{x['name']} - {x['id']}" for x in sound_modes}
+
+        # Set available options and selected option.
+        self._attr_options = list(self._sound_modes.values())
+
+        # Temp fix for any invalid active sound mode
+        try:
+            self._attr_current_option = self._sound_modes[active_sound_mode.id]
+        except KeyError:
+            self._attr_current_option = None
