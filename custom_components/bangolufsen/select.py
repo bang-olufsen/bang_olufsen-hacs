@@ -84,21 +84,25 @@ class BangOlufsenSelectSoundMode(BangOlufsenSelect):
         self._attr_unique_id = f"{self._unique_id}-sound-mode"
         self._attr_icon = "mdi:sine-wave"
 
-        self._sound_modes: dict[str, int] = {}
+        self._sound_modes: dict[int, str] = {}
         self._initial_setup()
 
     def _initial_setup(self) -> None:
         """Get the available sound modes and setup Select functionality."""
         sound_modes = self._client.get_listening_mode_set(async_req=True).get()
-
-        for sound_mode in sound_modes:
-            self._sound_modes[sound_mode["name"]] = sound_mode["id"]
-
         active_sound_mode = self._client.get_active_listening_mode(async_req=True).get()
 
+        # Add the key to make the labels unique as well
+        self._sound_modes = {x["id"]: f"{x['name']} - {x['id']}" for x in sound_modes}
+
         # Set available options and selected option.
-        self._attr_options = list(self._sound_modes)
-        self._attr_current_option = self._get_sound_mode_name(active_sound_mode.id)
+        self._attr_options = list(self._sound_modes.values())
+
+        # Temp fix for any invalid active sound mode
+        try:
+            self._attr_current_option = self._sound_modes[active_sound_mode.id]
+        except KeyError:
+            self._attr_current_option = None
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -117,20 +121,13 @@ class BangOlufsenSelectSoundMode(BangOlufsenSelect):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._client.activate_listening_mode(
-            id=self._sound_modes[option], async_req=True
-        )
+        key = [x for x in self._sound_modes if self._sound_modes[x] == option][0]
 
-    def _get_sound_mode_name(self, sound_mode_id: int) -> str:
-        """Get the sound mode name from ID."""
-        # pylint: disable=consider-using-dict-items
-        return [x for x in self._sound_modes if self._sound_modes[x] == sound_mode_id][
-            0
-        ]
+        self._client.activate_listening_mode(id=key, async_req=True)
 
     async def _update_sound_mode(self, data: ListeningModeProps) -> None:
         """Update sound mode."""
         active_sound_mode = data
-        self._attr_current_option = self._get_sound_mode_name(active_sound_mode.id)
+        self._attr_current_option = self._sound_modes[active_sound_mode.id]
 
         self.async_write_ha_state()

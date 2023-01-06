@@ -101,6 +101,7 @@ class BangOlufsenMediaType(StrEnum):
 
     FAVOURITE = "favourite"
     DEEZER = "deezer"
+    RADIO = "radio"
 
 
 # Proximity detection for binary_sensor
@@ -176,6 +177,7 @@ BANGOLUFSEN_ON: Final[str] = "on"
 VALID_MEDIA_TYPES: Final[tuple] = (
     BangOlufsenMediaType.FAVOURITE,
     BangOlufsenMediaType.DEEZER,
+    BangOlufsenMediaType.RADIO,
     MediaType.MUSIC,
     MediaType.URL,
 )
@@ -249,9 +251,9 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
 
 # Product capabilities for creating entities
 SUPPORTS_PROXIMITY_SENSOR: Final[tuple] = (
+    "BeoLab 28",
     "Beosound Balance",
     "Beosound Level",
-    "BeoLab 28",
     "Beosound Theatre",
 )
 

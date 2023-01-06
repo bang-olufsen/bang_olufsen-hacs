@@ -9,6 +9,7 @@ from typing import Any, cast
 
 from mozart_api.exceptions import ApiException
 from mozart_api.models import (
+    Action,
     Art,
     BeolinkLeader,
     BeolinkListener,
@@ -21,6 +22,7 @@ from mozart_api.models import (
     PlayQueueItemType,
     PlayQueueSettings,
     RenderingState,
+    SceneProperties,
     SoftwareUpdateState,
     SoftwareUpdateStatus,
     Source,
@@ -255,8 +257,8 @@ class BangOlufsenMediaPlayer(
         self._state: MediaPlayerState | str = MediaPlayerState.IDLE
         self._media_image: Art = Art()
         self._last_update: datetime = datetime(1970, 1, 1, 0, 0, 0, 0)
-        self._source_list: list[str] = []
-        self._source_list_friendly: list[str] = []
+        self._sources: dict[str, str] = {}
+        self._audio_sources: dict[str, str] = {}
         self._beolink_listeners: list[BeolinkListener] = []
         self._remote_leader: BeolinkLeader | None = None
         self._queue_settings: PlayQueueSettings = PlayQueueSettings()
@@ -377,25 +379,7 @@ class BangOlufsenMediaPlayer(
         beolink_self = self._client.get_beolink_self(async_req=True).get()
         self._friendly_name = beolink_self.friendly_name
 
-        # If the device has been updated with new sources, then the API will fail here.
-        try:
-            # Get all available sources.
-            sources = self._client.get_available_sources(
-                target_remote=False, async_req=True
-            ).get()
-
-        # Use a fallback list of sources
-        except ValueError:
-            _LOGGER.warning(
-                "The API is outdated compared to the device software version. Using fallback sources"
-            )
-            sources = FALLBACK_SOURCES
-
-        # Save all of the relevant enabled sources, both the ID and the friendly name for displaying.
-        for source in sources.items:
-            if source.is_enabled is True and source.id not in HIDDEN_SOURCE_IDS:
-                self._source_list.append(source.id)
-                self._source_list_friendly.append(source.name)
+        await self._get_sources()
 
         # Set the default and maximum volume of the product.
         self._client.set_volume_settings(
@@ -436,7 +420,7 @@ class BangOlufsenMediaPlayer(
         await self._update_bluetooth()
 
         # Set the static entity attributes that needed more information.
-        self._attr_source_list = self._source_list_friendly
+        self._attr_source_list = list(self._sources.values())
 
         # Wait for other entities to be initialized before starting the WebSocket listener
         await asyncio.sleep(1)
@@ -447,6 +431,34 @@ class BangOlufsenMediaPlayer(
         ].start_notification_listener()
 
         return True
+
+    async def _get_sources(self) -> None:
+        """Get sources for the specific product."""
+
+        # Audio sources
+        # If the device has been updated with new sources, then the API will fail here.
+        try:
+            # Get all available sources.
+            sources = self._client.get_available_sources(
+                target_remote=False, async_req=True
+            ).get()
+
+        # Use a fallback list of sources
+        except ValueError:
+            _LOGGER.warning(
+                "The API is outdated compared to the device software version. Using fallback sources"
+            )
+            sources = FALLBACK_SOURCES
+
+        # Save all of the relevant enabled sources, both the ID and the friendly name for displaying in a dict.
+        self._audio_sources = {
+            x.id: x.name
+            for x in sources.items
+            if x.is_enabled is True and x.id not in HIDDEN_SOURCE_IDS
+        }
+
+        # Combine the source dicts
+        self._sources.update(self._audio_sources)
 
     def _get_beolink_jid(self, entity_id: str) -> str | None:
         """Get beolink JID from entity_id."""
@@ -962,20 +974,21 @@ class BangOlufsenMediaPlayer(
 
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""
-        if source in self._source_list_friendly:
-            index = self._source_list_friendly.index(source)
-
-            self._client.set_active_source(
-                source_id=self._source_list[index],
-                async_req=True,
-            )
-
-        else:
+        if source not in self._sources.values():
             _LOGGER.error(
                 "Invalid source: %s. Valid sources are: %s",
                 source,
-                self._source_list_friendly,
+                list(self._sources.values()),
             )
+            return
+
+        # pylint: disable=consider-using-dict-items
+        key = [x for x in self._sources if self._sources[x] == source][0]
+
+        # Check for source type
+        if source in self._audio_sources.values():
+            # Audio
+            self._client.set_active_source(source_id=key, async_req=True)
 
     async def async_join_players(self, group_members: list[str]) -> None:
         """Create a Beolink session with defined group members."""
@@ -1036,6 +1049,19 @@ class BangOlufsenMediaPlayer(
         if media_type == MediaType.URL:
 
             self._client.post_uri_source(uri=Uri(location=media_id), async_req=True)
+
+        elif media_type == BangOlufsenMediaType.RADIO:
+            self._client.run_provided_scene(
+                scene_properties=SceneProperties(
+                    action_list=[
+                        Action(
+                            type="radio",
+                            radio_station_id=media_id,
+                        )
+                    ]
+                ),
+                async_req=True,
+            )
 
         elif media_type == BangOlufsenMediaType.FAVOURITE:
             self._client.activate_preset(id=media_id, async_req=True)

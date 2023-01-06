@@ -28,9 +28,9 @@ This integration adds an array of different useful entities that are generated a
 
 ```python
 SUPPORTS_PROXIMITY_SENSOR = (
+    "BeoLab 28",
     "Beosound Balance",
     "Beosound Level",
-    "BeoLab 28",
     "Beosound Theatre",
 )
 ```
