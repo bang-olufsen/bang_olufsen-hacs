@@ -26,6 +26,8 @@ from mozart_api.models import (
     SourceTypeEnum,
     SpeakerRoleEnum,
     VolumeState,
+    VolumeLevel,
+    VolumeMute,
     WebsocketNotificationTag,
 )
 from mozart_api.mozart_client import MozartClient
