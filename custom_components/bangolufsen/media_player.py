@@ -412,9 +412,10 @@ class BangOlufsenMediaPlayer(
                 "Error deserializing product state. Defaulting to fallback state"
             )
             self._volume = self._client.get_current_volume(async_req=True).get()
-            self._playback_progress = self._client.get_playback_state(
+            playback_state = self._client.get_playback_state(
                 async_req=True
             ).get()
+            self._playback_progress = playback_state.progress
 
         self._last_update = utcnow()
 
