@@ -379,6 +379,7 @@ class BangOlufsenMediaPlayer(
         beolink_self = self._client.get_beolink_self(async_req=True).get()
         self._friendly_name = beolink_self.friendly_name
 
+        # If the device has been updated with new sources, then the API will fail here.
         await self._get_sources()
 
         # Set the default and maximum volume of the product.
@@ -391,19 +392,29 @@ class BangOlufsenMediaPlayer(
         )
 
         # Get overall device state once. This is handled by WebSocket events the rest of the time.
-        product_state = self._client.get_product_state(async_req=True).get()
+        try:
+            product_state = self._client.get_product_state(async_req=True).get()
 
-        # Get volume information.
-        self._volume = product_state.volume
+            # Get volume information.
+            self._volume = product_state.volume
 
-        # Get all playback information.
-        # Ensure that the metadata is not None upon startup
-        if product_state.playback.metadata is not None:
-            self._playback_metadata = product_state.playback.metadata
+            # Get all playback information.
+            # Ensure that the metadata is not None upon startup
+            if product_state.playback.metadata is not None:
+                self._playback_metadata = product_state.playback.metadata
 
-        self._playback_progress = product_state.playback.progress
-        self._source_change = product_state.playback.source
-        self._playback_state = product_state.playback.state
+            self._playback_progress = product_state.playback.progress
+            self._source_change = product_state.playback.source
+            self._playback_state = product_state.playback.state
+
+        except ValueError:
+            _LOGGER.warning(
+                "Error deserializing product state. Defaulting to fallback state"
+            )
+            self._volume = self._client.get_current_volume(async_req=True).get()
+            self._playback_progress = self._client.get_playback_state(
+                async_req=True
+            ).get()
 
         self._last_update = utcnow()
 
@@ -436,7 +447,6 @@ class BangOlufsenMediaPlayer(
         """Get sources for the specific product."""
 
         # Audio sources
-        # If the device has been updated with new sources, then the API will fail here.
         try:
             # Get all available sources.
             sources = self._client.get_available_sources(

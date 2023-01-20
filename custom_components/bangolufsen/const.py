@@ -398,7 +398,7 @@ class BangOlufsenVariables:
         self._notification: WebsocketNotificationTag = WebsocketNotificationTag()
         self._playback_error: PlaybackError = PlaybackError()
         self._playback_metadata: PlaybackContentMetadata = PlaybackContentMetadata()
-        self._playback_progress: PlaybackProgress = PlaybackProgress()
+        self._playback_progress: PlaybackProgress = PlaybackProgress(total_duration=0)
         self._playback_source: Source = Source()
         self._playback_state: RenderingState = RenderingState()
         self._power_state: PowerStateEnum = PowerStateEnum()
@@ -406,7 +406,9 @@ class BangOlufsenVariables:
         self._software_update_state: SoftwareUpdateState = SoftwareUpdateState()
         self._sound_settings: SoundSettings = SoundSettings()
         self._source_change: Source = Source()
-        self._volume: VolumeState = VolumeState()
+        self._volume: VolumeState = VolumeState(
+            level=VolumeLevel(level=0), muted=VolumeMute(muted=False)
+        )
 
     @staticmethod
     def generate_favourite_attributes(
