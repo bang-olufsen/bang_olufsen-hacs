@@ -1034,9 +1034,15 @@ class BangOlufsenMediaPlayer(
     ) -> None:
         """Play from: netradio station id, URI, favourite or Deezer."""
 
-        if media_source.is_media_source_id(media_id):
-            media_type = MediaType.URL
+        if media_type not in VALID_MEDIA_TYPES:
+            _LOGGER.error(
+                "%s is an invalid type. Valid values are: %s",
+                media_type,
+                VALID_MEDIA_TYPES,
+            )
+            return
 
+        if media_source.is_media_source_id(media_id):
             sourced_media = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
@@ -1047,16 +1053,7 @@ class BangOlufsenMediaPlayer(
             if media_id.endswith(".m3u"):
                 media_id = media_id.replace(".m3u", "")
 
-        if media_type not in VALID_MEDIA_TYPES:
-            _LOGGER.error(
-                "%s is an invalid type. Valid values are: %s",
-                media_type,
-                VALID_MEDIA_TYPES,
-            )
-            return
-
-        if media_type == MediaType.URL:
-
+        if media_type in (MediaType.URL, MediaType.MUSIC):
             self._client.post_uri_source(uri=Uri(location=media_id), async_req=True)
 
         elif media_type == BangOlufsenMediaType.RADIO:
