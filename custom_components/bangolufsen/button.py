@@ -18,6 +18,7 @@ from .const import (
     HASS_FAVOURITES,
     BangOlufsenVariables,
     get_device,
+    generate_favourite_attributes,
 )
 from .coordinator import BangOlufsenCoordinator
 
@@ -111,7 +112,7 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
             self.coordinator.async_add_listener(self._update_favourite)
         )
 
-        self._attr_extra_state_attributes = self.generate_favourite_attributes(
+        self._attr_extra_state_attributes = generate_favourite_attributes(
             self._favourite
         )
 
@@ -126,7 +127,7 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
         self._favourite = self.coordinator.data["favourites"][str(self._favourite_id)]
 
         if old_favourite != self._favourite:
-            self._attr_extra_state_attributes = self.generate_favourite_attributes(
+            self._attr_extra_state_attributes = generate_favourite_attributes(
                 self._favourite
             )
 
