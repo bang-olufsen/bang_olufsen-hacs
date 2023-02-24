@@ -349,6 +349,67 @@ def get_device(hass: HomeAssistant | None, unique_id: str) -> DeviceEntry | None
     return device
 
 
+def generate_favourite_attributes(
+    favourite: Preset,
+) -> dict[str, str | int | dict[str, str | bool]]:
+    """Generate extra state attributes for a favourite."""
+    favourite_attribute: dict[str, str | int | dict[str, str | bool]] = {}
+
+    # Ensure that favourites with volume are properly shown.
+    for action in favourite.action_list:
+
+        if action.type == "volume":
+            favourite_attribute["volume"] = action.volume_level
+
+        else:
+            deezer_user_id = action.deezer_user_id
+            favourite_type = action.type
+            favourite_queue = action.queue_item
+
+            # Add Deezer as "source".
+            if (
+                favourite_type == "deezerFlow"
+                or favourite_type == "playQueue"
+                and favourite_queue.provider.value == "deezer"
+            ):
+                favourite_attribute["source"] = SourceEnum.deezer
+
+            # Add netradio as "source".
+            elif favourite_type == "radio":
+                favourite_attribute["source"] = SourceEnum.netRadio
+
+            # Add the source name if it is not none.
+            elif favourite.source is not None:
+                favourite_attribute["source"] = SourceEnum[favourite.source.value].value
+
+            # Add title if available.
+            if favourite.title is not None:
+                favourite_attribute["name"] = favourite.title
+
+            # Ensure that all favourites have a "name".
+            if "name" not in favourite_attribute:
+                favourite_attribute["name"] = favourite_attribute["source"]
+
+            # Add Deezer flow.
+            if favourite_type == "deezerFlow":
+                if deezer_user_id is not None:
+                    favourite_attribute["id"] = int(deezer_user_id)
+
+            # Add Deezer playlist "uri" and name
+            elif favourite_type == "playQueue":
+                favourite_attribute["id"] = favourite_queue.uri
+
+                # Add queue settings for Deezer queues.
+                if action.queue_settings:
+
+                    favourite_attribute["queue_settings"] = {
+                        "repeat": action.queue_settings.repeat,
+                        "shuffle": action.queue_settings.shuffle,
+                    }
+
+    return favourite_attribute
+
+
 class BangOlufsenVariables:
     """Shared variables for entities."""
 
@@ -411,66 +472,3 @@ class BangOlufsenVariables:
         self._volume: VolumeState = VolumeState(
             level=VolumeLevel(level=0), muted=VolumeMute(muted=False)
         )
-
-    @staticmethod
-    def generate_favourite_attributes(
-        favourite: Preset,
-    ) -> dict[str, str | int | dict[str, str | bool]]:
-        """Generate extra state attributes for a favourite."""
-        favourite_attribute: dict[str, str | int | dict[str, str | bool]] = {}
-
-        # Ensure that favourites with volume are properly shown.
-        for action in favourite.action_list:
-
-            if action.type == "volume":
-                favourite_attribute["volume"] = action.volume_level
-
-            else:
-                deezer_user_id = action.deezer_user_id
-                favourite_type = action.type
-                favourite_queue = action.queue_item
-
-                # Add Deezer as "source".
-                if (
-                    favourite_type == "deezerFlow"
-                    or favourite_type == "playQueue"
-                    and favourite_queue.provider.value == "deezer"
-                ):
-                    favourite_attribute["source"] = SourceEnum.deezer
-
-                # Add netradio as "source".
-                elif favourite_type == "radio":
-                    favourite_attribute["source"] = SourceEnum.netRadio
-
-                # Add the source name if it is not none.
-                elif favourite.source is not None:
-                    favourite_attribute["source"] = SourceEnum[
-                        favourite.source.value
-                    ].value
-
-                # Add title if available.
-                if favourite.title is not None:
-                    favourite_attribute["name"] = favourite.title
-
-                # Ensure that all favourites have a "name".
-                if "name" not in favourite_attribute:
-                    favourite_attribute["name"] = favourite_attribute["source"]
-
-                # Add Deezer flow.
-                if favourite_type == "deezerFlow":
-                    if deezer_user_id is not None:
-                        favourite_attribute["id"] = int(deezer_user_id)
-
-                # Add Deezer playlist "uri" and name
-                elif favourite_type == "playQueue":
-                    favourite_attribute["id"] = favourite_queue.uri
-
-                    # Add queue settings for Deezer queues.
-                    queue_settings = action.queue_settings
-
-                    favourite_attribute["queue_settings"] = {
-                        "repeat": queue_settings.repeat,
-                        "shuffle": queue_settings.shuffle,
-                    }
-
-        return favourite_attribute
