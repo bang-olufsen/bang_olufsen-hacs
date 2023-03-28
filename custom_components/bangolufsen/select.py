@@ -1,29 +1,20 @@
 """Select entities for the Bang & Olufsen Mozart integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
-from mozart_api.models import ListeningModeProps
+from mozart_api.models import ListeningModeProps, SpeakerGroupOverview
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONNECTION_STATUS,
-    DOMAIN,
-    HASS_SELECTS,
-    BangOlufsenVariables,
-    WebSocketNotification,
-)
+from .const import DOMAIN, BangOlufsenEntity, EntityEnum, WebSocketNotification
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(minutes=2)
 
 
 async def async_setup_entry(
@@ -34,44 +25,23 @@ async def async_setup_entry(
     """Set up Select entities from config entry."""
     entities = []
 
-    # Add select entities.
-    for select in hass.data[DOMAIN][config_entry.unique_id][HASS_SELECTS]:
+    # Add Select entities.
+    for select in hass.data[DOMAIN][config_entry.unique_id][EntityEnum.SELECTS]:
         entities.append(select)
 
-    async_add_entities(new_entities=entities, update_before_add=True)
+    async_add_entities(new_entities=entities)
 
 
-class BangOlufsenSelect(BangOlufsenVariables, SelectEntity):
+class BangOlufsenSelect(BangOlufsenEntity, SelectEntity):
     """Select for Mozart settings."""
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the Select."""
         super().__init__(entry)
 
+        self._attr_options = []
+        self._attr_current_option = None
         self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_should_poll = False
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
-
-    async def async_added_to_hass(self) -> None:
-        """Turn on the dispatchers."""
-        self._dispatchers = [
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._update_connection_state,
-            )
-        ]
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Turn off the dispatchers."""
-        for dispatcher in self._dispatchers:
-            dispatcher()
-
-    async def _update_connection_state(self, connection_state: bool) -> None:
-        """Update entity connection state."""
-        self._attr_available = connection_state
-
-        self.async_write_ha_state()
 
 
 class BangOlufsenSelectSoundMode(BangOlufsenSelect):
@@ -84,51 +54,125 @@ class BangOlufsenSelectSoundMode(BangOlufsenSelect):
         self._attr_name = f"{self._name} Sound mode"
         self._attr_unique_id = f"{self._unique_id}-sound-mode"
         self._attr_icon = "mdi:sine-wave"
-        self._attr_should_poll = True
 
-        self._sound_modes: dict[int, str] = {}
+        self._sound_modes: dict[str, int] = {}
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        self._dispatchers = [
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._update_connection_state,
-            ),
+        await super().async_added_to_hass()
+
+        self._dispatchers.append(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebSocketNotification.ACTIVE_LISTENING_MODE}",
-                self._update_sound_mode,
-            ),
-        ]
+                self._update_sound_modes,
+            )
+        )
+
+        await self._update_sound_modes()
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        key = [x for x in self._sound_modes if self._sound_modes[x] == option][0]
+        self._client.activate_listening_mode(
+            id=self._sound_modes[option], async_req=True
+        )
 
-        self._client.activate_listening_mode(id=key, async_req=True)
+    async def _update_sound_modes(
+        self, active_sound_mode: ListeningModeProps | None = None
+    ) -> None:
+        """Get the available sound modes and setup Select functionality."""
+        sound_modes = self._client.get_listening_mode_set(async_req=True).get()
+        if active_sound_mode is None:
+            active_sound_mode = self._client.get_active_listening_mode(
+                async_req=True
+            ).get()
 
-    async def _update_sound_mode(self, data: ListeningModeProps) -> None:
-        """Update sound mode."""
-        active_sound_mode = data
-        self._attr_current_option = self._sound_modes[active_sound_mode.id]
+        # Add the key to make the labels unique as well
+        for sound_mode in sound_modes:
+            label = f"{sound_mode['name']} - {sound_mode['id']}"
+
+            self._sound_modes[label] = sound_mode["id"]
+
+            if sound_mode["id"] == active_sound_mode.id:
+                self._attr_current_option = label
+
+        # Set available options and selected option.
+        self._attr_options = list(self._sound_modes.keys())
 
         self.async_write_ha_state()
 
-    async def async_update(self) -> None:
-        """Get the available sound modes and setup Select functionality."""
-        sound_modes = self._client.get_listening_mode_set(async_req=True).get()
-        active_sound_mode = self._client.get_active_listening_mode(async_req=True).get()
 
-        # Add the key to make the labels unique as well
-        self._sound_modes = {x["id"]: f"{x['name']} - {x['id']}" for x in sound_modes}
+class BangOlufsenSelectListeningPosition(BangOlufsenSelect):
+    """Listening position Select."""
 
-        # Set available options and selected option.
-        self._attr_options = list(self._sound_modes.values())
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Init the listening position select."""
+        super().__init__(entry)
 
-        # Temp fix for any invalid active sound mode
-        try:
-            self._attr_current_option = self._sound_modes[active_sound_mode.id]
-        except KeyError:
-            self._attr_current_option = None
+        self._attr_name = f"{self._name} Listening position"
+        self._attr_unique_id = f"{self._unique_id}-listening-position"
+        self._attr_icon = "mdi:sine-wave"
+
+        self._listening_positions: dict[str, str] = {}
+        self._scenes: dict[str, str] = {}
+
+    async def async_added_to_hass(self) -> None:
+        """Turn on the dispatchers."""
+        await super().async_added_to_hass()
+
+        self._dispatchers.extend(
+            [
+                async_dispatcher_connect(
+                    self.hass,
+                    f"{self._unique_id}_{WebSocketNotification.ACTIVE_SPEAKER_GROUP}",
+                    self._update_listening_positions,
+                ),
+                async_dispatcher_connect(
+                    self.hass,
+                    f"{self._unique_id}_{WebSocketNotification.REMOTE_MENU_CHANGED}",
+                    self._update_listening_positions,
+                ),
+            ]
+        )
+
+        await self._update_listening_positions()
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        self._client.post_scene_trigger(
+            id=self._listening_positions[option], async_req=True
+        )
+
+    async def _update_listening_positions(
+        self, active_speaker_group: SpeakerGroupOverview | None = None
+    ) -> None:
+        """Update listening position."""
+        scenes = self._client.get_all_scenes(async_req=True).get()
+
+        if active_speaker_group is None:
+            active_speaker_group = self._client.get_speakergroup_active(
+                async_req=True
+            ).get()
+
+        self._listening_positions = {}
+        index = 0
+
+        # Listening positions
+        for scene_key in scenes:
+            scene = scenes[scene_key]
+
+            if scene.tags is not None and "listeningposition" in scene.tags:
+                # Ensure that the label is unique
+                label = f"{scene.label} - {index}"
+
+                self._listening_positions[label] = scene_key
+
+                # Currently guess the current active listening position by the speakergroup ID
+                if active_speaker_group.id == scene.action_list[0].speaker_group_id:
+                    self._attr_current_option = label
+
+                index += 1
+
+        self._attr_options = list(self._listening_positions.keys())
+
+        self.async_write_ha_state()

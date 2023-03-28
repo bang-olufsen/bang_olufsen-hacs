@@ -5,7 +5,6 @@
             "api_exception": "En fejl opstod ved initialiseringen af enheden. Prøv at vente eller at genstarte enheden.",
             "max_retry_error": "Kan ikke forbinde til enheden på den givne IP-adresse. Tjek om IP-adressen stemmer overens med enhedens.",
             "new_connection_error": "Kan ikke detektere en enhed på givne IP-adresse. Tjek om IP-adressen stemmer overens med enhedens.",
-            "no_device": "Kunne ikke finde enheden.",
             "value_error": "Ikke en gyldig IP-adresse."
         },
         "flow_title": "{name}",
@@ -14,10 +13,9 @@
                 "data":{
                     "default_volume": "Standard lydstyrke",
                     "max_volume": "Maksimal lydstyrke",
-                    "name": "Navn",
                     "volume_step": "Lydstyrke trin"
                 },
-                "description": "Bekræft Konfigurationen af {model}-{serial_number} @ {host}."
+                "description": "Bekræft konfigurationen af {model}-{serial_number} @ {host}."
             },
             "user":{
                 "data": {
@@ -142,14 +140,12 @@
             "api_exception": "En fejl opstod ved initialiseringen af enheden. Prøv at vente eller at genstarte enheden.",
             "max_retry_error": "Kan ikke forbinde til enheden på den givne IP-adresse. Tjek om IP-adressen stemmer overens med enhedens.",
             "new_connection_error": "Kan ikke detektere en enhed på givne IP-adresse. Tjek om IP-adressen stemmer overens med enhedens.",
-            "no_device": "Kunne ikke finde enheden.",
             "value_error": "Ikke en gyldig IP-adresse."
         },
         "step":{
             "init": {
                 "data": {
                     "default_volume": "Standard lydstyrke",
-                    "host": "IP-Addresse",
                     "max_volume": "Maksimal lydstyrke",
                     "name": "Navn",
                     "volume_step": "Lydstyrke trin"

@@ -1,21 +1,19 @@
-"""Button entities for the Bang & Olufsen integration."""
+"""Text entities for the Bang & Olufsen integration."""
+# pylint: disable=unused-argument
+
+
 from __future__ import annotations
 
-import logging
+from mozart_api.models import HomeControlUri, ProductFriendlyName
 
 from homeassistant.components.text import TextEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONNECTION_STATUS, DOMAIN, HASS_TEXT, MEDIA_ID, BangOlufsenVariables
-
-# from mozart_api.models import HomeControlUri
-
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, BangOlufsenEntity, EntityEnum, WebSocketNotification
 
 
 async def async_setup_entry(
@@ -27,78 +25,81 @@ async def async_setup_entry(
     entities = []
     configuration = hass.data[DOMAIN][config_entry.unique_id]
 
-    # Add favourite Button entities.
-    for text in configuration[HASS_TEXT]:
+    # Add Text entities.
+    for text in configuration[EntityEnum.TEXT]:
         entities.append(text)
 
-    async_add_entities(new_entities=entities, update_before_add=True)
+    async_add_entities(new_entities=entities)
 
 
-class BangOlufsenText(TextEntity, BangOlufsenVariables):
+class BangOlufsenText(TextEntity, BangOlufsenEntity):
     """Base Text class."""
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the Text."""
         super().__init__(entry)
 
-        self._attr_entity_category = None
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
-
-    async def async_added_to_hass(self) -> None:
-        """Turn on the dispatchers."""
-        self._dispatchers = [
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._update_connection_state,
-            )
-        ]
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Turn off the dispatchers."""
-        for dispatcher in self._dispatchers:
-            dispatcher()
-
-    async def _update_connection_state(self, connection_state: bool) -> None:
-        """Update entity connection state."""
-        self._attr_available = connection_state
-
-        self.async_write_ha_state()
+        self._attr_entity_category = EntityCategory.CONFIG
 
 
-class BangOlufsenTextMediaId(BangOlufsenText):
-    """Media id Text."""
+class BangOlufsenTextFriendlyName(BangOlufsenText):
+    """Friendly name Text."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Init the media id Text."""
+    def __init__(self, entry: ConfigEntry, friendly_name: str) -> None:
+        """Init the friendly name Text."""
         super().__init__(entry)
 
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_name = f"{self._name} Media Id"
-        self._attr_unique_id = f"{self._unique_id}-media-id"
-        self._attr_device_class = None
-        self._attr_icon = "mdi:information"
-        self._attr_entity_registry_enabled_default = False
+        self._attr_name = f"{self._name} Friendly name"
+        self._attr_unique_id = f"{self._unique_id}-friendly-name"
+        self._attr_icon = "mdi:id-card"
 
-        self._attr_native_value = None
+        self._attr_native_value = friendly_name
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        self._dispatchers = [
-            async_dispatcher_connect(
-                self.hass,
-                f"{self.entry.unique_id}_{CONNECTION_STATUS}",
-                self._update_connection_state,
-            ),
-            async_dispatcher_connect(
-                self.hass,
-                f"{self.entry.unique_id}_{MEDIA_ID}",
-                self._update_media_id,
-            ),
-        ]
+        await super().async_added_to_hass()
 
-    async def _update_media_id(self, data: str | None) -> None:
+        self._dispatchers.append(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self.entry.unique_id}_{WebSocketNotification.CONFIGURATION}",
+                self._update_friendly_name,
+            ),
+        )
+
+    async def async_set_value(self, value: str) -> None:
+        """Set the friendly name."""
+        self._attr_native_value = value
+        self._client.set_product_friendly_name(
+            product_friendly_name=ProductFriendlyName(friendly_name=value),
+            async_req=True,
+        )
+
+    async def _update_friendly_name(self, data: str | None) -> None:
         """Update text value."""
-        self._attr_native_value = data
+        beolink_self = self._client.get_beolink_self(async_req=True).get()
+
+        self._attr_native_value = beolink_self.friendly_name
 
         self.async_write_ha_state()
+
+
+class BangOlufsenTextHomeControlUri(BangOlufsenText):
+    """Home Control URI Text."""
+
+    def __init__(self, entry: ConfigEntry, home_control_uri: str) -> None:
+        """Init the Home Control URI Text."""
+        super().__init__(entry)
+
+        self._attr_name = f"{self._name} Home Control URI"
+        self._attr_unique_id = f"{self._unique_id}-home-control-uri"
+        self._attr_icon = "mdi:link-variant"
+        self._attr_native_value = home_control_uri
+
+    async def async_set_value(self, value: str) -> None:
+        """Set the Home Control URI name."""
+        self._attr_native_value = value
+
+        self._client.set_remote_home_control_uri(
+            home_control_uri=HomeControlUri(uri=value), async_req=True
+        )

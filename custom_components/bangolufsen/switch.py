@@ -1,7 +1,6 @@
 """Switch entities for the Bang & Olufsen integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import Any
 
 from mozart_api.models import Loudness, SoundSettings
@@ -10,18 +9,10 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONNECTION_STATUS,
-    DOMAIN,
-    HASS_SWITCHES,
-    BangOlufsenVariables,
-    WebSocketNotification,
-)
-
-SCAN_INTERVAL = timedelta(seconds=120)
+from .const import DOMAIN, BangOlufsenEntity, EntityEnum, WebSocketNotification
 
 
 async def async_setup_entry(
@@ -33,52 +24,21 @@ async def async_setup_entry(
     entities = []
 
     # Add switch entities.
-    for switch in hass.data[DOMAIN][config_entry.unique_id][HASS_SWITCHES]:
+    for switch in hass.data[DOMAIN][config_entry.unique_id][EntityEnum.SWITCHES]:
         entities.append(switch)
 
-    async_add_entities(new_entities=entities, update_before_add=True)
+    async_add_entities(new_entities=entities)
 
 
-class BangOlufsenSwitch(BangOlufsenVariables, SwitchEntity):
+class BangOlufsenSwitch(BangOlufsenEntity, SwitchEntity):
     """Base Switch class."""
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the Switch."""
         super().__init__(entry)
 
-        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_device_class = SwitchDeviceClass.SWITCH
-        self._attr_should_poll = False
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
-        self._attr_is_on = False
-
-    async def async_added_to_hass(self) -> None:
-        """Turn on the dispatchers."""
-        self._dispatchers = [
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._update_connection_state,
-            )
-        ]
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Turn off the dispatchers."""
-        for dispatcher in self._dispatchers:
-            dispatcher()
-
-    async def _update_connection_state(self, connection_state: bool) -> None:
-        """Update entity connection state."""
-        self._attr_available = connection_state
-
-        self.async_write_ha_state()
-
-    async def async_toggle(self, **kwargs: Any) -> None:
-        """Toggle the option."""
-        if self._attr_is_on:
-            await self.async_turn_off()
-        else:
-            await self.async_turn_on()
+        self._attr_entity_category = EntityCategory.CONFIG
 
 
 class BangOlufsenSwitchLoudness(BangOlufsenSwitch):
@@ -108,22 +68,17 @@ class BangOlufsenSwitchLoudness(BangOlufsenSwitch):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        self._dispatchers = [
+        await super().async_added_to_hass()
+
+        self._dispatchers.append(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebSocketNotification.SOUND_SETTINGS}",
                 self._update_sound_settings,
-            ),
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._update_connection_state,
-            ),
-        ]
+            )
+        )
 
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""
-        sound_settings = data
-        self._attr_is_on = sound_settings.adjustments.loudness
-
+        self._attr_is_on = data.adjustments.loudness
         self.async_write_ha_state()

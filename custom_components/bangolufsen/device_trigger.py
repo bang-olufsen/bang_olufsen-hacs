@@ -1,19 +1,30 @@
 """Device triggers for the Bang & Olufsen integration."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
+from mozart_api.mozart_client import MozartClient
 import voluptuous as vol
 
 from homeassistant.components.automation import TriggerActionType, TriggerInfo
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_HOST,
+    CONF_PLATFORM,
+    CONF_TYPE,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.typing import ConfigType
 
-from .const import BANGOLUFSEN_EVENT, DOMAIN, HASS_CONTROLLER
+from .const import BANGOLUFSEN_EVENT, DOMAIN, EntityEnum
+from .media_player import BangOlufsenMediaPlayer
+
+_LOGGER = logging.getLogger(__name__)
 
 BUTTON_TRIGGERS = (
     "Preset1_shortPress",
@@ -29,18 +40,7 @@ BUTTON_TRIGGERS = (
     "Bluetooth_longPress",
 )
 
-ALL_TRIGGERS = (
-    "Preset1_shortPress",
-    "Preset2_shortPress",
-    "Preset3_shortPress",
-    "Preset4_shortPress",
-    "PlayPause_shortPress",
-    "PlayPause_longPress",
-    "Next_shortPress",
-    "Previous_shortPress",
-    "Microphone_shortPress",
-    "Bluetooth_shortPress",
-    "Bluetooth_longPress",
+REMOTE_TRIGGERS = (
     "Control/Wind_KeyPress",
     "Control/Rewind_KeyPress",
     "Control/Play_KeyPress",
@@ -137,7 +137,7 @@ ALL_TRIGGERS = (
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(ALL_TRIGGERS),
+        vol.Required(CONF_TYPE): vol.In(REMOTE_TRIGGERS + BUTTON_TRIGGERS),
     }
 )
 
@@ -148,21 +148,23 @@ async def async_get_triggers(
     """List device triggers for Bang & Olufsen devices."""
     triggers = []
 
-    # Get the device serial number in order to retrieve the controller
-    # and determine if a remote is connected and the device triggers for the remote should be available.
-
+    # Get the host IP address
     registry = device_registry.async_get(hass)
-
     serial_number = list(registry.devices[device_id].identifiers)[0][1]
+    media_player: BangOlufsenMediaPlayer = hass.data[DOMAIN][serial_number][
+        EntityEnum.MEDIA_PLAYER
+    ]
 
-    controller = hass.data[DOMAIN][serial_number][HASS_CONTROLLER]
+    client = MozartClient(host=media_player.entry.data[CONF_HOST])
 
-    trigger_types: tuple[str, ...] = ()
+    # Get if a remote control is connected
+    bluetooth_remote_list = client.get_bluetooth_remotes(async_req=True).get()
+    remote_control_available = bool(len(bluetooth_remote_list.items))
 
-    if controller.websocket_remote_control:
-        trigger_types = ALL_TRIGGERS
-    else:
-        trigger_types = BUTTON_TRIGGERS
+    trigger_types: list[str] = list(BUTTON_TRIGGERS)
+
+    if remote_control_available:
+        trigger_types.extend(REMOTE_TRIGGERS)
 
     for trigger_type in trigger_types:
 
@@ -184,6 +186,7 @@ async def async_attach_trigger(
     automation_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
+
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
             event_trigger.CONF_PLATFORM: "event",

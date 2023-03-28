@@ -7,16 +7,10 @@ from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONNECTION_STATUS,
-    DOMAIN,
-    HASS_NUMBERS,
-    BangOlufsenVariables,
-    WebSocketNotification,
-)
+from .const import DOMAIN, BangOlufsenEntity, EntityEnum, WebSocketNotification
 
 
 async def async_setup_entry(
@@ -27,46 +21,23 @@ async def async_setup_entry(
     """Set up Number entities from config entry."""
     entities = []
 
-    # Add number entities.
-    for number in hass.data[DOMAIN][config_entry.unique_id][HASS_NUMBERS]:
+    # Add Number entities.
+    for number in hass.data[DOMAIN][config_entry.unique_id][EntityEnum.NUMBERS]:
         entities.append(number)
 
-    async_add_entities(new_entities=entities, update_before_add=True)
+    async_add_entities(new_entities=entities)
 
 
-class BangOlufsenNumber(BangOlufsenVariables, NumberEntity):
+class BangOlufsenNumber(BangOlufsenEntity, NumberEntity):
     """Base Number class."""
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the Number."""
         super().__init__(entry)
 
-        self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_should_poll = False
         self._attr_mode = NumberMode.AUTO
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
         self._attr_native_value = 0.0
-
-    async def async_added_to_hass(self) -> None:
-        """Turn on the dispatchers."""
-        self._dispatchers = [
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._update_connection_state,
-            )
-        ]
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Turn off the dispatchers."""
-        for dispatcher in self._dispatchers:
-            dispatcher()
-
-    async def _update_connection_state(self, connection_state: bool) -> None:
-        """Update entity connection state."""
-        self._attr_available = connection_state
-
-        self.async_write_ha_state()
+        self._attr_entity_category = EntityCategory.CONFIG
 
 
 class BangOlufsenNumberTreble(BangOlufsenNumber):
@@ -92,24 +63,19 @@ class BangOlufsenNumberTreble(BangOlufsenNumber):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        self._dispatchers = [
+        await super().async_added_to_hass()
+
+        self._dispatchers.append(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebSocketNotification.SOUND_SETTINGS}",
                 self._update_sound_settings,
-            ),
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._update_connection_state,
-            ),
-        ]
+            )
+        )
 
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""
-        self._sound_settings = data
-        self._attr_native_value = self._sound_settings.adjustments.treble
-
+        self._attr_native_value = data.adjustments.treble
         self.async_write_ha_state()
 
 
@@ -136,22 +102,17 @@ class BangOlufsenNumberBass(BangOlufsenNumber):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        self._dispatchers = [
+        await super().async_added_to_hass()
+
+        self._dispatchers.append(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WebSocketNotification.SOUND_SETTINGS}",
                 self._update_sound_settings,
-            ),
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._update_connection_state,
-            ),
-        ]
+            )
+        )
 
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""
-        self._sound_settings = data
-        self._attr_native_value = self._sound_settings.adjustments.bass
-
+        self._attr_native_value = data.adjustments.bass
         self.async_write_ha_state()

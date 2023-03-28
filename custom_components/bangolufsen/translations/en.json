@@ -5,7 +5,6 @@
             "api_exception": "An error occurred while initializing the device. Try waiting or restarting the device.",
             "max_retry_error": "Unable to connect to the device at the address. Please check if the IP address is correct.",
             "new_connection_error": "Unable to detect a device at the address. Please check if the IP address is correct.",
-            "no_device": "Unable to retrieve device.",
             "value_error": "Invalid hostname or IP address"
         },
         "flow_title": "{name}",
@@ -14,7 +13,6 @@
                 "data": {
                     "default_volume": "Default volume",
                     "max_volume": "Max volume",
-                    "name": "Name",
                     "volume_step": "Volume step"
                 },
                 "description": "Confirm the configuration of the {model}-{serial_number} @ {host}."
@@ -141,14 +139,12 @@
             "api_exception": "An error occurred while initializing the device. Try waiting or restarting the device.",
             "max_retry_error": "Unable to connect to the device at the address. Please check if the IP address is correct.",
             "new_connection_error": "Unable to detect a device at the address. Please check if the IP address is correct.",
-            "no_device": "Unable to retrieve device.",
             "value_error": "Invalid hostname or IP address"
         },
         "step": {
             "init": {
                 "data": {
                     "default_volume": "Default volume",
-                    "host": "IP Address",
                     "max_volume": "Max volume",
                     "name": "Name",
                     "volume_step": "Volume step"

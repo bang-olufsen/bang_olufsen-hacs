@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import ipaddress
 import logging
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 
 from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
@@ -33,7 +33,6 @@ from .const import (
     DEFAULT_HOST,
     DEFAULT_MAX_VOLUME,
     DEFAULT_MODEL,
-    DEFAULT_NAME,
     DEFAULT_VOLUME_RANGE,
     DEFAULT_VOLUME_STEP,
     DOMAIN,
@@ -48,14 +47,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _config_schema(
-    name: str = DEFAULT_NAME,
     volume_step: int = DEFAULT_VOLUME_STEP,
     default_volume: int = DEFAULT_DEFAULT_VOLUME,
     max_volume: int = DEFAULT_MAX_VOLUME,
 ) -> dict:
     """Create a schema for configuring the device with adjustable default values."""
     return {
-        vol.Optional(CONF_NAME, default=name): cv.string,
         vol.Required(CONF_VOLUME_STEP, default=volume_step): vol.All(
             vol.Coerce(int),
             vol.Range(
@@ -78,36 +75,6 @@ def _config_schema(
             ),
         ),
     }
-
-
-async def _validate_host(host: str) -> tuple[str, str, str]:
-    """Validate that a connection can be made to the device and return jid, friendly name and serial number."""
-    try:
-        # Check if the IP address is a valid address.
-        ipaddress.ip_address(host)
-
-        # Get information from Beolink self method.
-        client = MozartClient(host)
-
-        beolink_self = client.get_beolink_self(async_req=True, _request_timeout=3).get()
-
-        beolink_jid = beolink_self.jid
-        name = beolink_self.friendly_name
-        serial_number = beolink_self.jid.split(".")[2].split("@")[0]
-
-        return (beolink_jid, name, serial_number)
-
-    except ApiException as error:
-        raise AbortFlow(reason=API_EXCEPTION) from error
-
-    except NewConnectionError as error:
-        raise AbortFlow(reason=NEW_CONNECTION_ERROR) from error
-
-    except MaxRetryError as error:
-        raise AbortFlow(reason=MAX_RETRY_ERROR) from error
-
-    except ValueError as error:
-        raise AbortFlow(reason=VALUE_ERROR) from error
 
 
 class UserInput(TypedDict):
@@ -133,7 +100,37 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self._serial_number: str = ""
         self._beolink_jid: str = ""
 
+        self._client: MozartClient | None = None
+
     VERSION = 1
+
+    async def _validate_host(self) -> None:
+        """Validate that a connection can be made to the device and set jid and serial number."""
+        try:
+            # Check if the IP address is a valid address.
+            ipaddress.ip_address(self._host)
+
+            self._client = MozartClient(self._host)
+
+            # Get information from Beolink self method.
+            beolink_self = self._client.get_beolink_self(
+                async_req=True, _request_timeout=3
+            ).get()
+
+            self._beolink_jid = beolink_self.jid
+            self._serial_number = beolink_self.jid.split(".")[2].split("@")[0]
+
+        except ApiException as error:
+            raise AbortFlow(reason=API_EXCEPTION) from error
+
+        except NewConnectionError as error:
+            raise AbortFlow(reason=NEW_CONNECTION_ERROR) from error
+
+        except MaxRetryError as error:
+            raise AbortFlow(reason=MAX_RETRY_ERROR) from error
+
+        except ValueError as error:
+            raise AbortFlow(reason=VALUE_ERROR) from error
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -142,9 +139,9 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._model = user_input[CONF_MODEL]
-            self._beolink_jid, self._name, self._serial_number = await _validate_host(
-                self._host
-            )
+            await self._validate_host()
+
+            self._name = f"{self._model}-{self._serial_number}"
 
             await self.async_set_unique_id(self._serial_number)
             self._abort_if_unique_id_configured()
@@ -174,9 +171,13 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self._model = discovery_info.hostname[:-16].replace("-", " ")
         self._serial_number = discovery_info.properties[ATTR_SERIAL_NUMBER]
         self._beolink_jid = f"{discovery_info.properties[ATTR_TYPE_NUMBER]}.{discovery_info.properties[ATTR_ITEM_NUMBER]}.{self._serial_number}@products.bang-olufsen.com"
-        self._name = discovery_info.properties[ATTR_FRIENDLY_NAME]
+        self._name = f"{self._model}-{self._serial_number}"
 
-        self.context["title_placeholders"] = {"name": self._name}
+        self._client = MozartClient(self._host)
+
+        self.context["title_placeholders"] = {
+            "name": discovery_info.properties[ATTR_FRIENDLY_NAME]
+        }
 
         await self.async_set_unique_id(self._serial_number)
         self._abort_if_unique_id_configured()
@@ -188,24 +189,24 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm the configuration of the device."""
         if user_input is not None:
-            self._name = user_input[CONF_NAME]
 
             # Make sure that all information is included
             data = user_input
             data[CONF_HOST] = self._host
             data[CONF_MODEL] = self._model
             data[CONF_BEOLINK_JID] = self._beolink_jid
+            data[CONF_NAME] = self._name
 
             return self.async_create_entry(
                 title=self._name,
                 data=data,
             )
 
-        client = MozartClient(self._host)
-        volume_settings = client.get_volume_settings(async_req=True).get()
+        volume_settings = (
+            cast(MozartClient, self._client).get_volume_settings(async_req=True).get()
+        )
 
         data_schema = _config_schema(
-            name=self._name,
             default_volume=volume_settings.default.level,
             max_volume=volume_settings.maximum.level,
         )
@@ -242,33 +243,27 @@ class BangOlufsenOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             # Make sure that everything get included in the data.
             data = user_input
-
             data[CONF_MODEL] = self._config_entry.data[CONF_MODEL]
             data[CONF_BEOLINK_JID] = self._config_entry.data[CONF_BEOLINK_JID]
-            if not self.show_advanced_options:
-                data[CONF_HOST] = self._config_entry.data[CONF_HOST]
+            data[CONF_HOST] = self._config_entry.data[CONF_HOST]
 
             # Check connection
-            await _validate_host(data[CONF_HOST])
             return self.async_create_entry(title=data[CONF_NAME], data=data)
 
         # Create data schema with the last configuration as default values.
-        data_schema = _config_schema(
-            name=self._config_entry.data[CONF_NAME],
-            volume_step=self._config_entry.data[CONF_VOLUME_STEP],
-            default_volume=self._config_entry.data[CONF_DEFAULT_VOLUME],
-            max_volume=self._config_entry.data[CONF_MAX_VOLUME],
-        )
-
-        # Only show the ip address if advanced options are on.
-        if self.show_advanced_options:
-            data_schema.update(
-                {
-                    vol.Required(
-                        CONF_HOST, default=self._config_entry.data[CONF_HOST]
-                    ): cv.string
-                },
+        # Also add the ability to change the friendly name in Home Assistant
+        data_schema = {
+            vol.Optional(
+                CONF_NAME, default=self._config_entry.data[CONF_NAME]
+            ): cv.string,
+        }
+        data_schema.update(
+            _config_schema(
+                volume_step=self._config_entry.data[CONF_VOLUME_STEP],
+                default_volume=self._config_entry.data[CONF_DEFAULT_VOLUME],
+                max_volume=self._config_entry.data[CONF_MAX_VOLUME],
             )
+        )
 
         # Create options form with selected options.
         return self.async_show_form(

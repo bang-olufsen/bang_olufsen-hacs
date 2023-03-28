@@ -16,7 +16,7 @@ Devices that have been tested and _should_ work without any trouble are:
 - [Beosound Balance](https://www.bang-olufsen.com/en/dk/speakers/beosound-balance)
 - [Beosound Emerge](https://www.bang-olufsen.com/en/dk/speakers/beosound-emerge)
 - [Beosound Level](https://www.bang-olufsen.com/en/dk/speakers/beosound-level)
-- [Beosound Theatre](https://www.bang-olufsen.com/en/dk/soundbars/beosound-theatre) (Audio only for now)
+- [Beosound Theatre](https://www.bang-olufsen.com/en/dk/soundbars/beosound-theatre)
 
 ## Configuration
 
@@ -24,16 +24,7 @@ This device can be added to your Home Assistant installation manually by using t
 
 ## Entities
 
-This integration adds an array of different useful entities that are generated and added automatically upon setup, customized for the supported features of the device.
-
-```python
-SUPPORTS_PROXIMITY_SENSOR = (
-    "BeoLab 28",
-    "Beosound Balance",
-    "Beosound Level",
-    "Beosound Theatre",
-)
-```
+This integration adds an array of different useful entities that are generated and added automatically upon setup, customized for the supported features of the device. Some of these features, such as `proximity sensor` and `home-control` are manually defined based on model name in the code, as they currently can't be determined in any other way.
 
 ### Media Player entity
 
@@ -46,9 +37,6 @@ SUPPORTS_PROXIMITY_SENSOR = (
 - Displaying currently playing artist and track
 - Displaying playback progress
 - Media seeking (Currently only when using Deezer)
-- Device triggers for automations by using device buttons such as Preset1, Bluetooth etc.
-- Device triggers for automations by using the Beoremote One Control and Light events
-- Events fired upon WebSocket events received
 - Media browsing:
   - Playback of local media
   - Radio Browsing
@@ -98,8 +86,6 @@ SUPPORTS_PROXIMITY_SENSOR = (
       - media_previous_track
       - toggle
 
-Some entities are added according to lists of supported devices. These are currently:
-
 ### Binary Sensor entity
 
 - Battery Charging (If available)
@@ -119,10 +105,13 @@ Some entities are added according to lists of supported devices. These are curre
 - Battery Level (If available)
 - Battery Charging Time (If available)
 - Battery Playing Time (If available)
+- Media ID (Disabled by default)
+- Input Signal (Disabled by default)
 
 ### Select entity
 
 - Sound mode (If available)
+- Listening Position (If available)
 
 ### Switch entity
 
@@ -130,13 +119,14 @@ Some entities are added according to lists of supported devices. These are curre
 
 ### Text entity
 
-- Media ID (If available)
+- Friendly Name
+- Home Control URI (If available)
 
 ## Getting Deezer URIs
 
-In order to find Deezer playlist, album URIs and user IDs for Deezer flows, the Deezer website has to be accessed. When navigating to an album, the URL will look something like: "https://www.deezer.com/en/album/ALBUM_ID", and this simply needs to be converted to: `album:ALBUM_ID` and the same applies to playlist, which have the format: `playlist:PLAYLIST_ID`.
+In order to find Deezer playlist, album URIs and user IDs for Deezer flows, the Deezer website has to be accessed. When navigating to an album, the URL will look something like: <https://www.deezer.com/en/album/ALBUM_ID>, and this simply needs to be converted to: `album:ALBUM_ID` and the same applies to playlist, which have the format: `playlist:PLAYLIST_ID`.
 
-Additionally a Deezer user ID can be found at https://www.deezer.com/en/profile/USER_ID by selecting the active user in a web browser.
+Additionally a Deezer user ID can be found at <https://www.deezer.com/en/profile/USER_ID> by selecting the active user in a web browser.
 
 Deezer track IDs can currently only easily be found by playing the track on the device and looking at the extra state attributes, where it is shown with the key "deezer_track_id". Tracks do not have a prefix so the ID needs to be used directly.
 
@@ -144,7 +134,7 @@ Deezer track IDs can currently only easily be found by playing the track on the 
 
 All device triggers can be received by listinging to `bangolufsen_event` event types.
 
-Additionally the "raw" WebSocket notifications received from the device are fired as events in Home Assistant. These can be received by listening to `bangolufsen_websocket_event` event types.
+Additionally the "raw" WebSocket notifications received from the device are fired as events in Home Assistant. These can be received by listening to `bangolufsen_websocket_event` event types where `device_id` is used to differentiate devices.
 
 ### Physical buttons and sensors
 

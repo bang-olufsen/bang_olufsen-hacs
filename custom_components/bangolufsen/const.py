@@ -1,33 +1,31 @@
 """Constants for the Bang & Olufsen integration."""
+# pylint: disable=invalid-name too-many-instance-attributes too-few-public-methods
+
 from __future__ import annotations
 
 from enum import Enum
 from typing import Final, cast
 
 from mozart_api.models import (
-    AlarmTriggeredInfo,
     BatteryState,
-    BeolinkExperience,
-    BeolinkExperiencesResult,
-    BeolinkJoinResult,
     BeoRemoteButton,
     ButtonEvent,
+    ListeningModeProps,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
     PowerStateEnum,
     Preset,
-    ProductCurtainStatus,
     RenderingState,
     SoftwareUpdateState,
     SoundSettings,
     Source,
     SourceArray,
     SourceTypeEnum,
-    SpeakerRoleEnum,
-    VolumeState,
+    SpeakerGroupOverview,
     VolumeLevel,
     VolumeMute,
+    VolumeState,
     WebsocketNotificationTag,
 )
 from mozart_api.mozart_client import MozartClient
@@ -39,6 +37,8 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 
 class ArtSizeEnum(Enum):
@@ -69,6 +69,7 @@ class SourceEnum(StrEnum):
     tv = "TV"
     deezer = "Deezer"
     beolink = "Networklink"
+    tidalConnect = "Tidal Connect"
 
 
 class RepeatEnum(StrEnum):
@@ -114,15 +115,88 @@ class ProximityEnum(Enum):
     proximityPresenceNotDetected = False
 
 
+class ModelEnum(StrEnum):
+    """Enum for compatible model names."""
+
+    beolab_28 = "BeoLab 28"
+    balance = "Beosound Balance"
+    emerge = "Beosound Emerge"
+    level = "Beosound Level"
+    theatre = "Beosound Theatre"
+
+
+class EntityEnum(StrEnum):
+    """Enum for accessing and storing the entities in hass."""
+
+    BINARY_SENSORS = "binary_sensors"
+    COORDINATOR = "coordinator"
+    MEDIA_PLAYER = "media_player"
+    NUMBERS = "numbers"
+    FAVOURITES = "favourites"
+    SENSORS = "sensors"
+    SWITCHES = "switches"
+    TEXT = "text"
+    SELECTS = "selects"
+
+
+# Dispatcher events
+class WebSocketNotification(StrEnum):
+    """Enum for WebSocket notification types."""
+
+    ACTIVE_LISTENING_MODE: Final[str] = "active_listening_mode"
+    ACTIVE_SPEAKER_GROUP: Final[str] = "active_speaker_group"
+    ALARM_TRIGGERED: Final[str] = "alarm_triggered"
+    BATTERY: Final[str] = "battery"
+    BEOLINK_EXPERIENCES_RESULT: Final[str] = "beolink_experiences_result"
+    BEOLINK_JOIN_RESULT: Final[str] = "beolink_join_result"
+    BEO_REMOTE_BUTTON: Final[str] = "beo_remote_button"
+    BUTTON: Final[str] = "button"
+    CURTAINS: Final[str] = "curtains"
+    PLAYBACK_ERROR: Final[str] = "playback_error"
+    PLAYBACK_METADATA: Final[str] = "playback_metadata"
+    PLAYBACK_PROGRESS: Final[str] = "playback_progress"
+    PLAYBACK_SOURCE: Final[str] = "playback_source"
+    PLAYBACK_STATE: Final[str] = "playback_state"
+    POWER_STATE: Final[str] = "power_state"
+    ROLE: Final[str] = "role"
+    SOFTWARE_UPDATE_STATE: Final[str] = "software_update_state"
+    SOUND_SETTINGS: Final[str] = "sound_settings"
+    SOURCE_CHANGE: Final[str] = "source_change"
+    VOLUME: Final[str] = "volume"
+
+    # Sub-notifications
+    NOTIFICATION: Final[str] = "notification"
+    PROXIMITY: Final[str] = "proximity"
+    BEOLINK: Final[str] = "beolink"
+    REMOTE_MENU_CHANGED: Final[str] = "remoteMenuChanged"
+    CONFIGURATION: Final[str] = "configuration"
+    BLUETOOTH_DEVICES: Final[str] = "bluetooth"
+    REMOTE_CONTROL_DEVICES: Final[str] = "remoteControlDevices"
+
+    ALL: Final[str] = "all"
+
+
+class SupportEnum(Enum):
+    """Enum for storing compatibility of devices."""
+
+    PROXIMITY_SENSOR = (
+        ModelEnum.beolab_28,
+        ModelEnum.balance,
+        ModelEnum.level,
+        ModelEnum.theatre,
+    )
+
+    HOME_CONTROL = (ModelEnum.theatre,)
+
+
 DOMAIN: Final[str] = "bangolufsen"
 
 # Default values for configuration.
-DEFAULT_NAME: Final[str] = "Bang & Olufsen device"
 DEFAULT_HOST: Final[str] = "192.168.1.1"
 DEFAULT_DEFAULT_VOLUME: Final[int] = 40
 DEFAULT_MAX_VOLUME: Final[int] = 100
 DEFAULT_VOLUME_STEP: Final[int] = 5
-DEFAULT_MODEL: Final[str] = "Beosound Balance"
+DEFAULT_MODEL: Final[str] = ModelEnum.balance
 
 # Acceptable ranges for configuration.
 DEFAULT_VOLUME_RANGE: Final[range] = range(1, (70 + 1), 1)
@@ -145,26 +219,7 @@ CONF_BEOLINK_JID: Final = "jid"
 
 
 # Models to choose from in manual configuration.
-COMPATIBLE_MODELS: list[str] = [
-    "BeoLab 28",
-    "Beosound Balance",
-    "Beosound Emerge",
-    "Beosound Level",
-    "Beosound Theatre",
-]
-
-
-# Constants for accessing and storing the entities in hass.
-HASS_BINARY_SENSORS: Final = "binary_sensors"
-HASS_CONTROLLER: Final = "controller"
-HASS_COORDINATOR: Final = "coordinator"
-HASS_MEDIA_PLAYER: Final = "media_player"
-HASS_NUMBERS: Final = "numbers"
-HASS_FAVOURITES: Final = "favourites"
-HASS_SENSORS: Final = "sensors"
-HASS_SWITCHES: Final = "switches"
-HASS_TEXT: Final = "text"
-HASS_SELECTS: Final = "selects"
+COMPATIBLE_MODELS: list[str] = [x.value for x in ModelEnum]
 
 
 # Attribute names for zeroconf discovery.
@@ -200,6 +255,8 @@ HIDDEN_SOURCE_IDS: Final[tuple] = (
     "wpl",
     "pl",
     "beolink",
+    "classicsAdapter",
+    "usbIn",
 )
 
 # Fallback sources to use in case of API failure.
@@ -208,14 +265,21 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         Source(
             id="uriStreamer",
             is_enabled=True,
-            is_playable=True,
+            is_playable=False,
             name="Audio Streamer",
             type=SourceTypeEnum("uriStreamer"),
         ),
         Source(
+            id="bluetooth",
+            is_enabled=True,
+            is_playable=False,
+            name="Bluetooth",
+            type=SourceTypeEnum("bluetooth"),
+        ),
+        Source(
             id="spotify",
             is_enabled=True,
-            is_playable=True,
+            is_playable=False,
             name="Spotify Connect",
             type=SourceTypeEnum("spotify"),
         ),
@@ -247,60 +311,29 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             name="Deezer",
             type=SourceTypeEnum("deezer"),
         ),
+        Source(
+            id="tidalConnect",
+            is_enabled=True,
+            is_playable=True,
+            name="Tidal Connect",
+            type=SourceTypeEnum("tidalConnect"),
+        ),
     ]
 )
 
-
-# Product capabilities for creating entities
-SUPPORTS_PROXIMITY_SENSOR: Final[tuple] = (
-    "BeoLab 28",
-    "Beosound Balance",
-    "Beosound Level",
-    "Beosound Theatre",
-)
 
 # Device trigger events
 BANGOLUFSEN_EVENT: Final[str] = f"{DOMAIN}_event"
 BANGOLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
-# Device dispatcher events
-CLEANUP: Final[str] = "CLEANUP"
-
-# Dispatcher events
-class WebSocketNotification(StrEnum):
-    """Enum for WebSocket notification types."""
-
-    ACTIVE_LISTENING_MODE: Final[str] = "active_listening_mode"
-    ALARM_TRIGGERED: Final[str] = "alarm_triggered"
-    BATTERY: Final[str] = "battery"
-    BEOLINK_EXPERIENCES_RESULT: Final[str] = "beolink_experiences_result"
-    BEOLINK_JOIN_RESULT: Final[str] = "beolink_join_result"
-    BEO_REMOTE_BUTTON: Final[str] = "beo_remote_button"
-    BUTTON: Final[str] = "button"
-    CURTAINS: Final[str] = "curtains"
-    NOTIFICATION: Final[str] = "notification"
-    PROXIMITY: Final[str] = "proximity"
-    PLAYBACK_ERROR: Final[str] = "playback_error"
-    PLAYBACK_METADATA: Final[str] = "playback_metadata"
-    PLAYBACK_PROGRESS: Final[str] = "playback_progress"
-    PLAYBACK_SOURCE: Final[str] = "playback_source"
-    PLAYBACK_STATE: Final[str] = "playback_state"
-    POWER_STATE: Final[str] = "power_state"
-    ROLE: Final[str] = "role"
-    SOFTWARE_UPDATE_STATE: Final[str] = "software_update_state"
-    SOUND_SETTINGS: Final[str] = "sound_settings"
-    SOURCE_CHANGE: Final[str] = "source_change"
-    VOLUME: Final[str] = "volume"
-    ALL: Final[str] = "all"
-
-
-WS_REMOTE_CONTROL_AVAILABLE: Final[str] = "WEBSOCKET_REMOTE_CONTROL_CHECK"
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
+START_WEBSOCKET: Final[str] = "START_WEBSOCKET"
+STOP_WEBSOCKET: Final[str] = "STOP_WEBSOCKET"
 BEOLINK_LEADER_COMMAND: Final[str] = "BEOLINK_LEADER_COMMAND"
 BEOLINK_LISTENER_COMMAND: Final[str] = "BEOLINK_LISTENER_COMMAND"
 BEOLINK_VOLUME: Final[str] = "BEOLINK_VOLUME"
-MEDIA_ID: Final[str] = "MEDIA_ID"
+
 
 # Misc.
 NO_METADATA: Final[tuple] = (None, "", 0)
@@ -411,7 +444,7 @@ def generate_favourite_attributes(
 
 
 class BangOlufsenVariables:
-    """Shared variables for entities."""
+    """Shared variables for various classes."""
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the object."""
@@ -424,40 +457,18 @@ class BangOlufsenVariables:
         self._name: str = self.entry.data[CONF_NAME]
         self._unique_id: str = cast(str, self.entry.unique_id)
 
-        self._dispatchers: list = []
-
         self._client: MozartClient = MozartClient(
             host=self._host, websocket_reconnect=True
         )
 
         # Objects that get directly updated by notifications.
-        self._alarm_triggered: AlarmTriggeredInfo = AlarmTriggeredInfo()
+        self._active_listening_mode = ListeningModeProps()
+        self._active_speaker_group = SpeakerGroupOverview(
+            friendly_name="", id="", is_deleteable=False
+        )
         self._battery: BatteryState = BatteryState()
         self._beo_remote_button: BeoRemoteButton = BeoRemoteButton()
-        self._beolink_experiences_result: BeolinkExperiencesResult = (
-            BeolinkExperiencesResult(
-                experiences=[
-                    BeolinkExperience(
-                        category="UNKNOWN",
-                        id="",
-                        linkable=False,
-                        name="",
-                        type="",
-                        unique_source_id="",
-                    )
-                ],
-                request_id="",
-                status="ok",
-            )
-        )
-        self._beolink_join_result: BeolinkJoinResult = BeolinkJoinResult(
-            jid="",
-            request_id="",
-            status="idle",
-            type="join",
-        )
         self._button: ButtonEvent = ButtonEvent()
-        self._curtains: ProductCurtainStatus = ProductCurtainStatus()
         self._notification: WebsocketNotificationTag = WebsocketNotificationTag()
         self._playback_error: PlaybackError = PlaybackError()
         self._playback_metadata: PlaybackContentMetadata = PlaybackContentMetadata()
@@ -465,10 +476,44 @@ class BangOlufsenVariables:
         self._playback_source: Source = Source()
         self._playback_state: RenderingState = RenderingState()
         self._power_state: PowerStateEnum = PowerStateEnum()
-        self._role: SpeakerRoleEnum = SpeakerRoleEnum()
         self._software_update_state: SoftwareUpdateState = SoftwareUpdateState()
         self._sound_settings: SoundSettings = SoundSettings()
         self._source_change: Source = Source()
         self._volume: VolumeState = VolumeState(
             level=VolumeLevel(level=0), muted=VolumeMute(muted=False)
         )
+
+
+class BangOlufsenEntity(Entity, BangOlufsenVariables):
+    """Base Entity for BangOlufsen entities."""
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize the object."""
+        BangOlufsenVariables.__init__(self, entry)
+        self._dispatchers: list = []
+
+        self._attr_should_poll = False
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
+        self._attr_device_class = None
+        self._attr_entity_category = None
+
+    async def async_added_to_hass(self) -> None:
+        """Turn on the dispatchers."""
+        self._dispatchers = [
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        ]
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Turn off the dispatchers."""
+        for dispatcher in self._dispatchers:
+            dispatcher()
+
+    async def _update_connection_state(self, connection_state: bool) -> None:
+        """Update entity connection state."""
+        self._attr_available = connection_state
+
+        self.async_write_ha_state()
