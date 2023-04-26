@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import BANGOLUFSEN_EVENT, DOMAIN, EntityEnum
@@ -149,8 +149,8 @@ async def async_get_triggers(
     triggers = []
 
     # Get the host IP address
-    registry = device_registry.async_get(hass)
-    serial_number = list(registry.devices[device_id].identifiers)[0][1]
+    device_registry = dr.async_get(hass)
+    serial_number = list(device_registry.devices[device_id].identifiers)[0][1]
     media_player: BangOlufsenMediaPlayer = hass.data[DOMAIN][serial_number][
         EntityEnum.MEDIA_PLAYER
     ]
@@ -167,7 +167,6 @@ async def async_get_triggers(
         trigger_types.extend(REMOTE_TRIGGERS)
 
     for trigger_type in trigger_types:
-
         triggers.append(
             {
                 CONF_PLATFORM: "device",

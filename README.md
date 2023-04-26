@@ -13,6 +13,8 @@ This integration uses the [Mozart open API](https://bang-olufsen.github.io/mozar
 Devices that have been tested and _should_ work without any trouble are:
 
 - [Beolab 28](https://www.bang-olufsen.com/en/dk/speakers/beolab-28)
+- [Beosound 2 3rd gen](https://www.bang-olufsen.com/en/dk/speakers/beosound-2)
+- [Beosound A9 5th gen](https://www.bang-olufsen.com/en/dk/speakers/beosound-a9)
 - [Beosound Balance](https://www.bang-olufsen.com/en/dk/speakers/beosound-balance)
 - [Beosound Emerge](https://www.bang-olufsen.com/en/dk/speakers/beosound-emerge)
 - [Beosound Level](https://www.bang-olufsen.com/en/dk/speakers/beosound-level)

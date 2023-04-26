@@ -224,7 +224,6 @@ class BangOlufsenSensorInputSignal(BangOlufsenSensor):
     async def _update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
         """Update Sensor value."""
         if data.encoding:
-
             # Ensure that abbreviated formats are capitialized and non-abbreviated formats are made "human readable"
             encoding = titleize(underscore(data.encoding))
             if data.encoding.capitalize() == encoding:

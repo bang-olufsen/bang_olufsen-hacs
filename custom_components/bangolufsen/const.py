@@ -35,7 +35,7 @@ from homeassistant.components.media_player import MediaPlayerState, MediaType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -119,10 +119,12 @@ class ModelEnum(StrEnum):
     """Enum for compatible model names."""
 
     beolab_28 = "BeoLab 28"
-    balance = "Beosound Balance"
-    emerge = "Beosound Emerge"
-    level = "Beosound Level"
-    theatre = "Beosound Theatre"
+    beosound_2 = "Beosound 2 3rd Gen"
+    beosound_a9 = "Beosound A9 5th Gen"
+    beosound_balance = "Beosound Balance"
+    beosound_emerge = "Beosound Emerge"
+    beosound_level = "Beosound Level"
+    beosound_theatre = "Beosound Theatre"
 
 
 class EntityEnum(StrEnum):
@@ -181,12 +183,13 @@ class SupportEnum(Enum):
 
     PROXIMITY_SENSOR = (
         ModelEnum.beolab_28,
-        ModelEnum.balance,
-        ModelEnum.level,
-        ModelEnum.theatre,
+        ModelEnum.beosound_2,
+        ModelEnum.beosound_balance,
+        ModelEnum.beosound_level,
+        ModelEnum.beosound_theatre,
     )
 
-    HOME_CONTROL = (ModelEnum.theatre,)
+    HOME_CONTROL = (ModelEnum.beosound_theatre,)
 
 
 DOMAIN: Final[str] = "bangolufsen"
@@ -196,7 +199,7 @@ DEFAULT_HOST: Final[str] = "192.168.1.1"
 DEFAULT_DEFAULT_VOLUME: Final[int] = 40
 DEFAULT_MAX_VOLUME: Final[int] = 100
 DEFAULT_VOLUME_STEP: Final[int] = 5
-DEFAULT_MODEL: Final[str] = ModelEnum.balance
+DEFAULT_MODEL: Final[str] = ModelEnum.beosound_balance
 
 # Acceptable ranges for configuration.
 DEFAULT_VOLUME_RANGE: Final[range] = range(1, (70 + 1), 1)
@@ -217,10 +220,8 @@ CONF_VOLUME_STEP: Final = "volume_step"
 CONF_SERIAL_NUMBER: Final = "serial_number"
 CONF_BEOLINK_JID: Final = "jid"
 
-
 # Models to choose from in manual configuration.
 COMPATIBLE_MODELS: list[str] = [x.value for x in ModelEnum]
-
 
 # Attribute names for zeroconf discovery.
 ATTR_TYPE_NUMBER: Final[str] = "tn"
@@ -377,8 +378,8 @@ def get_device(hass: HomeAssistant | None, unique_id: str) -> DeviceEntry | None
     if not isinstance(hass, HomeAssistant):
         return None
 
-    registry = device_registry.async_get(hass)
-    device = cast(DeviceEntry, registry.async_get_device({(DOMAIN, unique_id)}))
+    device_registry = dr.async_get(hass)
+    device = cast(DeviceEntry, device_registry.async_get_device({(DOMAIN, unique_id)}))
     return device
 
 
@@ -390,7 +391,6 @@ def generate_favourite_attributes(
 
     # Ensure that favourites with volume are properly shown.
     for action in favourite.action_list:
-
         if action.type == "volume":
             favourite_attribute["volume"] = action.volume_level
 
@@ -434,7 +434,6 @@ def generate_favourite_attributes(
 
                 # Add queue settings for Deezer queues.
                 if action.queue_settings:
-
                     favourite_attribute["queue_settings"] = {
                         "repeat": action.queue_settings.repeat,
                         "shuffle": action.queue_settings.shuffle,

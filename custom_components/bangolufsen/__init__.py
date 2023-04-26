@@ -187,7 +187,7 @@ async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create the sound mode select entity if supported
     # Currently the Balance does not expose any useful Sound Modes and should be excluded
-    if model != ModelEnum.balance:
+    if model != ModelEnum.beosound_balance:
         listening_modes = client.get_listening_mode_set(async_req=True).get()
         if len(listening_modes) > 0:
             selects.append(BangOlufsenSelectSoundMode(entry))

@@ -239,7 +239,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         """Send notification dispatch."""
 
         if WebSocketNotification.PROXIMITY in notification.value:
-
             async_dispatcher_send(
                 self.hass,
                 f"{self._unique_id}_{WebSocketNotification.PROXIMITY}",

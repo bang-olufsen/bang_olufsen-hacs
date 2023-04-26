@@ -162,7 +162,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(data_schema),
         )
-
+    
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
@@ -189,7 +189,6 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm the configuration of the device."""
         if user_input is not None:
-
             # Make sure that all information is included
             data = user_input
             data[CONF_HOST] = self._host
@@ -236,6 +235,7 @@ class BangOlufsenOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the options flow handler."""
+        self._client: MozartClient = MozartClient(host=config_entry.data[CONF_HOST])
         self._config_entry: ConfigEntry = config_entry
 
     async def async_step_init(self, user_input: UserInput | None = None) -> FlowResult:
@@ -250,8 +250,10 @@ class BangOlufsenOptionsFlowHandler(OptionsFlow):
             # Check connection
             return self.async_create_entry(title=data[CONF_NAME], data=data)
 
-        # Create data schema with the last configuration as default values.
+        # Create data schema with the current volume options, not necessarily the ones set in Home Assistant.
         # Also add the ability to change the friendly name in Home Assistant
+        volume_settings = self._client.get_volume_settings(async_req=True).get()
+
         data_schema = {
             vol.Optional(
                 CONF_NAME, default=self._config_entry.data[CONF_NAME]
@@ -260,8 +262,8 @@ class BangOlufsenOptionsFlowHandler(OptionsFlow):
         data_schema.update(
             _config_schema(
                 volume_step=self._config_entry.data[CONF_VOLUME_STEP],
-                default_volume=self._config_entry.data[CONF_DEFAULT_VOLUME],
-                max_volume=self._config_entry.data[CONF_MAX_VOLUME],
+                default_volume=volume_settings.default.level,
+                max_volume=volume_settings.maximum.level,
             )
         )
 

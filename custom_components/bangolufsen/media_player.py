@@ -765,7 +765,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
         # Try to fix some of the source_change chromecast weirdness.
         if hasattr(self._playback_metadata, "title"):
-
             # source_change is chromecast but line in is selected.
             if self._playback_metadata.title == SourceEnum.lineIn:
                 return SourceEnum.lineIn
@@ -964,7 +963,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         jids = []
         # Get JID for each group member
         for group_member in group_members:
-
             jid = self._get_beolink_jid(group_member)
 
             # Invalid entity
@@ -1029,7 +1027,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         elif media_type == BangOlufsenMediaType.DEEZER:
             try:
                 if media_id == "flow":
-
                     deezer_id = None
 
                     if "id" in kwargs[ATTR_MEDIA_EXTRA]:
@@ -1043,7 +1040,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 else:
                     # Play a Deezer playlist or album.
                     if any(match in media_id for match in ("playlist", "album")):
-
                         start_from = 0
                         if "start_from" in kwargs[ATTR_MEDIA_EXTRA]:
                             start_from = kwargs[ATTR_MEDIA_EXTRA]["start_from"]
@@ -1075,7 +1071,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def async_browse_media(
         self,
-        media_content_type: str | None = None,
+        media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the WebSocket media browsing helper."""
@@ -1157,7 +1153,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         """Send a command to the Beolink leader."""
         for command_list in ACCEPTED_COMMANDS_LISTS:
             if command in command_list:
-
                 # Get the parameter type.
                 parameter_type = command_list[-1]
 
