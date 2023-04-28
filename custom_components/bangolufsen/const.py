@@ -120,6 +120,7 @@ class ModelEnum(StrEnum):
 
     beolab_28 = "BeoLab 28"
     beosound_2 = "Beosound 2 3rd Gen"
+    beosound_a5 = "Beosound A5"
     beosound_a9 = "Beosound A9 5th Gen"
     beosound_balance = "Beosound Balance"
     beosound_emerge = "Beosound Emerge"
