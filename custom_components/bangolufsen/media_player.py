@@ -986,6 +986,10 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     ) -> None:
         """Play from: netradio station id, URI, favourite or Deezer."""
 
+        # Convert audio/mpeg, audio/aac etc. to MediaType.MUSIC
+        if media_type.startswith("audio/"):
+            media_type = MediaType.MUSIC
+
         if media_type not in VALID_MEDIA_TYPES:
             _LOGGER.error(
                 "%s is an invalid type. Valid values are: %s",
@@ -1007,6 +1011,16 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
         if media_type in (MediaType.URL, MediaType.MUSIC):
             self._client.post_uri_source(uri=Uri(location=media_id), async_req=True)
+
+        # The "provider" media_type may not be suitable for overlay all the time.
+        # Use it for now.
+        elif media_type == BangOlufsenMediaType.TTS:
+            self._client.post_overlay_play(
+                overlay_play_request=OverlayPlayRequest(
+                    uri=Uri(location=media_id),
+                ),
+                async_req=True,
+            )
 
         elif media_type == BangOlufsenMediaType.RADIO:
             self._client.run_provided_scene(

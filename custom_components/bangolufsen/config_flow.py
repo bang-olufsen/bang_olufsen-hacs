@@ -162,11 +162,16 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(data_schema),
         )
-    
+
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle discovery using Zeroconf."""
+
+        # Check if the discovered device is a Mozart device
+        if ATTR_FRIENDLY_NAME not in discovery_info.properties:
+            return self.async_abort(reason="Not Mozart device")
+
         self._host = discovery_info.host
         self._model = discovery_info.hostname[:-16].replace("-", " ")
         self._serial_number = discovery_info.properties[ATTR_SERIAL_NUMBER]

@@ -105,6 +105,7 @@ class BangOlufsenMediaType(StrEnum):
     FAVOURITE = "favourite"
     DEEZER = "deezer"
     RADIO = "radio"
+    TTS = "provider"
 
 
 # Proximity detection for binary_sensor
@@ -237,8 +238,10 @@ VALID_MEDIA_TYPES: Final[tuple] = (
     BangOlufsenMediaType.FAVOURITE,
     BangOlufsenMediaType.DEEZER,
     BangOlufsenMediaType.RADIO,
+    BangOlufsenMediaType.TTS,
     MediaType.MUSIC,
     MediaType.URL,
+    MediaType.CHANNEL,
 )
 
 # Playback states for playing and not playing

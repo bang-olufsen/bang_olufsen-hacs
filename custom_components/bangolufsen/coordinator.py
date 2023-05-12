@@ -148,7 +148,8 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
 
     def connect_websocket(self) -> None:
         """Start the notification WebSocket listeners."""
-        self._client.connect_notifications(remote_control=True)
+        if not self._client.websocket_connected:
+            self._client.connect_notifications(remote_control=True)
 
     def disconnect(self) -> None:
         """Terminate the WebSocket connections and remove dispatchers."""
