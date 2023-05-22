@@ -1,8 +1,6 @@
 """Sensor entities for the Bang & Olufsen integration."""
 from __future__ import annotations
 
-import logging
-
 from inflection import titleize, underscore
 from mozart_api.models import BatteryState, PlaybackContentMetadata
 
@@ -17,8 +15,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, BangOlufsenEntity, EntityEnum, WebSocketNotification
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

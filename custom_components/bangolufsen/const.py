@@ -1,5 +1,4 @@
 """Constants for the Bang & Olufsen integration."""
-# pylint: disable=invalid-name too-many-instance-attributes too-few-public-methods
 
 from __future__ import annotations
 
@@ -214,6 +213,8 @@ MAX_RETRY_ERROR: Final[str] = "max_retry_error"
 NEW_CONNECTION_ERROR: Final[str] = "new_connection_error"
 NO_DEVICE: Final[str] = "no_device"
 VALUE_ERROR: Final[str] = "value_error"
+NOT_MOZART_DEVICE: Final[str] = "not_mozart_device"
+
 
 # Configuration.
 CONF_DEFAULT_VOLUME: Final = "default_volume"
@@ -333,8 +334,6 @@ BANGOLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
-START_WEBSOCKET: Final[str] = "START_WEBSOCKET"
-STOP_WEBSOCKET: Final[str] = "STOP_WEBSOCKET"
 BEOLINK_LEADER_COMMAND: Final[str] = "BEOLINK_LEADER_COMMAND"
 BEOLINK_LISTENER_COMMAND: Final[str] = "BEOLINK_LISTENER_COMMAND"
 BEOLINK_VOLUME: Final[str] = "BEOLINK_VOLUME"

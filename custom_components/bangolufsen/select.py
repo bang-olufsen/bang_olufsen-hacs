@@ -1,8 +1,6 @@
 """Select entities for the Bang & Olufsen Mozart integration."""
 from __future__ import annotations
 
-import logging
-
 from mozart_api.models import ListeningModeProps, SpeakerGroupOverview
 
 from homeassistant.components.select import SelectEntity
@@ -13,8 +11,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, BangOlufsenEntity, EntityEnum, WebSocketNotification
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

@@ -1,5 +1,4 @@
 """Text entities for the Bang & Olufsen integration."""
-# pylint: disable=unused-argument
 
 
 from __future__ import annotations
@@ -75,7 +74,7 @@ class BangOlufsenTextFriendlyName(BangOlufsenText):
             async_req=True,
         )
 
-    async def _update_friendly_name(self, data: str | None) -> None:
+    async def _update_friendly_name(self, _: str | None) -> None:
         """Update text value."""
         beolink_self = self._client.get_beolink_self(async_req=True).get()
 

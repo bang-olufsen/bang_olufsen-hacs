@@ -1,5 +1,4 @@
 """Button entities for the Bang & Olufsen integration."""
-# pylint: disable=too-many-ancestors
 
 
 from __future__ import annotations

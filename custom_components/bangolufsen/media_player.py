@@ -78,7 +78,6 @@ from .const import (
     FALLBACK_SOURCES,
     HIDDEN_SOURCE_IDS,
     NO_METADATA,
-    START_WEBSOCKET,
     VALID_MEDIA_TYPES,
     ArtSizeEnum,
     BangOlufsenEntity,
@@ -405,12 +404,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # Set the static entity attributes that needed more information.
         self._attr_source_list = list(self._sources.values())
 
-        # Wait for other entities to be initialized before starting the WebSocket listener
-        await asyncio.sleep(1)
-
-        # Only receive WebSocket notifications when the dispatchers are ready.
-        async_dispatcher_send(self.hass, f"{self.entry.unique_id}_{START_WEBSOCKET}")
-
     async def _update_friendly_name(self, name: str) -> None:
         """Update the device friendly name."""
         self._friendly_name = name
@@ -461,7 +454,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # Combine the source dicts
         self._sources = self._audio_sources | self._video_sources
 
-        # HASS won't be running the first time this method is run
+        # HASS won't be necessarily be running the first time this method is run
         if self.hass.is_running:
             self.async_write_ha_state()
 
@@ -973,10 +966,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             jids.append(jid)
 
         await self.async_beolink_expand(jids)
-
-    async def async_unjoin_player(self) -> None:
-        """Unexpand device from Beolink session."""
-        await self.async_beolink_leave()
 
     async def async_play_media(
         self,

@@ -1,7 +1,6 @@
 """Device triggers for the Bang & Olufsen integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from mozart_api.mozart_client import MozartClient
@@ -23,8 +22,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import BANGOLUFSEN_EVENT, DOMAIN, EntityEnum
 from .media_player import BangOlufsenMediaPlayer
-
-_LOGGER = logging.getLogger(__name__)
 
 BUTTON_TRIGGERS = (
     "Preset1_shortPress",

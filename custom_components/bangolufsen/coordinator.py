@@ -1,9 +1,9 @@
 """Update coordinator and WebSocket listener(s) for the Bang & Olufsen integration."""
-# pylint: disable=unused-argument raise-missing-from
+# pylint: disable=raise-missing-from
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 import logging
 from typing import TypedDict
 
@@ -32,17 +32,13 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     BANGOLUFSEN_EVENT,
     BANGOLUFSEN_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
-    START_WEBSOCKET,
     BangOlufsenVariables,
     WebSocketNotification,
     get_device,
@@ -74,14 +70,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         self._coordinator_data: CoordinatorData = {"favourites": {}}
 
         self._device: DeviceEntry | None = None
-
-        self._dispatchers = [
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{START_WEBSOCKET}",
-                self.connect_websocket,
-            )
-        ]
 
         # WebSocket callbacks
         self._client.get_on_connection(self.on_connection)
@@ -146,10 +134,12 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         ):
             raise UpdateFailed
 
-    def connect_websocket(self) -> None:
+    def connect_websocket(self, _: datetime | None = None) -> None:
         """Start the notification WebSocket listeners."""
-        if not self._client.websocket_connected:
-            self._client.connect_notifications(remote_control=True)
+        if self._client.websocket_connected:
+            return
+
+        self._client.connect_notifications(remote_control=True)
 
     def disconnect(self) -> None:
         """Terminate the WebSocket connections and remove dispatchers."""
@@ -174,8 +164,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         """Handle WebSocket connection lost."""
         _LOGGER.error("Lost connection to the %s", self._name)
         self._update_connection_status()
-
-        # raise UpdateFailed
 
     def on_active_listening_mode(self, notification: ListeningModeProps) -> None:
         """Send active_listening_mode dispatch."""
@@ -335,7 +323,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
             notification,
         )
 
-    def on_software_update_state(self, notification: SoftwareUpdateState) -> None:
+    def on_software_update_state(self, _: SoftwareUpdateState) -> None:
         """Check device sw version."""
 
         # Get software version.

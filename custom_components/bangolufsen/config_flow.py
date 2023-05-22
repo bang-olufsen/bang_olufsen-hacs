@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import ipaddress
-import logging
 from typing import Any, TypedDict, cast
 
 from mozart_api.exceptions import ApiException
@@ -41,9 +40,8 @@ from .const import (
     NEW_CONNECTION_ERROR,
     VALUE_ERROR,
     VOLUME_STEP_RANGE,
+    NOT_MOZART_DEVICE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _config_schema(
@@ -170,7 +168,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if the discovered device is a Mozart device
         if ATTR_FRIENDLY_NAME not in discovery_info.properties:
-            return self.async_abort(reason="Not Mozart device")
+            return self.async_abort(reason=NOT_MOZART_DEVICE)
 
         self._host = discovery_info.host
         self._model = discovery_info.hostname[:-16].replace("-", " ")

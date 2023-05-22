@@ -7,9 +7,14 @@ from mozart_api.mozart_client import MozartClient
 from urllib3.exceptions import MaxRetryError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_NAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 
 from .binary_sensor import (
     BangOlufsenBinarySensor,
@@ -17,7 +22,7 @@ from .binary_sensor import (
     BangOlufsenBinarySensorProximity,
 )
 from .button import BangOlufsenButtonFavourite
-from .const import DOMAIN, STOP_WEBSOCKET, EntityEnum, ModelEnum, SupportEnum
+from .const import DOMAIN, EntityEnum, ModelEnum, SupportEnum
 from .coordinator import BangOlufsenCoordinator
 from .media_player import BangOlufsenMediaPlayer
 from .number import BangOlufsenNumber, BangOlufsenNumberBass, BangOlufsenNumberTreble
@@ -74,9 +79,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # Close WebSocket listener(s) and coordinator
-    async_dispatcher_send(hass, f"{entry.unique_id}_{STOP_WEBSOCKET}")
-
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
@@ -207,5 +209,8 @@ async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         EntityEnum.SELECTS: selects,
         EntityEnum.TEXT: texts,
     }
+
+    # Start the WebSocket listener with a delay to allow for entity and dispatcher listener creation
+    async_call_later(hass, 3.0, coordinator.connect_websocket)
 
     return True
