@@ -362,8 +362,9 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
 
         assert isinstance(self._device, DeviceEntry)
 
-        # Add the device_id to the notification
+        # Add the device_id and serial_number to the notification
         notification["device_id"] = self._device.id
+        notification["serial_number"] = int(self._unique_id)
 
         _LOGGER.debug("%s", notification)
         self.hass.bus.async_fire(BANGOLUFSEN_WEBSOCKET_EVENT, notification)
