@@ -323,7 +323,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
             notification,
         )
 
-    def on_software_update_state(self, _: SoftwareUpdateState) -> None:
+    def on_software_update_state(self, notification: SoftwareUpdateState) -> None:
         """Check device sw version."""
 
         # Get software version.

@@ -1,6 +1,8 @@
 """Select entities for the Bang & Olufsen Mozart integration."""
 from __future__ import annotations
 
+import logging
+
 from mozart_api.models import ListeningModeProps, SpeakerGroupOverview
 
 from homeassistant.components.select import SelectEntity
@@ -11,6 +13,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, BangOlufsenEntity, EntityEnum, WebSocketNotification
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -151,23 +155,26 @@ class BangOlufsenSelectListeningPosition(BangOlufsenSelect):
             ).get()
 
         self._listening_positions = {}
-        index = 0
 
         # Listening positions
         for scene_key in scenes:
             scene = scenes[scene_key]
 
             if scene.tags is not None and "listeningposition" in scene.tags:
-                # Ensure that the label is unique
-                label = f"{scene.label} - {index}"
+                # Ignore listening positions with the same name
+                if scene.label in self._listening_positions:
+                    _LOGGER.warning(
+                        "Ignoring listening position with duplicate name: %s and ID: %s",
+                        scene.label,
+                        scene_key,
+                    )
+                    continue
 
-                self._listening_positions[label] = scene_key
+                self._listening_positions[scene.label] = scene_key
 
                 # Currently guess the current active listening position by the speakergroup ID
                 if active_speaker_group.id == scene.action_list[0].speaker_group_id:
-                    self._attr_current_option = label
-
-                index += 1
+                    self._attr_current_option = scene.label
 
         self._attr_options = list(self._listening_positions.keys())
 
