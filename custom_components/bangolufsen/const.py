@@ -337,13 +337,19 @@ CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
 BEOLINK_LEADER_COMMAND: Final[str] = "BEOLINK_LEADER_COMMAND"
 BEOLINK_LISTENER_COMMAND: Final[str] = "BEOLINK_LISTENER_COMMAND"
 BEOLINK_VOLUME: Final[str] = "BEOLINK_VOLUME"
+BEOLINK_RELATIVE_VOLUME: Final[str] = "BEOLINK_RELATIVE_VOLUME"
 
 
 # Misc.
 NO_METADATA: Final[tuple] = (None, "", 0)
 
 # Valid commands and their expected parameter type for beolink_command service
-FLOAT_PARAMETERS: Final[tuple] = ("set_volume_level", "media_seek", float)
+FLOAT_PARAMETERS: Final[tuple] = (
+    "set_volume_level",
+    "media_seek",
+    "set_relative_volume_level",
+    float,
+)
 BOOL_PARAMETERS: Final[tuple] = ("mute_volume", bool)
 STR_PARAMETERS: Final[tuple] = ("select_source", str)
 NONE_PARAMETERS: Final[tuple] = (

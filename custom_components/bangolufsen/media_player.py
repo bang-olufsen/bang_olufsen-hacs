@@ -79,6 +79,7 @@ from .const import (
     HIDDEN_SOURCE_IDS,
     NO_METADATA,
     VALID_MEDIA_TYPES,
+    BEOLINK_RELATIVE_VOLUME,
     ArtSizeEnum,
     BangOlufsenEntity,
     BangOlufsenMediaType,
@@ -188,6 +189,12 @@ async def async_setup_entry(
         name="beolink_set_volume",
         schema={vol.Required("volume_level"): cv.string},
         func="async_beolink_set_volume",
+    )
+
+    platform.async_register_entity_service(
+        name="beolink_set_relative_volume",
+        schema={vol.Required("volume_level"): cv.string},
+        func="async_beolink_set_relative_volume",
     )
 
     platform.async_register_entity_service(
@@ -334,6 +341,11 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                     f"{self._beolink_jid}_{BEOLINK_VOLUME}",
                     self.async_beolink_set_volume,
                 ),
+                async_dispatcher_connect(
+                    self.hass,
+                    f"{self._beolink_jid}_{BEOLINK_RELATIVE_VOLUME}",
+                    self.async_beolink_set_relative_volume,
+                ),
             ]
         )
 
@@ -454,7 +466,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # Combine the source dicts
         self._sources = self._audio_sources | self._video_sources
 
-        # HASS won't be necessarily be running the first time this method is run
+        # HASS won't necessarily be running the first time this method is run
         if self.hass.is_running:
             self.async_write_ha_state()
 
@@ -1209,6 +1221,32 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                     self.hass,
                     f"{beolink_listener.jid}_{BEOLINK_LISTENER_COMMAND}",
                     "set_volume_level",
+                    volume_level,
+                )
+
+    async def async_set_relative_volume_level(self, volume: float) -> None:
+        """Set a volume level relative to the current level."""
+        await self.async_set_volume_level(volume=self.volume_level + volume)
+
+    async def async_beolink_set_relative_volume(self, volume_level: str) -> None:
+        """Set a volume level to adjust current volume level for all connected Beolink devices."""
+
+        # Get the remote leader to send the volume command to listeners
+        if self._remote_leader is not None:
+            async_dispatcher_send(
+                self.hass,
+                f"{self._remote_leader.jid}_{BEOLINK_RELATIVE_VOLUME}",
+                volume_level,
+            )
+
+        else:
+            await self.async_set_relative_volume_level(volume=float(volume_level))
+
+            for beolink_listener in self._beolink_listeners:
+                async_dispatcher_send(
+                    self.hass,
+                    f"{beolink_listener.jid}_{BEOLINK_LISTENER_COMMAND}",
+                    "set_relative_volume_level",
                     volume_level,
                 )
 

@@ -7,12 +7,7 @@ from mozart_api.mozart_client import MozartClient
 from urllib3.exceptions import MaxRetryError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MODEL,
-    CONF_NAME,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_call_later
 

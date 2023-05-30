@@ -98,6 +98,24 @@ beolink_set_volume:
       selector:
         text:
 
+beolink_set_relative_volume:
+  name: Beolink set relative volume
+  description: Set a volume level relative to the current level of all connected Beolink devices.
+  target:
+    entity:
+      integration: bangolufsen
+      domain: media_player
+    device:
+      integration: bangolufsen
+  fields:
+    volume_level:
+      name: Volume level
+      description: Specify the volume level.
+      required: true
+      example: 0.2
+      selector:
+        text:
+
 beolink_leader_command:
   name: Beolink leader command
   description: Send a media_player command to Beolink leader.
@@ -116,19 +134,20 @@ beolink_leader_command:
       selector:
         select:
           options:
-            - "set_volume_level"
+            - "media_next_track"
+            - "media_pause"
+            - "media_play_pause"
+            - "media_play"
+            - "media_previous_track"
             - "media_seek"
+            - "media_stop"
             - "mute_volume"
             - "select_source"
-            - "volume_up"
-            - "volume_down"
-            - "media_play_pause"
-            - "media_pause"
-            - "media_play"
-            - "media_stop"
-            - "media_next_track"
-            - "media_previous_track"
+            - "set_relative_volume_level"
+            - "set_volume_level"
             - "toggle"
+            - "volume_down"
+            - "volume_up"
     parameter:
       name: Parameter
       description: Specify the media_player command's parameter.
