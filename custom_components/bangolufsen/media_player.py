@@ -69,6 +69,7 @@ from .const import (
     ACCEPTED_COMMANDS_LISTS,
     BEOLINK_LEADER_COMMAND,
     BEOLINK_LISTENER_COMMAND,
+    BEOLINK_RELATIVE_VOLUME,
     BEOLINK_VOLUME,
     CONF_BEOLINK_JID,
     CONF_DEFAULT_VOLUME,
@@ -79,7 +80,6 @@ from .const import (
     HIDDEN_SOURCE_IDS,
     NO_METADATA,
     VALID_MEDIA_TYPES,
-    BEOLINK_RELATIVE_VOLUME,
     ArtSizeEnum,
     BangOlufsenEntity,
     BangOlufsenMediaType,
@@ -809,7 +809,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             identifiers={(DOMAIN, self._unique_id)},
             manufacturer="Bang & Olufsen",
             model=self._model,
-            name=self.name,
+            name=cast(str, self.name),
             sw_version=self._software_status.software_version,
         )
 
@@ -1052,34 +1052,33 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                         user_flow=UserFlow(user_id=deezer_id), async_req=True
                     )
 
+                # Play a Deezer playlist or album.
+                elif any(match in media_id for match in ("playlist", "album")):
+                    start_from = 0
+                    if "start_from" in kwargs[ATTR_MEDIA_EXTRA]:
+                        start_from = kwargs[ATTR_MEDIA_EXTRA]["start_from"]
+
+                    self._client.add_to_queue(
+                        play_queue_item=PlayQueueItem(
+                            provider=PlayQueueItemType(value="deezer"),
+                            start_now_from_position=start_from,
+                            type="playlist",
+                            uri=media_id,
+                        ),
+                        async_req=True,
+                    )
+
+                # Play a Deezer track.
                 else:
-                    # Play a Deezer playlist or album.
-                    if any(match in media_id for match in ("playlist", "album")):
-                        start_from = 0
-                        if "start_from" in kwargs[ATTR_MEDIA_EXTRA]:
-                            start_from = kwargs[ATTR_MEDIA_EXTRA]["start_from"]
-
-                        self._client.add_to_queue(
-                            play_queue_item=PlayQueueItem(
-                                provider=PlayQueueItemType(value="deezer"),
-                                start_now_from_position=start_from,
-                                type="playlist",
-                                uri=media_id,
-                            ),
-                            async_req=True,
-                        )
-
-                    # Play a Deezer track.
-                    else:
-                        self._client.add_to_queue(
-                            play_queue_item=PlayQueueItem(
-                                provider=PlayQueueItemType(value="deezer"),
-                                start_now_from_position=0,
-                                type="track",
-                                uri=media_id,
-                            ),
-                            async_req=True,
-                        )
+                    self._client.add_to_queue(
+                        play_queue_item=PlayQueueItem(
+                            provider=PlayQueueItemType(value="deezer"),
+                            start_now_from_position=0,
+                            type="track",
+                            uri=media_id,
+                        ),
+                        async_req=True,
+                    )
 
             except ApiException as error:
                 _LOGGER.error(json.loads(error.body)["message"])
@@ -1193,14 +1192,11 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                     )
 
                 # Run the command if leader.
-                else:
-                    if parameter is not None:
-                        await getattr(self, f"async_{command}")(
-                            parameter_type(parameter)
-                        )
+                elif parameter is not None:
+                    await getattr(self, f"async_{command}")(parameter_type(parameter))
 
-                    elif parameter_type is None:
-                        await getattr(self, f"async_{command}")()
+                elif parameter_type is None:
+                    await getattr(self, f"async_{command}")()
 
     async def async_beolink_set_volume(self, volume_level: str) -> None:
         """Set volume level for all connected Beolink devices."""
@@ -1226,7 +1222,16 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def async_set_relative_volume_level(self, volume: float) -> None:
         """Set a volume level relative to the current level."""
-        await self.async_set_volume_level(volume=self.volume_level + volume)
+
+        # Ensure that volume level behaves as expected
+        if self.volume_level + volume >= 1.0:
+            new_volume = 1.0
+        elif self.volume_level + volume <= 0:
+            new_volume = 0
+        else:
+            new_volume = self.volume_level + volume
+
+        await self.async_set_volume_level(volume=new_volume)
 
     async def async_beolink_set_relative_volume(self, volume_level: str) -> None:
         """Set a volume level to adjust current volume level for all connected Beolink devices."""

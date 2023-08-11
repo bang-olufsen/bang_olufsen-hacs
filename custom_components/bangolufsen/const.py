@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Final, cast
 
 from mozart_api.models import (
@@ -29,7 +29,6 @@ from mozart_api.models import (
 )
 from mozart_api.mozart_client import MozartClient
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -51,15 +50,15 @@ class ArtSizeEnum(Enum):
 class SourceEnum(StrEnum):
     """Enum used for associating device source ids with friendly names. May not include all sources."""
 
-    uriStreamer = "Audio Streamer"
+    uriStreamer = "Audio Streamer"  # noqa: N815
     bluetooth = "Bluetooth"
-    airPlay = "AirPlay"
-    chromeCast = "Chromecast built-in"
+    airPlay = "AirPlay"  # noqa: N815
+    chromeCast = "Chromecast built-in"  # noqa: N815
     spotify = "Spotify Connect"
     generator = "Tone Generator"
-    lineIn = "Line-In"
+    lineIn = "Line-In"  # noqa: N815
     spdif = "Optical"
-    netRadio = "B&O Radio"
+    netRadio = "B&O Radio"  # noqa: N815
     local = "Local"
     dlna = "DLNA"
     qplay = "QPlay"
@@ -68,7 +67,7 @@ class SourceEnum(StrEnum):
     tv = "TV"
     deezer = "Deezer"
     beolink = "Networklink"
-    tidalConnect = "Tidal Connect"
+    tidalConnect = "Tidal Connect"  # noqa: N815
 
 
 class RepeatEnum(StrEnum):
@@ -94,7 +93,7 @@ class StateEnum(StrEnum):
     unknown = MediaPlayerState.IDLE
 
     # Power states
-    networkStandby = MediaPlayerState.IDLE
+    networkStandby = MediaPlayerState.IDLE  # noqa: N815
 
 
 # Media types for play_media
@@ -111,8 +110,8 @@ class BangOlufsenMediaType(StrEnum):
 class ProximityEnum(Enum):
     """Proximity detection mapping.."""
 
-    proximityPresenceDetected = True
-    proximityPresenceNotDetected = False
+    proximityPresenceDetected = True  # noqa: N815
+    proximityPresenceNotDetected = False  # noqa: N815
 
 
 class ModelEnum(StrEnum):
