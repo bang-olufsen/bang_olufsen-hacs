@@ -48,11 +48,10 @@ class BangOlufsenTextFriendlyName(BangOlufsenText):
         """Init the friendly name Text."""
         super().__init__(entry)
 
-        self._attr_name = f"{self._name} Friendly name"
-        self._attr_unique_id = f"{self._unique_id}-friendly-name"
         self._attr_icon = "mdi:id-card"
-
         self._attr_native_value = friendly_name
+        self._attr_translation_key = "friendly_name"
+        self._attr_unique_id = f"{self._unique_id}-friendly-name"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -90,11 +89,11 @@ class BangOlufsenTextHomeControlUri(BangOlufsenText):
         """Init the Home Control URI Text."""
         super().__init__(entry)
 
-        self._attr_name = f"{self._name} Home Control URI"
-        self._attr_unique_id = f"{self._unique_id}-home-control-uri"
+        self._attr_entity_registry_enabled_default = False
         self._attr_icon = "mdi:link-variant"
         self._attr_native_value = home_control_uri
-        self._attr_entity_registry_enabled_default = False
+        self._attr_translation_key = "home_control_uri"
+        self._attr_unique_id = f"{self._unique_id}-home-control-uri"
 
     async def async_set_value(self, value: str) -> None:
         """Set the Home Control URI name."""

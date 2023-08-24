@@ -50,8 +50,9 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
 
         self._favourite_id: int = int(favourite.name[6:])
         self._favourite: Preset = favourite
-        self._attr_name = f"{self._name} Favourite {self._favourite_id}"
 
+        self._attr_has_entity_name = True
+        self._attr_name = f"Favourite {self._favourite_id}"
         self._attr_unique_id = f"{self._unique_id}-favourite-{self._favourite_id}"
 
         if self._favourite_id in range(10):

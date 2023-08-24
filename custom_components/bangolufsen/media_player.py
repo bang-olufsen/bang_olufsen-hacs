@@ -233,14 +233,14 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         MediaPlayerEntity.__init__(self)
         BangOlufsenEntity.__init__(self, entry)
 
-        # Static entity attributes
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
-        self._attr_name = self._name
+        self._attr_group_members = []
+        self._attr_has_entity_name = False
         self._attr_icon = "mdi:speaker-wireless"
+        self._attr_name = self._name
+        self._attr_should_poll = True
         self._attr_supported_features = BANGOLUFSEN_FEATURES
         self._attr_unique_id = self._unique_id
-        self._attr_group_members = []
-        self._attr_should_poll = True
 
         self._beolink_jid: str = self.entry.data[CONF_BEOLINK_JID]
         self._max_volume: int = self.entry.data[CONF_MAX_VOLUME]
@@ -563,10 +563,15 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
         # If the device is a listener.
         if self._remote_leader is not None:
+            # Add leader
             group_members.append(
                 cast(str, self._get_entity_id_from_jid(self._remote_leader.jid))
             )
 
+            # Add self
+            group_members.append(
+                cast(str, self._get_entity_id_from_jid(self._beolink_jid))
+            )
             self._beolink_attribute["beolink"]["leader"] = {
                 self._remote_leader.friendly_name: self._remote_leader.jid,
             }
@@ -577,12 +582,13 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 async_req=True
             ).get()
 
-            group_members.append(
-                cast(str, self._get_entity_id_from_jid(self._beolink_jid))
-            )
-
             # Check if the device is a leader.
             if len(self._beolink_listeners) > 0:
+                # Add self
+                group_members.append(
+                    cast(str, self._get_entity_id_from_jid(self._beolink_jid))
+                )
+
                 # Get the friendly names from listeners from the peers
                 beolink_listeners = {}
                 for beolink_listener in self._beolink_listeners:
@@ -978,6 +984,10 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             jids.append(jid)
 
         await self.async_beolink_expand(jids)
+
+    async def async_unjoin_player(self) -> None:
+        """Unjoin Beolink session. End session if leader."""
+        self._client.post_beolink_leave(async_req=True)
 
     async def async_play_media(
         self,

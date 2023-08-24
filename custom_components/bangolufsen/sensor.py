@@ -49,11 +49,11 @@ class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
         """Init the battery level Sensor."""
         super().__init__(entry)
 
-        self._attr_name = f"{self._name} Battery level"
-        self._attr_unique_id = f"{self._unique_id}-battery-level"
         self._attr_device_class = SensorDeviceClass.BATTERY
-        self._attr_native_unit_of_measurement = "%"
         self._attr_icon = "mdi:battery"
+        self._attr_native_unit_of_measurement = "%"
+        self._attr_translation_key = "battery_level"
+        self._attr_unique_id = f"{self._unique_id}-battery-level"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -80,12 +80,12 @@ class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
         """Init the battery charging time Sensor."""
         super().__init__(entry)
 
-        self._attr_name = f"{self._name} Battery charging time"
-        self._attr_unique_id = f"{self._unique_id}-battery-charging-time"
         self._attr_device_class = SensorDeviceClass.DURATION
-        self._attr_native_unit_of_measurement = "min"
-        self._attr_icon = "mdi:battery-arrow-up"
         self._attr_entity_registry_enabled_default = False
+        self._attr_icon = "mdi:battery-arrow-up"
+        self._attr_native_unit_of_measurement = "min"
+        self._attr_translation_key = "battery_charging_time"
+        self._attr_unique_id = f"{self._unique_id}-battery-charging-time"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -123,11 +123,11 @@ class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
         """Init the battery playing time Sensor."""
         super().__init__(entry)
 
-        self._attr_name = f"{self._name} Battery playing time"
-        self._attr_unique_id = f"{self._unique_id}-battery-playing-time"
-        self._attr_native_unit_of_measurement = "min"
-        self._attr_icon = "mdi:battery-arrow-down"
         self._attr_entity_registry_enabled_default = False
+        self._attr_icon = "mdi:battery-arrow-down"
+        self._attr_native_unit_of_measurement = "min"
+        self._attr_translation_key = "battery_playing_time"
+        self._attr_unique_id = f"{self._unique_id}-battery-playing-time"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -164,14 +164,13 @@ class BangOlufsenSensorMediaId(BangOlufsenSensor):
         """Init the media id Sensor."""
         super().__init__(entry)
 
-        self._attr_name = f"{self._name} Media Id"
-        self._attr_unique_id = f"{self._unique_id}-media-id"
-        self._attr_icon = "mdi:information"
         self._attr_device_class = None
-        self._attr_state_class = None
         self._attr_entity_registry_enabled_default = False
-
+        self._attr_icon = "mdi:information"
         self._attr_native_value = None
+        self._attr_state_class = None
+        self._attr_translation_key = "media_id"
+        self._attr_unique_id = f"{self._unique_id}-media-id"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -198,12 +197,12 @@ class BangOlufsenSensorInputSignal(BangOlufsenSensor):
         """Init the input signal Sensor."""
         super().__init__(entry)
 
-        self._attr_name = f"{self._name} Input signal"
-        self._attr_unique_id = f"{self._unique_id}-input-signal"
         self._attr_device_class = None
-        self._attr_state_class = None
-        self._attr_icon = "mdi:audio-input-stereo-minijack"
         self._attr_entity_registry_enabled_default = False
+        self._attr_icon = "mdi:audio-input-stereo-minijack"
+        self._attr_state_class = None
+        self._attr_translation_key = "input_signal"
+        self._attr_unique_id = f"{self._unique_id}-input-signal"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""

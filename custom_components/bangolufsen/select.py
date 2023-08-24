@@ -39,9 +39,9 @@ class BangOlufsenSelect(BangOlufsenEntity, SelectEntity):
         """Init the Select."""
         super().__init__(entry)
 
-        self._attr_options = []
         self._attr_current_option = None
         self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_options = []
 
 
 class BangOlufsenSelectSoundMode(BangOlufsenSelect):
@@ -51,9 +51,9 @@ class BangOlufsenSelectSoundMode(BangOlufsenSelect):
         """Init the sound mode select."""
         super().__init__(entry)
 
-        self._attr_name = f"{self._name} Sound mode"
-        self._attr_unique_id = f"{self._unique_id}-sound-mode"
         self._attr_icon = "mdi:sine-wave"
+        self._attr_translation_key = "sound_mode"
+        self._attr_unique_id = f"{self._unique_id}-sound-mode"
 
         self._sound_modes: dict[str, int] = {}
 
@@ -109,9 +109,9 @@ class BangOlufsenSelectListeningPosition(BangOlufsenSelect):
         """Init the listening position select."""
         super().__init__(entry)
 
-        self._attr_name = f"{self._name} Listening position"
-        self._attr_unique_id = f"{self._unique_id}-listening-position"
         self._attr_icon = "mdi:sine-wave"
+        self._attr_translation_key = "listening_position"
+        self._attr_unique_id = f"{self._unique_id}-listening-position"
 
         self._listening_positions: dict[str, str] = {}
         self._scenes: dict[str, str] = {}

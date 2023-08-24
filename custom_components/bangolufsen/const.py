@@ -499,10 +499,11 @@ class BangOlufsenEntity(Entity, BangOlufsenVariables):
         BangOlufsenVariables.__init__(self, entry)
         self._dispatchers: list = []
 
-        self._attr_should_poll = False
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
         self._attr_device_class = None
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
         self._attr_entity_category = None
+        self._attr_has_entity_name = True
+        self._attr_should_poll = False
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""

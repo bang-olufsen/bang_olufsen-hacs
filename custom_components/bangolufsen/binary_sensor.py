@@ -48,10 +48,10 @@ class BangOlufsenBinarySensorBatteryCharging(BangOlufsenBinarySensor):
         """Init the battery charging Binary Sensor."""
         super().__init__(entry)
 
-        self._attr_name = f"{self._name} Battery charging"
-        self._attr_unique_id = f"{self._unique_id}-battery-charging"
-        self._attr_icon = "mdi:battery-charging"
         self._attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
+        self._attr_icon = "mdi:battery-charging"
+        self._attr_translation_key = "battery_charging"
+        self._attr_unique_id = f"{self._unique_id}-battery-charging"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -77,9 +77,9 @@ class BangOlufsenBinarySensorProximity(BangOlufsenBinarySensor):
         """Init the proximity Binary Sensor."""
         super().__init__(entry)
 
-        self._attr_name = f"{self._name} proximity"
-        self._attr_unique_id = f"{self._unique_id}-proximity"
         self._attr_icon = "mdi:account-question"
+        self._attr_translation_key = "proximity"
+        self._attr_unique_id = f"{self._unique_id}-proximity"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""

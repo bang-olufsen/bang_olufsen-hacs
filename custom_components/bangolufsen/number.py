@@ -35,9 +35,9 @@ class BangOlufsenNumber(BangOlufsenEntity, NumberEntity):
         """Init the Number."""
         super().__init__(entry)
 
+        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_mode = NumberMode.AUTO
         self._attr_native_value = 0.0
-        self._attr_entity_category = EntityCategory.CONFIG
 
 
 class BangOlufsenNumberTreble(BangOlufsenNumber):
@@ -48,12 +48,13 @@ class BangOlufsenNumberTreble(BangOlufsenNumber):
         super().__init__(entry)
 
         number_range: range = range(-6, 6, 1)
-        self._attr_native_min_value = float(number_range.start)
-        self._attr_native_max_value = float(number_range.stop)
-        self._attr_name = f"{self._name} Treble"
-        self._attr_unique_id = f"{self._unique_id}-treble"
+
         self._attr_icon = "mdi:equalizer"
         self._attr_mode = NumberMode.SLIDER
+        self._attr_native_max_value = float(number_range.stop)
+        self._attr_native_min_value = float(number_range.start)
+        self._attr_translation_key = "treble"
+        self._attr_unique_id = f"{self._unique_id}-treble"
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the treble value."""
@@ -87,12 +88,13 @@ class BangOlufsenNumberBass(BangOlufsenNumber):
         super().__init__(entry)
 
         number_range: range = range(-6, 6, 1)
-        self._attr_native_min_value = float(number_range.start)
-        self._attr_native_max_value = float(number_range.stop)
-        self._attr_name = f"{self._name} Bass"
-        self._attr_unique_id = f"{self._unique_id}-bass"
+
         self._attr_icon = "mdi:equalizer"
         self._attr_mode = NumberMode.SLIDER
+        self._attr_native_max_value = float(number_range.stop)
+        self._attr_native_min_value = float(number_range.start)
+        self._attr_translation_key = "bass"
+        self._attr_unique_id = f"{self._unique_id}-bass"
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the bass value."""

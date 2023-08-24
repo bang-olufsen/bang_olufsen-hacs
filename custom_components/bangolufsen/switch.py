@@ -48,9 +48,9 @@ class BangOlufsenSwitchLoudness(BangOlufsenSwitch):
         """Init the loudness Switch."""
         super().__init__(entry)
 
-        self._attr_name = f"{self._name} Loudness"
-        self._attr_unique_id = f"{self._unique_id}-loudness"
         self._attr_icon = "mdi:music-note-plus"
+        self._attr_translation_key = "loudness"
+        self._attr_unique_id = f"{self._unique_id}-loudness"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Activate the option."""
