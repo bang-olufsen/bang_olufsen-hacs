@@ -6,6 +6,7 @@ import logging
 from mozart_api.mozart_client import MozartClient
 from urllib3.exceptions import MaxRetryError
 
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
@@ -51,11 +52,13 @@ PLATFORMS = [
     Platform.TEXT,
     Platform.SELECT,
 ]
+
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+
     hass.data.setdefault(DOMAIN, {})
 
     # Check if there are available options.
@@ -64,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # If connection can't be made abort.
     if not await init_entities(hass, entry):
-        return False
+        raise ConfigEntryNotReady(f"Unable to connect to {entry.data[CONF_NAME]}")
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -89,7 +92,9 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Initialise the supported entities of the device."""
-    client = MozartClient(host=entry.data[CONF_HOST])
+    client = MozartClient(
+        host=entry.data[CONF_HOST], urllib3_logging_level=logging.ERROR
+    )
     supports_battery = False
     model = entry.data[CONF_MODEL]
 
@@ -99,7 +104,6 @@ async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async_req=True, _request_timeout=3
         ).get()
     except MaxRetryError:
-        _LOGGER.error("Unable to connect to %s", entry.data[CONF_NAME])
         return False
 
     # Get whether or not the device has a battery.
