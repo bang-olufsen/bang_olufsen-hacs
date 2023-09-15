@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, BangOlufsenEntity, EntityEnum, WebSocketNotification
+from .const import DOMAIN, ENTITY_ENUM, WEBSOCKET_NOTIFICATION
+from .entity import BangOlufsenEntity
 
 
 async def async_setup_entry(
@@ -24,7 +25,7 @@ async def async_setup_entry(
     entities = []
 
     # Add switch entities.
-    for switch in hass.data[DOMAIN][config_entry.unique_id][EntityEnum.SWITCHES]:
+    for switch in hass.data[DOMAIN][config_entry.unique_id][ENTITY_ENUM.SWITCHES]:
         entities.append(switch)
 
     async_add_entities(new_entities=entities)
@@ -36,7 +37,6 @@ class BangOlufsenSwitch(BangOlufsenEntity, SwitchEntity):
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the Switch."""
         super().__init__(entry)
-
         self._attr_device_class = SwitchDeviceClass.SWITCH
         self._attr_entity_category = EntityCategory.CONFIG
 
@@ -44,12 +44,13 @@ class BangOlufsenSwitch(BangOlufsenEntity, SwitchEntity):
 class BangOlufsenSwitchLoudness(BangOlufsenSwitch):
     """Loudness Switch."""
 
+    _attr_icon = "mdi:music-note-plus"
+    _attr_translation_key = "loudness"
+
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the loudness Switch."""
         super().__init__(entry)
 
-        self._attr_icon = "mdi:music-note-plus"
-        self._attr_translation_key = "loudness"
         self._attr_unique_id = f"{self._unique_id}-loudness"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -73,12 +74,13 @@ class BangOlufsenSwitchLoudness(BangOlufsenSwitch):
         self._dispatchers.append(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebSocketNotification.SOUND_SETTINGS}",
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOUND_SETTINGS}",
                 self._update_sound_settings,
             )
         )
 
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""
-        self._attr_is_on = data.adjustments.loudness
-        self.async_write_ha_state()
+        if data.adjustments and data.adjustments.loudness:
+            self._attr_is_on = data.adjustments.loudness
+            self.async_write_ha_state()

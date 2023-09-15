@@ -1,6 +1,8 @@
 """Sensor entities for the Bang & Olufsen integration."""
 from __future__ import annotations
 
+from typing import cast
+
 from inflection import titleize, underscore
 from mozart_api.models import BatteryState, PlaybackContentMetadata
 
@@ -14,7 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, BangOlufsenEntity, EntityEnum, WebSocketNotification
+from .const import DOMAIN, ENTITY_ENUM, WEBSOCKET_NOTIFICATION
+from .entity import BangOlufsenEntity
 
 
 async def async_setup_entry(
@@ -26,7 +29,7 @@ async def async_setup_entry(
     entities = []
 
     # Add Sensor entities.
-    for sensor in hass.data[DOMAIN][config_entry.unique_id][EntityEnum.SENSORS]:
+    for sensor in hass.data[DOMAIN][config_entry.unique_id][ENTITY_ENUM.SENSORS]:
         entities.append(sensor)
 
     async_add_entities(new_entities=entities)
@@ -45,14 +48,15 @@ class BangOlufsenSensor(BangOlufsenEntity, SensorEntity):
 class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
     """Battery level Sensor."""
 
+    _attr_icon = "mdi:battery"
+    _attr_native_unit_of_measurement = "%"
+    _attr_translation_key = "battery_level"
+
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the battery level Sensor."""
         super().__init__(entry)
 
         self._attr_device_class = SensorDeviceClass.BATTERY
-        self._attr_icon = "mdi:battery"
-        self._attr_native_unit_of_measurement = "%"
-        self._attr_translation_key = "battery_level"
         self._attr_unique_id = f"{self._unique_id}-battery-level"
 
     async def async_added_to_hass(self) -> None:
@@ -62,7 +66,7 @@ class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
         self._dispatchers.append(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebSocketNotification.BATTERY}",
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BATTERY}",
                 self._update_battery,
             )
         )
@@ -76,15 +80,16 @@ class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
 class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
     """Battery charging time Sensor."""
 
+    _attr_entity_registry_enabled_default = False
+    _attr_icon = "mdi:battery-arrow-up"
+    _attr_native_unit_of_measurement = "min"
+    _attr_translation_key = "battery_charging_time"
+
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the battery charging time Sensor."""
         super().__init__(entry)
 
         self._attr_device_class = SensorDeviceClass.DURATION
-        self._attr_entity_registry_enabled_default = False
-        self._attr_icon = "mdi:battery-arrow-up"
-        self._attr_native_unit_of_measurement = "min"
-        self._attr_translation_key = "battery_charging_time"
         self._attr_unique_id = f"{self._unique_id}-battery-charging-time"
 
     async def async_added_to_hass(self) -> None:
@@ -94,7 +99,7 @@ class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
         self._dispatchers.append(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebSocketNotification.BATTERY}",
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BATTERY}",
                 self._update_battery,
             )
         )
@@ -119,14 +124,15 @@ class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
 class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
     """Battery playing time Sensor."""
 
+    _attr_entity_registry_enabled_default = False
+    _attr_icon = "mdi:battery-arrow-down"
+    _attr_native_unit_of_measurement = "min"
+    _attr_translation_key = "battery_playing_time"
+
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the battery playing time Sensor."""
         super().__init__(entry)
 
-        self._attr_entity_registry_enabled_default = False
-        self._attr_icon = "mdi:battery-arrow-down"
-        self._attr_native_unit_of_measurement = "min"
-        self._attr_translation_key = "battery_playing_time"
         self._attr_unique_id = f"{self._unique_id}-battery-playing-time"
 
     async def async_added_to_hass(self) -> None:
@@ -136,16 +142,16 @@ class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
         self._dispatchers.append(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebSocketNotification.BATTERY}",
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BATTERY}",
                 self._update_battery,
             )
         )
 
-    async def _update_battery(self, data: PlaybackContentMetadata) -> None:
+    async def _update_battery(self, data: BatteryState) -> None:
         """Update sensor value."""
         self._attr_available = True
 
-        playing_time = data.remaining_playing_time_minutes
+        playing_time = cast(int, data.remaining_playing_time_minutes)
 
         # The playing time is 65535 if the device is charging
         if playing_time == 65535:
@@ -160,16 +166,17 @@ class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
 class BangOlufsenSensorMediaId(BangOlufsenSensor):
     """Media id Sensor."""
 
+    _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "media_id"
+    _attr_icon = "mdi:information"
+
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the media id Sensor."""
         super().__init__(entry)
 
         self._attr_device_class = None
-        self._attr_entity_registry_enabled_default = False
-        self._attr_icon = "mdi:information"
-        self._attr_native_value = None
         self._attr_state_class = None
-        self._attr_translation_key = "media_id"
+        self._attr_native_value = None
         self._attr_unique_id = f"{self._unique_id}-media-id"
 
     async def async_added_to_hass(self) -> None:
@@ -179,7 +186,7 @@ class BangOlufsenSensorMediaId(BangOlufsenSensor):
         self._dispatchers.append(
             async_dispatcher_connect(
                 self.hass,
-                f"{self.entry.unique_id}_{WebSocketNotification.PLAYBACK_METADATA}",
+                f"{self.entry.unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_METADATA}",
                 self._update_playback_metadata,
             ),
         )
@@ -193,15 +200,16 @@ class BangOlufsenSensorMediaId(BangOlufsenSensor):
 class BangOlufsenSensorInputSignal(BangOlufsenSensor):
     """Input signal Sensor."""
 
+    _attr_entity_registry_enabled_default = False
+    _attr_icon = "mdi:audio-input-stereo-minijack"
+    _attr_translation_key = "input_signal"
+
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the input signal Sensor."""
         super().__init__(entry)
 
         self._attr_device_class = None
-        self._attr_entity_registry_enabled_default = False
-        self._attr_icon = "mdi:audio-input-stereo-minijack"
         self._attr_state_class = None
-        self._attr_translation_key = "input_signal"
         self._attr_unique_id = f"{self._unique_id}-input-signal"
 
     async def async_added_to_hass(self) -> None:
@@ -211,7 +219,7 @@ class BangOlufsenSensorInputSignal(BangOlufsenSensor):
         self._dispatchers.append(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebSocketNotification.PLAYBACK_METADATA}",
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_METADATA}",
                 self._update_playback_metadata,
             )
         )

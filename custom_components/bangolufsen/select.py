@@ -2,8 +2,16 @@
 from __future__ import annotations
 
 import logging
+from multiprocessing.pool import ApplyResult
+from typing import cast
 
-from mozart_api.models import ListeningModeProps, SpeakerGroupOverview
+from mozart_api.models import (
+    ListeningMode,
+    ListeningModeProps,
+    ListeningModeRef,
+    Scene,
+    SpeakerGroupOverview,
+)
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, BangOlufsenEntity, EntityEnum, WebSocketNotification
+from .const import DOMAIN, ENTITY_ENUM, WEBSOCKET_NOTIFICATION
+from .entity import BangOlufsenEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +35,7 @@ async def async_setup_entry(
     entities = []
 
     # Add Select entities.
-    for select in hass.data[DOMAIN][config_entry.unique_id][EntityEnum.SELECTS]:
+    for select in hass.data[DOMAIN][config_entry.unique_id][ENTITY_ENUM.SELECTS]:
         entities.append(select)
 
     async_add_entities(new_entities=entities)
@@ -35,24 +44,26 @@ async def async_setup_entry(
 class BangOlufsenSelect(BangOlufsenEntity, SelectEntity):
     """Select for Mozart settings."""
 
+    _attr_entity_category = EntityCategory.CONFIG
+
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the Select."""
         super().__init__(entry)
 
         self._attr_current_option = None
-        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_options = []
 
 
 class BangOlufsenSelectSoundMode(BangOlufsenSelect):
     """Sound mode Select."""
 
+    _attr_icon = "mdi:sine-wave"
+    _attr_translation_key = "sound_mode"
+
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the sound mode select."""
         super().__init__(entry)
 
-        self._attr_icon = "mdi:sine-wave"
-        self._attr_translation_key = "sound_mode"
         self._attr_unique_id = f"{self._unique_id}-sound-mode"
 
         self._sound_modes: dict[str, int] = {}
@@ -64,7 +75,7 @@ class BangOlufsenSelectSoundMode(BangOlufsenSelect):
         self._dispatchers.append(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebSocketNotification.ACTIVE_LISTENING_MODE}",
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.ACTIVE_LISTENING_MODE}",
                 self._update_sound_modes,
             )
         )
@@ -78,22 +89,26 @@ class BangOlufsenSelectSoundMode(BangOlufsenSelect):
         )
 
     async def _update_sound_modes(
-        self, active_sound_mode: ListeningModeProps | None = None
+        self, active_sound_mode: ListeningModeProps | ListeningModeRef | None = None
     ) -> None:
         """Get the available sound modes and setup Select functionality."""
-        sound_modes = self._client.get_listening_mode_set(async_req=True).get()
+        sound_modes = cast(
+            ApplyResult[list[ListeningMode]],
+            self._client.get_listening_mode_set(async_req=True),
+        ).get()
         if active_sound_mode is None:
-            active_sound_mode = self._client.get_active_listening_mode(
-                async_req=True
+            active_sound_mode = cast(
+                ApplyResult[ListeningModeRef],
+                self._client.get_active_listening_mode(async_req=True),
             ).get()
 
         # Add the key to make the labels unique as well
         for sound_mode in sound_modes:
-            label = f"{sound_mode['name']} - {sound_mode['id']}"
+            label = f"{sound_mode.name} - {sound_mode.id}"
 
-            self._sound_modes[label] = sound_mode["id"]
+            self._sound_modes[label] = sound_mode.id
 
-            if sound_mode["id"] == active_sound_mode.id:
+            if sound_mode.id == active_sound_mode.id:
                 self._attr_current_option = label
 
         # Set available options and selected option.
@@ -105,12 +120,13 @@ class BangOlufsenSelectSoundMode(BangOlufsenSelect):
 class BangOlufsenSelectListeningPosition(BangOlufsenSelect):
     """Listening position Select."""
 
+    _attr_icon = "mdi:sine-wave"
+    _attr_translation_key = "listening_position"
+
     def __init__(self, entry: ConfigEntry) -> None:
         """Init the listening position select."""
         super().__init__(entry)
 
-        self._attr_icon = "mdi:sine-wave"
-        self._attr_translation_key = "listening_position"
         self._attr_unique_id = f"{self._unique_id}-listening-position"
 
         self._listening_positions: dict[str, str] = {}
@@ -124,12 +140,12 @@ class BangOlufsenSelectListeningPosition(BangOlufsenSelect):
             [
                 async_dispatcher_connect(
                     self.hass,
-                    f"{self._unique_id}_{WebSocketNotification.ACTIVE_SPEAKER_GROUP}",
+                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.ACTIVE_SPEAKER_GROUP}",
                     self._update_listening_positions,
                 ),
                 async_dispatcher_connect(
                     self.hass,
-                    f"{self._unique_id}_{WebSocketNotification.REMOTE_MENU_CHANGED}",
+                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.REMOTE_MENU_CHANGED}",
                     self._update_listening_positions,
                 ),
             ]
@@ -147,11 +163,14 @@ class BangOlufsenSelectListeningPosition(BangOlufsenSelect):
         self, active_speaker_group: SpeakerGroupOverview | None = None
     ) -> None:
         """Update listening position."""
-        scenes = self._client.get_all_scenes(async_req=True).get()
+        scenes = cast(
+            ApplyResult[dict[str, Scene]], self._client.get_all_scenes(async_req=True)
+        ).get()
 
         if active_speaker_group is None:
-            active_speaker_group = self._client.get_speakergroup_active(
-                async_req=True
+            active_speaker_group = cast(
+                ApplyResult[SpeakerGroupOverview],
+                self._client.get_speakergroup_active(async_req=True),
             ).get()
 
         self._listening_positions = {}
@@ -160,17 +179,22 @@ class BangOlufsenSelectListeningPosition(BangOlufsenSelect):
         for scene_key in scenes:
             scene = scenes[scene_key]
 
-            if scene.tags is not None and "listeningposition" in scene.tags:
+            if (
+                scene.tags is not None
+                and "listeningposition" in scene.tags
+                and scene.label is not None
+            ):
                 # Ignore listening positions with the same name
-                if scene.label in self._listening_positions:
-                    _LOGGER.warning(
-                        "Ignoring listening position with duplicate name: %s and ID: %s",
-                        scene.label,
-                        scene_key,
-                    )
-                    continue
+                if scene.label is not None:
+                    if scene.label in self._listening_positions:
+                        _LOGGER.warning(
+                            "Ignoring listening position with duplicate name: %s and ID: %s",
+                            scene.label,
+                            scene_key,
+                        )
+                        continue
 
-                self._listening_positions[scene.label] = scene_key
+                    self._listening_positions[scene.label] = scene_key
 
                 # Currently guess the current active listening position by the speakergroup ID
                 if active_speaker_group.id == scene.action_list[0].speaker_group_id:

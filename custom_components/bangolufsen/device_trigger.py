@@ -1,8 +1,10 @@
 """Device triggers for the Bang & Olufsen integration."""
 from __future__ import annotations
 
-from typing import Any
+from multiprocessing.pool import ApplyResult
+from typing import Any, cast
 
+from mozart_api.models import PairedRemote, PairedRemoteResponse
 from mozart_api.mozart_client import MozartClient
 import voluptuous as vol
 
@@ -20,7 +22,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .const import BANGOLUFSEN_EVENT, DOMAIN, EntityEnum
+from .const import BANGOLUFSEN_EVENT, DOMAIN, ENTITY_ENUM
 from .media_player import BangOlufsenMediaPlayer
 
 BUTTON_TRIGGERS = (
@@ -149,14 +151,18 @@ async def async_get_triggers(
     device_registry = dr.async_get(hass)
     serial_number = list(device_registry.devices[device_id].identifiers)[0][1]
     media_player: BangOlufsenMediaPlayer = hass.data[DOMAIN][serial_number][
-        EntityEnum.MEDIA_PLAYER
+        ENTITY_ENUM.MEDIA_PLAYER
     ]
 
     client = MozartClient(host=media_player.entry.data[CONF_HOST])
 
     # Get if a remote control is connected
-    bluetooth_remote_list = client.get_bluetooth_remotes(async_req=True).get()
-    remote_control_available = bool(len(bluetooth_remote_list.items))
+    bluetooth_remote_list = cast(
+        ApplyResult[PairedRemoteResponse], client.get_bluetooth_remotes(async_req=True)
+    ).get()
+    remote_control_available = bool(
+        len(cast(list[PairedRemote], bluetooth_remote_list.items))
+    )
 
     trigger_types: list[str] = list(BUTTON_TRIGGERS)
 

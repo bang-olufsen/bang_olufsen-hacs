@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum, StrEnum
+import logging
 from typing import Final, cast
 
 from mozart_api.models import (
@@ -35,11 +36,9 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
 
 
-class ArtSizeEnum(Enum):
+class ART_SIZE_ENUM(Enum):
     """Enum used for sorting images that have size defined by a string."""
 
     small = 1
@@ -47,7 +46,7 @@ class ArtSizeEnum(Enum):
     large = 3
 
 
-class SourceEnum(StrEnum):
+class SOURCE_ENUM(StrEnum):
     """Enum used for associating device source ids with friendly names. May not include all sources."""
 
     uriStreamer = "Audio Streamer"  # noqa: N815
@@ -70,7 +69,7 @@ class SourceEnum(StrEnum):
     tidalConnect = "Tidal Connect"  # noqa: N815
 
 
-class RepeatEnum(StrEnum):
+class REPEAT_ENUM(StrEnum):
     """Enum used for translating device repeat settings to Home Assistant settings."""
 
     all = "all"
@@ -78,26 +77,24 @@ class RepeatEnum(StrEnum):
     off = "none"
 
 
-class StateEnum(StrEnum):
-    """Enum used for translating device states to Home Assistant states."""
-
-    # Playback states
-    started = MediaPlayerState.PLAYING
-    buffering = MediaPlayerState.PLAYING
-    idle = MediaPlayerState.IDLE
-    paused = MediaPlayerState.PAUSED
-    stopped = MediaPlayerState.PAUSED
-    ended = MediaPlayerState.PAUSED
-    error = MediaPlayerState.IDLE
+BANGOLUFSEN_STATES: dict[str, MediaPlayerState] = {
+    # Dict used for translating device states to Home Assistant states.
+    "started": MediaPlayerState.PLAYING,
+    "buffering": MediaPlayerState.PLAYING,
+    "idle": MediaPlayerState.IDLE,
+    "paused": MediaPlayerState.PAUSED,
+    "stopped": MediaPlayerState.PAUSED,
+    "ended": MediaPlayerState.PAUSED,
+    "error": MediaPlayerState.IDLE,
     # A devices initial state is "unknown" and should be treated as "idle"
-    unknown = MediaPlayerState.IDLE
-
+    "unknown": MediaPlayerState.IDLE,
     # Power states
-    networkStandby = MediaPlayerState.IDLE  # noqa: N815
+    "networkStandby": MediaPlayerState.IDLE,  # noqa: N815
+}
 
 
 # Media types for play_media
-class BangOlufsenMediaType(StrEnum):
+class BANGOLUFSEN_MEDIA_TYPE(StrEnum):
     """Bang & Olufsen specific media types."""
 
     FAVOURITE = "favourite"
@@ -107,27 +104,28 @@ class BangOlufsenMediaType(StrEnum):
 
 
 # Proximity detection for binary_sensor
-class ProximityEnum(Enum):
+class PROXIMITY_ENUM(Enum):
     """Proximity detection mapping.."""
 
     proximityPresenceDetected = True  # noqa: N815
     proximityPresenceNotDetected = False  # noqa: N815
 
 
-class ModelEnum(StrEnum):
+class MODEL_ENUM(StrEnum):
     """Enum for compatible model names."""
 
-    beolab_28 = "BeoLab 28"
-    beosound_2 = "Beosound 2 3rd Gen"
-    beosound_a5 = "Beosound A5"
-    beosound_a9 = "Beosound A9 5th Gen"
-    beosound_balance = "Beosound Balance"
-    beosound_emerge = "Beosound Emerge"
-    beosound_level = "Beosound Level"
-    beosound_theatre = "Beosound Theatre"
+    BEOLAB_8 = "BeoLab 8"
+    BEOLAB_28 = "BeoLab 28"
+    BEOSOUND_2 = "Beosound 2 3rd Gen"
+    BEOSOUND_A5 = "Beosound A5"
+    BEOSOUND_A9 = "Beosound A9 5th Gen"
+    BEOSOUND_BALANCE = "Beosound Balance"
+    BEOSOUND_EMERGE = "Beosound Emerge"
+    BEOSOUND_LEVEL = "Beosound Level"
+    BEOSOUND_THEATRE = "Beosound Theatre"
 
 
-class EntityEnum(StrEnum):
+class ENTITY_ENUM(StrEnum):
     """Enum for accessing and storing the entities in hass."""
 
     BINARY_SENSORS = "binary_sensors"
@@ -142,7 +140,7 @@ class EntityEnum(StrEnum):
 
 
 # Dispatcher events
-class WebSocketNotification(StrEnum):
+class WEBSOCKET_NOTIFICATION(StrEnum):
     """Enum for WebSocket notification types."""
 
     ACTIVE_LISTENING_MODE: Final[str] = "active_listening_mode"
@@ -178,28 +176,31 @@ class WebSocketNotification(StrEnum):
     ALL: Final[str] = "all"
 
 
-class SupportEnum(Enum):
+class SUPPORT_ENUM(Enum):
     """Enum for storing compatibility of devices."""
 
     PROXIMITY_SENSOR = (
-        ModelEnum.beolab_28,
-        ModelEnum.beosound_2,
-        ModelEnum.beosound_balance,
-        ModelEnum.beosound_level,
-        ModelEnum.beosound_theatre,
+        MODEL_ENUM.BEOLAB_8,
+        MODEL_ENUM.BEOLAB_28,
+        MODEL_ENUM.BEOSOUND_2,
+        MODEL_ENUM.BEOSOUND_BALANCE,
+        MODEL_ENUM.BEOSOUND_LEVEL,
+        MODEL_ENUM.BEOSOUND_THEATRE,
     )
 
-    HOME_CONTROL = (ModelEnum.beosound_theatre,)
+    HOME_CONTROL = (MODEL_ENUM.BEOSOUND_THEATRE,)
 
+
+# Range for bass and treble entities
+BASS_TREBLE_RANGE = range(-6, 6, 1)
 
 DOMAIN: Final[str] = "bangolufsen"
 
 # Default values for configuration.
-DEFAULT_HOST: Final[str] = "192.168.1.1"
 DEFAULT_DEFAULT_VOLUME: Final[int] = 40
 DEFAULT_MAX_VOLUME: Final[int] = 100
 DEFAULT_VOLUME_STEP: Final[int] = 5
-DEFAULT_MODEL: Final[str] = ModelEnum.beosound_balance
+DEFAULT_MODEL: Final[str] = MODEL_ENUM.BEOSOUND_BALANCE
 
 # Acceptable ranges for configuration.
 DEFAULT_VOLUME_RANGE: Final[range] = range(1, (70 + 1), 1)
@@ -223,7 +224,7 @@ CONF_SERIAL_NUMBER: Final = "serial_number"
 CONF_BEOLINK_JID: Final = "jid"
 
 # Models to choose from in manual configuration.
-COMPATIBLE_MODELS: list[str] = [x.value for x in ModelEnum]
+COMPATIBLE_MODELS: list[str] = [x.value for x in MODEL_ENUM]
 
 # Attribute names for zeroconf discovery.
 ATTR_TYPE_NUMBER: Final[str] = "tn"
@@ -235,10 +236,10 @@ ATTR_FRIENDLY_NAME: Final[str] = "fn"
 BANGOLUFSEN_ON: Final[str] = "on"
 
 VALID_MEDIA_TYPES: Final[tuple] = (
-    BangOlufsenMediaType.FAVOURITE,
-    BangOlufsenMediaType.DEEZER,
-    BangOlufsenMediaType.RADIO,
-    BangOlufsenMediaType.TTS,
+    BANGOLUFSEN_MEDIA_TYPE.FAVOURITE,
+    BANGOLUFSEN_MEDIA_TYPE.DEEZER,
+    BANGOLUFSEN_MEDIA_TYPE.RADIO,
+    BANGOLUFSEN_MEDIA_TYPE.TTS,
     MediaType.MUSIC,
     MediaType.URL,
     MediaType.CHANNEL,
@@ -272,56 +273,56 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
             is_enabled=True,
             is_playable=False,
             name="Audio Streamer",
-            type=SourceTypeEnum("uriStreamer"),
+            type=SourceTypeEnum(value="uriStreamer"),
         ),
         Source(
             id="bluetooth",
             is_enabled=True,
             is_playable=False,
             name="Bluetooth",
-            type=SourceTypeEnum("bluetooth"),
+            type=SourceTypeEnum(value="bluetooth"),
         ),
         Source(
             id="spotify",
             is_enabled=True,
             is_playable=False,
             name="Spotify Connect",
-            type=SourceTypeEnum("spotify"),
+            type=SourceTypeEnum(value="spotify"),
         ),
         Source(
             id="lineIn",
             is_enabled=True,
             is_playable=True,
             name="Line-In",
-            type=SourceTypeEnum("lineIn"),
+            type=SourceTypeEnum(value="lineIn"),
         ),
         Source(
             id="spdif",
             is_enabled=True,
             is_playable=True,
             name="Optical",
-            type=SourceTypeEnum("spdif"),
+            type=SourceTypeEnum(value="spdif"),
         ),
         Source(
             id="netRadio",
             is_enabled=True,
             is_playable=True,
             name="B&O Radio",
-            type=SourceTypeEnum("netRadio"),
+            type=SourceTypeEnum(value="netRadio"),
         ),
         Source(
             id="deezer",
             is_enabled=True,
             is_playable=True,
             name="Deezer",
-            type=SourceTypeEnum("deezer"),
+            type=SourceTypeEnum(value="deezer"),
         ),
         Source(
             id="tidalConnect",
             is_enabled=True,
             is_playable=True,
             name="Tidal Connect",
-            type=SourceTypeEnum("tidalConnect"),
+            type=SourceTypeEnum(value="tidalConnect"),
         ),
     ]
 )
@@ -341,6 +342,7 @@ BEOLINK_RELATIVE_VOLUME: Final[str] = "BEOLINK_RELATIVE_VOLUME"
 
 # Misc.
 NO_METADATA: Final[tuple] = (None, "", 0)
+WEBSOCKET_CONNECTION_DELAY: Final[float] = 3.0
 
 # Valid commands and their expected parameter type for beolink_command service
 FLOAT_PARAMETERS: Final[tuple] = (
@@ -398,54 +400,57 @@ def generate_favourite_attributes(
     favourite_attribute: dict[str, str | int | dict[str, str | bool]] = {}
 
     # Ensure that favourites with volume are properly shown.
-    for action in favourite.action_list:
-        if action.type == "volume":
-            favourite_attribute["volume"] = action.volume_level
+    if favourite.action_list:
+        for action in favourite.action_list:
+            if action.type == "volume":
+                favourite_attribute["volume"] = action.volume_level
 
-        else:
-            deezer_user_id = action.deezer_user_id
-            favourite_type = action.type
-            favourite_queue = action.queue_item
+            else:
+                deezer_user_id = action.deezer_user_id
+                favourite_type = action.type
+                favourite_queue = action.queue_item
 
-            # Add Deezer as "source".
-            if (
-                favourite_type == "deezerFlow"
-                or favourite_type == "playQueue"
-                and favourite_queue.provider.value == "deezer"
-            ):
-                favourite_attribute["source"] = SourceEnum.deezer
+                # Add Deezer as "source".
+                if (
+                    favourite_type == "deezerFlow"
+                    or favourite_type == "playQueue"
+                    and favourite_queue.provider.value == "deezer"
+                ):
+                    favourite_attribute["source"] = SOURCE_ENUM.deezer
 
-            # Add netradio as "source".
-            elif favourite_type == "radio":
-                favourite_attribute["source"] = SourceEnum.netRadio
+                # Add netradio as "source".
+                elif favourite_type == "radio":
+                    favourite_attribute["source"] = SOURCE_ENUM.netRadio
 
-            # Add the source name if it is not none.
-            elif favourite.source is not None:
-                favourite_attribute["source"] = SourceEnum[favourite.source.value].value
+                # Add the source name if it is not none.
+                elif favourite.source and favourite.source.value:
+                    favourite_attribute["source"] = SOURCE_ENUM[
+                        favourite.source.value
+                    ].value
 
-            # Add title if available.
-            if favourite.title is not None:
-                favourite_attribute["name"] = favourite.title
+                # Add title if available.
+                if favourite.title:
+                    favourite_attribute["name"] = favourite.title
 
-            # Ensure that all favourites have a "name".
-            if "name" not in favourite_attribute:
-                favourite_attribute["name"] = favourite_attribute["source"]
+                # Ensure that all favourites have a "name".
+                if "name" not in favourite_attribute:
+                    favourite_attribute["name"] = favourite_attribute["source"]
 
-            # Add Deezer flow.
-            if favourite_type == "deezerFlow":
-                if deezer_user_id is not None:
-                    favourite_attribute["id"] = int(deezer_user_id)
+                # Add Deezer flow.
+                if favourite_type == "deezerFlow":
+                    if deezer_user_id:
+                        favourite_attribute["id"] = int(deezer_user_id)
 
-            # Add Deezer playlist "uri" and name
-            elif favourite_type == "playQueue":
-                favourite_attribute["id"] = favourite_queue.uri
+                # Add Deezer playlist "uri" and name
+                elif favourite_type == "playQueue":
+                    favourite_attribute["id"] = favourite_queue.uri
 
-                # Add queue settings for Deezer queues.
-                if action.queue_settings:
-                    favourite_attribute["queue_settings"] = {
-                        "repeat": action.queue_settings.repeat,
-                        "shuffle": action.queue_settings.shuffle,
-                    }
+                    # Add queue settings for Deezer queues.
+                    if action.queue_settings:
+                        favourite_attribute["queue_settings"] = {
+                            "repeat": action.queue_settings.repeat,
+                            "shuffle": action.queue_settings.shuffle,
+                        }
 
     return favourite_attribute
 
@@ -465,7 +470,9 @@ class BangOlufsenVariables:
         self._unique_id: str = cast(str, self.entry.unique_id)
 
         self._client: MozartClient = MozartClient(
-            host=self._host, websocket_reconnect=True
+            host=self._host,
+            websocket_reconnect=True,
+            urllib3_logging_level=logging.ERROR,
         )
 
         # Objects that get directly updated by notifications.
@@ -489,39 +496,3 @@ class BangOlufsenVariables:
         self._volume: VolumeState = VolumeState(
             level=VolumeLevel(level=0), muted=VolumeMute(muted=False)
         )
-
-
-class BangOlufsenEntity(Entity, BangOlufsenVariables):
-    """Base Entity for BangOlufsen entities."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize the object."""
-        BangOlufsenVariables.__init__(self, entry)
-        self._dispatchers: list = []
-
-        self._attr_device_class = None
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
-        self._attr_entity_category = None
-        self._attr_has_entity_name = True
-        self._attr_should_poll = False
-
-    async def async_added_to_hass(self) -> None:
-        """Turn on the dispatchers."""
-        self._dispatchers = [
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._update_connection_state,
-            )
-        ]
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Turn off the dispatchers."""
-        for dispatcher in self._dispatchers:
-            dispatcher()
-
-    async def _update_connection_state(self, connection_state: bool) -> None:
-        """Update entity connection state."""
-        self._attr_available = connection_state
-
-        self.async_write_ha_state()

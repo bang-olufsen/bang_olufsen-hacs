@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from mozart_api.models import Preset
 
 from homeassistant.components.button import ButtonEntity
@@ -11,8 +13,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, BangOlufsenEntity, EntityEnum, generate_favourite_attributes
+from .const import DOMAIN, ENTITY_ENUM, generate_favourite_attributes
 from .coordinator import BangOlufsenCoordinator
+from .entity import BangOlufsenEntity
 
 
 async def async_setup_entry(
@@ -25,7 +28,7 @@ async def async_setup_entry(
     configuration = hass.data[DOMAIN][config_entry.unique_id]
 
     # Add Button entities.
-    for button in configuration[EntityEnum.FAVOURITES]:
+    for button in configuration[ENTITY_ENUM.FAVOURITES]:
         entities.append(button)
 
     async_add_entities(new_entities=entities)
@@ -48,10 +51,9 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
         CoordinatorEntity.__init__(self, coordinator)
         BangOlufsenButton.__init__(self, entry)
 
-        self._favourite_id: int = int(favourite.name[6:])
+        self._favourite_id: int = int(cast(str, favourite.name)[6:])
         self._favourite: Preset = favourite
 
-        self._attr_has_entity_name = True
         self._attr_name = f"Favourite {self._favourite_id}"
         self._attr_unique_id = f"{self._unique_id}-favourite-{self._favourite_id}"
 

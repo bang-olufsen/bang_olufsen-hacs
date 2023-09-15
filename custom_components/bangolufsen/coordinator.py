@@ -5,7 +5,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import TypedDict
+from multiprocessing.pool import ApplyResult
+from typing import TypedDict, cast
 
 from mozart_api.exceptions import ApiException
 from mozart_api.models import (
@@ -19,6 +20,7 @@ from mozart_api.models import (
     Preset,
     RenderingState,
     SoftwareUpdateState,
+    SoftwareUpdateStatus,
     SoundSettings,
     Source,
     SpeakerGroupOverview,
@@ -39,8 +41,8 @@ from .const import (
     BANGOLUFSEN_EVENT,
     BANGOLUFSEN_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
+    WEBSOCKET_NOTIFICATION,
     BangOlufsenVariables,
-    WebSocketNotification,
     get_device,
 )
 
@@ -112,8 +114,10 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
 
     async def _update_variables(self) -> None:
         """Update the coordinator data."""
-        favourites = self._client.get_presets(async_req=True, _request_timeout=5).get()
-
+        favourites = cast(
+            ApplyResult[dict[str, Preset]],
+            self._client.get_presets(async_req=True, _request_timeout=5),
+        ).get()
         self._coordinator_data = {"favourites": favourites}
 
     async def _async_update_data(self) -> CoordinatorData:
@@ -131,6 +135,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
             NewConnectionError,
             ApiException,
             ConnectionResetError,
+            AttributeError,  # An API bug will return an invalid value when the device is not available
         ):
             raise UpdateFailed
 
@@ -157,7 +162,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
 
     def on_connection(self) -> None:
         """Handle WebSocket connection made."""
-        _LOGGER.info("Connected to the %s notification channel", self._name)
+        _LOGGER.debug("Connected to the %s notification channel", self._name)
         self._update_connection_status()
 
     def on_connection_lost(self) -> None:
@@ -169,7 +174,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         """Send active_listening_mode dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebSocketNotification.ACTIVE_LISTENING_MODE}",
+            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.ACTIVE_LISTENING_MODE}",
             notification,
         )
 
@@ -177,7 +182,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         """Send active_speaker_group dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebSocketNotification.ACTIVE_SPEAKER_GROUP}",
+            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.ACTIVE_SPEAKER_GROUP}",
             notification,
         )
 
@@ -185,7 +190,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         """Send battery dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebSocketNotification.BATTERY}",
+            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BATTERY}",
             notification,
         )
 
@@ -226,50 +231,52 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         self, notification: WebsocketNotificationTag
     ) -> None:
         """Send notification dispatch."""
+        if notification.value is None:
+            return
 
-        if WebSocketNotification.PROXIMITY in notification.value:
+        if WEBSOCKET_NOTIFICATION.PROXIMITY in notification.value:
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{WebSocketNotification.PROXIMITY}",
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PROXIMITY}",
                 notification,
             )
 
-        elif WebSocketNotification.REMOTE_MENU_CHANGED in notification.value:
+        elif WEBSOCKET_NOTIFICATION.REMOTE_MENU_CHANGED in notification.value:
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{WebSocketNotification.REMOTE_MENU_CHANGED}",
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.REMOTE_MENU_CHANGED}",
             )
 
-        elif WebSocketNotification.CONFIGURATION in notification.value:
+        elif WEBSOCKET_NOTIFICATION.CONFIGURATION in notification.value:
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{WebSocketNotification.CONFIGURATION}",
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.CONFIGURATION}",
                 notification,
             )
 
-        elif WebSocketNotification.BLUETOOTH_DEVICES in notification.value:
+        elif WEBSOCKET_NOTIFICATION.BLUETOOTH_DEVICES in notification.value:
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{WebSocketNotification.BLUETOOTH_DEVICES}",
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BLUETOOTH_DEVICES}",
             )
 
-        elif WebSocketNotification.REMOTE_CONTROL_DEVICES in notification.value:
+        elif WEBSOCKET_NOTIFICATION.REMOTE_CONTROL_DEVICES in notification.value:
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{WebSocketNotification.BLUETOOTH_DEVICES}",
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BLUETOOTH_DEVICES}",
             )
 
-        elif WebSocketNotification.BEOLINK in notification.value:
+        elif WEBSOCKET_NOTIFICATION.BEOLINK in notification.value:
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{WebSocketNotification.BEOLINK}",
+                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BEOLINK}",
             )
 
     def on_playback_error_notification(self, notification: PlaybackError) -> None:
         """Send playback_error dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebSocketNotification.PLAYBACK_ERROR}",
+            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_ERROR}",
             notification,
         )
 
@@ -279,7 +286,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         """Send playback_metadata dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebSocketNotification.PLAYBACK_METADATA}",
+            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_METADATA}",
             notification,
         )
 
@@ -287,7 +294,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         """Send playback_progress dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebSocketNotification.PLAYBACK_PROGRESS}",
+            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_PROGRESS}",
             notification,
         )
 
@@ -295,7 +302,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         """Send playback_state dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebSocketNotification.PLAYBACK_STATE}",
+            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_STATE}",
             notification,
         )
 
@@ -303,7 +310,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         """Send sound_settings dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebSocketNotification.SOUND_SETTINGS}",
+            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOUND_SETTINGS}",
             notification,
         )
 
@@ -311,7 +318,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         """Send source_change dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebSocketNotification.SOURCE_CHANGE}",
+            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOURCE_CHANGE}",
             notification,
         )
 
@@ -319,7 +326,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         """Send volume dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebSocketNotification.VOLUME}",
+            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.VOLUME}",
             notification,
         )
 
@@ -327,7 +334,10 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         """Check device sw version."""
 
         # Get software version.
-        software_status = self._client.get_softwareupdate_status(async_req=True).get()
+        software_status = cast(
+            ApplyResult[SoftwareUpdateStatus],
+            self._client.get_softwareupdate_status(async_req=True),
+        ).get()
 
         # Update the HA device if the sw version does not match
         if not isinstance(self._device, DeviceEntry):

@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import ipaddress
+from multiprocessing.pool import ApplyResult
 from typing import Any, TypedDict, cast
 
 from mozart_api.exceptions import ApiException
+from mozart_api.models import BeolinkPeer, VolumeSettings
 from mozart_api.mozart_client import MozartClient
 from urllib3.exceptions import MaxRetryError, NewConnectionError
 import voluptuous as vol
@@ -29,7 +31,6 @@ from .const import (
     CONF_SERIAL_NUMBER,
     CONF_VOLUME_STEP,
     DEFAULT_DEFAULT_VOLUME,
-    DEFAULT_HOST,
     DEFAULT_MAX_VOLUME,
     DEFAULT_MODEL,
     DEFAULT_VOLUME_RANGE,
@@ -75,7 +76,7 @@ def _config_schema(
     }
 
 
-class UserInput(TypedDict):
+class UserInput(TypedDict, total=False):
     """TypedDict for user_input."""
 
     name: str
@@ -111,8 +112,9 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self._client = MozartClient(self._host)
 
             # Get information from Beolink self method.
-            beolink_self = self._client.get_beolink_self(
-                async_req=True, _request_timeout=3
+            beolink_self = cast(
+                ApplyResult[BeolinkPeer],
+                self._client.get_beolink_self(async_req=True, _request_timeout=3),
             ).get()
 
             self._beolink_jid = beolink_self.jid
@@ -130,6 +132,35 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         except ValueError as error:
             raise AbortFlow(reason=VALUE_ERROR) from error
 
+    async def _compile_data(self) -> UserInput:
+        """Compile data for entry creation."""
+        # Get current volume settings
+        volume_settings = cast(
+            ApplyResult[VolumeSettings],
+            cast(MozartClient, self._client).get_volume_settings(async_req=True),
+        ).get()
+
+        # Create a dict containing all necessary information for setup
+        data = UserInput()
+
+        data[CONF_HOST] = self._host
+        data[CONF_MODEL] = self._model
+        data[CONF_NAME] = self._name
+        data[CONF_BEOLINK_JID] = self._beolink_jid
+        data[CONF_VOLUME_STEP] = DEFAULT_VOLUME_STEP
+        data[CONF_DEFAULT_VOLUME] = (
+            volume_settings.default.level
+            if volume_settings.default and volume_settings.default.level
+            else DEFAULT_DEFAULT_VOLUME
+        )
+        data[CONF_MAX_VOLUME] = (
+            volume_settings.maximum.level
+            if volume_settings.maximum and volume_settings.maximum.level
+            else DEFAULT_MAX_VOLUME
+        )
+
+        return data
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -139,15 +170,10 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self._model = user_input[CONF_MODEL]
             await self._validate_host()
 
-            self._name = f"{self._model}-{self._serial_number}"
-
-            await self.async_set_unique_id(self._serial_number)
-            self._abort_if_unique_id_configured()
-
             return await self.async_step_confirm()
 
         data_schema = {
-            vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+            vol.Required(CONF_HOST): str,
             vol.Required(CONF_MODEL, default=DEFAULT_MODEL): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=COMPATIBLE_MODELS,
@@ -174,16 +200,12 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self._model = discovery_info.hostname[:-16].replace("-", " ")
         self._serial_number = discovery_info.properties[ATTR_SERIAL_NUMBER]
         self._beolink_jid = f"{discovery_info.properties[ATTR_TYPE_NUMBER]}.{discovery_info.properties[ATTR_ITEM_NUMBER]}.{self._serial_number}@products.bang-olufsen.com"
-        self._name = f"{self._model}-{self._serial_number}"
 
         self._client = MozartClient(self._host)
 
         self.context["title_placeholders"] = {
             "name": discovery_info.properties[ATTR_FRIENDLY_NAME]
         }
-
-        await self.async_set_unique_id(self._serial_number)
-        self._abort_if_unique_id_configured()
 
         return await self.async_step_confirm()
 
@@ -192,32 +214,18 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm the configuration of the device."""
         if user_input is not None:
-            # Make sure that all information is included
-            data = user_input
-            data[CONF_HOST] = self._host
-            data[CONF_MODEL] = self._model
-            data[CONF_BEOLINK_JID] = self._beolink_jid
-            data[CONF_NAME] = self._name
+            data = await self._compile_data()
+            return self.async_create_entry(title=self._name, data=data)
 
-            return self.async_create_entry(
-                title=self._name,
-                data=data,
-            )
+        self._name = f"{self._model}-{self._serial_number}"
 
-        volume_settings = (
-            cast(MozartClient, self._client).get_volume_settings(async_req=True).get()
-        )
-
-        data_schema = _config_schema(
-            default_volume=volume_settings.default.level,
-            max_volume=volume_settings.maximum.level,
-        )
+        await self.async_set_unique_id(self._serial_number)
+        self._abort_if_unique_id_configured()
 
         self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema(data_schema),
             description_placeholders={
                 CONF_HOST: self._host,
                 CONF_MODEL: self._model,
@@ -255,7 +263,10 @@ class BangOlufsenOptionsFlowHandler(OptionsFlow):
 
         # Create data schema with the current volume options, not necessarily the ones set in Home Assistant.
         # Also add the ability to change the friendly name in Home Assistant
-        volume_settings = self._client.get_volume_settings(async_req=True).get()
+        volume_settings = cast(
+            ApplyResult[VolumeSettings],
+            self._client.get_volume_settings(async_req=True),
+        ).get()
 
         data_schema = {
             vol.Optional(
@@ -265,8 +276,12 @@ class BangOlufsenOptionsFlowHandler(OptionsFlow):
         data_schema.update(
             _config_schema(
                 volume_step=self._config_entry.data[CONF_VOLUME_STEP],
-                default_volume=volume_settings.default.level,
-                max_volume=volume_settings.maximum.level,
+                default_volume=volume_settings.default.level
+                if volume_settings.default and volume_settings.default.level
+                else DEFAULT_DEFAULT_VOLUME,
+                max_volume=volume_settings.maximum.level
+                if volume_settings.maximum and volume_settings.maximum.level
+                else DEFAULT_MAX_VOLUME,
             )
         )
 
