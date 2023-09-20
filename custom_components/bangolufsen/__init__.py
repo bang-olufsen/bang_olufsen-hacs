@@ -17,7 +17,7 @@ from mozart_api.mozart_client import MozartClient
 from urllib3.exceptions import MaxRetryError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, Platform
+from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -92,12 +92,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},
-        name=entry.data[CONF_NAME],
+        name=entry.title,
+        model=entry.data[CONF_MODEL],
     )
 
     # If connection can't be made abort.
     if not await init_entities(hass, entry):
-        raise ConfigEntryNotReady(f"Unable to connect to {entry.data[CONF_NAME]}")
+        raise ConfigEntryNotReady(f"Unable to connect to {entry.title}")
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))

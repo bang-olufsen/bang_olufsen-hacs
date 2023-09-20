@@ -10,11 +10,6 @@
         "flow_title": "{name}",
         "step": {
             "confirm":{
-                "data":{
-                    "default_volume": "Standard lydstyrke",
-                    "max_volume": "Maksimal lydstyrke",
-                    "volume_step": "Lydstyrke trin"
-                },
                 "description": "Bekræft konfigurationen af {model}-{serial_number} @ {host}."
             },
             "user":{
@@ -153,5 +148,23 @@
                 "description": "Juster indstillinger."
             }
         }
-    }
+    },
+    
+    
+	"entity":{
+		"binary_sensor":{
+			"battery_charging":{
+				"name":"Oplader batteri"
+			},
+			"proximity":{"name":"Proksimitet"}
+		},
+        "text": {
+            "friendly_name": {
+                "name": "Venligt navn"
+            },
+            "home_control_uri": {
+                "name": "Home Control URI"
+            }
+        }
+	}
 }

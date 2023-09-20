@@ -4,8 +4,9 @@
             "already_configured": "Already configured. Only a single configuration possible.",
             "already_in_progress": "Configuration flow is already in progress",
             "api_exception": "An error occurred while initializing the device. Try waiting or restarting the device.",
-            "max_retry_error": "Unable to connect to the device at the address. Please check if the IP address is correct.",
-            "new_connection_error": "Unable to detect a device at the address. Please check if the IP address is correct.",
+            "max_retry_error": "Timeout establishing connection",
+            "new_connection_error": "Failed to connect",
+            "not_found_exception": "Failed to connect",
             "value_error": "Invalid hostname or IP address"
         },
         "flow_title": "{name}",

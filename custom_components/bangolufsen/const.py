@@ -32,7 +32,7 @@ from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -89,7 +89,6 @@ BANGOLUFSEN_STATES: dict[str, MediaPlayerState] = {
     # A devices initial state is "unknown" and should be treated as "idle"
     "unknown": MediaPlayerState.IDLE,
     # Power states
-    "networkStandby": MediaPlayerState.IDLE,  # noqa: N815
 }
 
 
@@ -203,18 +202,9 @@ DEFAULT_VOLUME_STEP: Final[int] = 5
 DEFAULT_MODEL: Final[str] = MODEL_ENUM.BEOSOUND_BALANCE
 
 # Acceptable ranges for configuration.
-DEFAULT_VOLUME_RANGE: Final[range] = range(1, (70 + 1), 1)
-MAX_VOLUME_RANGE: Final[range] = range(20, (100 + 1), 1)
-VOLUME_STEP_RANGE: Final[range] = range(1, (20 + 1), 1)
-
-# Abort reasons for configuration.
-API_EXCEPTION: Final[str] = "api_exception"
-MAX_RETRY_ERROR: Final[str] = "max_retry_error"
-NEW_CONNECTION_ERROR: Final[str] = "new_connection_error"
-NO_DEVICE: Final[str] = "no_device"
-VALUE_ERROR: Final[str] = "value_error"
-NOT_MOZART_DEVICE: Final[str] = "not_mozart_device"
-
+DEFAULT_VOLUME_RANGE: Final[range] = range(1, 70, 1)
+MAX_VOLUME_RANGE: Final[range] = range(20, 100, 1)
+VOLUME_STEP_RANGE: Final[range] = range(1, 20, 1)
 
 # Configuration.
 CONF_DEFAULT_VOLUME: Final = "default_volume"
@@ -466,7 +456,7 @@ class BangOlufsenVariables:
 
         # Set the configuration variables.
         self._host: str = self.entry.data[CONF_HOST]
-        self._name: str = self.entry.data[CONF_NAME]
+        self._name: str = self.entry.title
         self._unique_id: str = cast(str, self.entry.unique_id)
 
         self._client: MozartClient = MozartClient(

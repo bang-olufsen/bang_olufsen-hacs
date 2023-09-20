@@ -257,6 +257,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             identifiers={(DOMAIN, self._unique_id)},
             manufacturer="Bang & Olufsen",
             model=self._model,
+            name=cast(str, self.name),
         )
         self._attr_group_members = []
         self._attr_name = self._name
@@ -702,6 +703,15 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def _update_playback_progress(self, data: PlaybackProgress) -> None:
         """Update _playback_progress and last update."""
+        # Fix for some devices appear as "idle" even though they are currently playing
+        if (
+            self.state == MediaPlayerState.IDLE
+            and data.progress
+            and self._playback_progress.progress
+            and data.progress > self._playback_progress.progress
+        ):
+            self._state = MediaPlayerState.PLAYING
+
         self._playback_progress = data
         self._last_update = utcnow()
 
@@ -715,7 +725,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         if self._playback_state.value:
             self._state = self._playback_state.value
 
-        self.async_write_ha_state()
+            self.async_write_ha_state()
 
     async def _update_source_change(self, data: Source) -> None:
         """Update _source_change and related."""
@@ -725,7 +735,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         if self._source_change.id and self._source_change.id == SOURCE_ENUM.bluetooth:
             await self._update_bluetooth()
 
-        self.async_write_ha_state()
+            self.async_write_ha_state()
 
     async def _update_volume(self, data: VolumeState) -> None:
         """Update _volume."""
