@@ -424,8 +424,10 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 self._source_change = product_state.playback.source
             if product_state.playback.state:
                 self._playback_state = product_state.playback.state
+
                 # Set initial state
-                self._state = self._playback_state.value
+                if product_state.playback.state.value:
+                    self._state = product_state.playback.state.value
 
         self._last_update = utcnow()
 
