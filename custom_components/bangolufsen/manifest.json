@@ -3,10 +3,11 @@
 	"name": "Bang & Olufsen",
 	"codeowners": ["@mj23000"],
 	"config_flow": true,
+	"dependencies": ["zeroconf"],
 	"documentation": "https://github.com/bang-olufsen/bangolufsen-hacs",
 	"iot_class": "local_push",
 	"issue_tracker": "https://github.com/bang-olufsen/bangolufsen-hacs/issues",
-	"requirements": ["mozart-api==3.2.1.150.1"],
-	"version": "1.5.4",
+	"requirements": ["mozart-api==3.2.1.150.2"],
+	"version": "1.5.5",
 	"zeroconf": ["_bangolufsen._tcp.local."]
 }

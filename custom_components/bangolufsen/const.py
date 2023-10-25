@@ -1,5 +1,4 @@
 """Constants for the Bang & Olufsen integration."""
-
 from __future__ import annotations
 
 from enum import Enum, StrEnum
@@ -331,7 +330,6 @@ BEOLINK_RELATIVE_VOLUME: Final[str] = "BEOLINK_RELATIVE_VOLUME"
 
 
 # Misc.
-NO_METADATA: Final[tuple] = (None, "", 0)
 WEBSOCKET_CONNECTION_DELAY: Final[float] = 3.0
 
 # Valid commands and their expected parameter type for beolink_command service

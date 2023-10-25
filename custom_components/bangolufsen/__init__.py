@@ -14,6 +14,7 @@ from mozart_api.models import (
     Scene,
 )
 from mozart_api.mozart_client import MozartClient
+from mozart_api.exceptions import ServiceException
 from urllib3.exceptions import MaxRetryError
 
 from homeassistant.config_entries import ConfigEntry
@@ -138,7 +139,7 @@ async def init_entities(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _request_timeout=3,
             ),
         ).get()
-    except MaxRetryError:
+    except (MaxRetryError, ServiceException):
         return False
 
     # Get whether or not the device has a battery.
