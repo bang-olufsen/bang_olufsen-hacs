@@ -1,6 +1,6 @@
 # Home Assistant integration for Bang & Olufsen products
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/bang-olufsen/BangOlufsen-HACS)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/bang-olufsen/bangolufsen-hacs)
 
 [![Balance stereo](https://raw.githubusercontent.com/bang-olufsen/mozart-open-api/main/docs/media/balance_stereo.png)](https://www.bang-olufsen.com/en/dk/speakers/beosound-balance-stereo-set?variant=beosound-balance-gva-naturaloak-bundle)
 
@@ -24,7 +24,9 @@ Devices that have been tested and _should_ work without any trouble are:
 
 ## Configuration
 
-This device can be added to your Home Assistant installation manually by using the UI or by auto-discovery.
+This integration can be added to a Home Assistant installation using [HACS](https://hacs.xyz/) by adding `https://github.com/bang-olufsen/bangolufsen-hacs` as a [custom repository](https://hacs.xyz/docs/faq/custom_repositories/).
+
+Afterwards, devices can be added to your Home Assistant installation manually by using the UI or by auto-discovery.
 
 ## Entities
 
