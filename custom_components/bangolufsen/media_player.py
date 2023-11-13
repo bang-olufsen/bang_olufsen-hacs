@@ -1322,7 +1322,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         absolute_volume: int | None = None,
         volume_offset: int | None = None,
         tts: str | None = None,
-        tts_language: str | None = None,
+        tts_language: str = "en-us",
     ) -> None:
         """Overlay audio over any currently playing audio."""
 
