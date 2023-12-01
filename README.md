@@ -270,17 +270,6 @@ data:
   media_content_type: music
 ```
 
-Playing a radio station:
-
-```yaml
-service: media_player.play_media
-target:
-  entity_id: media_player.beosound_balance_12345678
-data:
-  media_content_id: 1234567890123456
-  media_content_type: radio
-```
-
 Playing a Deezer flow. Optionally define a Deezer user ID:
 
 ```yaml
@@ -330,6 +319,20 @@ data:
   media_content_type: deezer
   media_content_id: 1234567890
 ```
+
+Playing a B&O Radio station:
+
+```yaml
+service: media_player.play_media
+target:
+  entity_id: media_player.beosound_balance_12345678
+data:
+  media_content_id: 1234567890123456
+  media_content_type: radio
+```
+
+_NOTE_: To easily obtain the media_content_id for a Deezer track or B&O Radio station, you can enable the 'Media id' sensor on Mozart device in Home Assistant (disabled by default). 
+Once enabled, start playing the content you wish to activate in a service call - the Media id sensor will then provide the value to be used in the media_content_id field.
 
 ### Custom services
 
