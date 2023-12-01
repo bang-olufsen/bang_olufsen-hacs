@@ -400,3 +400,43 @@ Generated TTS messages are cached for 24 hours.
 | `volume_offset`        | yes      | Specify a volume offset to be added to the current volume level. |
 | `tts`                  | yes      | Specify a string to be converted to a TTS message.               |
 | `tts_language`         | yes      | Specify TTS language.                                            |
+
+## Blueprints
+
+### Announce where music has been joined from (Beolink)
+
+A Blueprint for this scenario: https://youtu.be/AiZbrYQ6u48
+
+Select the speaker you want to announce which other product it has joined. 
+
+Default phrase is “Joined {friendly name}”, but this can easily be modified to a different language, e.g: “Lytter med fra {friendly name}”.
+
+Additionally it is possible to enable announcements when using a remote or the Bang & Olufsen app to expand.
+
+Create an automation for each Mozart product that should announce when joining a different room.
+
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgist.github.com%2Fcklit%2Fe7126c9fda1195bd88bcaefb45fe493e)
+
+### Control lights using Beoremote One BT
+
+A Blueprint to easily set up light control with Beoremote One BT and a Mozart-based product.
+
+Select your Mozart product and the light-bulbs or groups you want to control.
+
+This Blueprint allows for 3 light "zones". See the setup for detailed information on how to control the 3 zones.
+
+To use Light-commands, press “List” on your Beoremote One, navigate down to “Light” and press the center-button. From here, use the described buttons on the remote below to modify brightness.
+
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgist.github.com%2Fcklit%2F816e6fd144ff91559548e1bf0eb3bf84)
+
+### Control shades using Beoremote One BT
+
+A Blueprint to easily set up shade control with Beoremote One BT and a Mozart-based product.
+
+Select your Mozart product and the shades you want to control.
+
+This Blueprint allows for 3 "zones". See the setup for detailed information on how to control the 3 zones.
+
+To use Control-commands, press “List” on your Beoremote One, navigate down to “Control” and press the center-button. From here, use the described buttons on the remote below to modify the position.
+
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgist.github.com%2Fcklit%2Fd81d36c525936ab8f9309a226287ff91)
