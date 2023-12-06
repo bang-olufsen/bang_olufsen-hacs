@@ -407,7 +407,7 @@ Generated TTS messages are cached for 24 hours.
 
 A Blueprint for this scenario: https://youtu.be/AiZbrYQ6u48
 
-Select the speaker you want to announce which other product it has joined. 
+Select the speaker you want to announce which other product it joins, when performing a long-press on the Play/Pause button.
 
 Default phrase is “Joined {friendly name}”, but this can easily be modified to a different language, e.g: “Lytter med fra {friendly name}”.
 
