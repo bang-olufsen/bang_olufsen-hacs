@@ -1,13 +1,12 @@
 """Update coordinator and WebSocket listener(s) for the Bang & Olufsen integration."""
-# pylint: disable=raise-missing-from
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import timedelta
 import logging
-from multiprocessing.pool import ApplyResult
-from typing import TypedDict, cast
 
+from aiohttp.client_exceptions import ClientConnectorError
 from mozart_api.exceptions import ApiException
 from mozart_api.models import (
     BatteryState,
@@ -17,22 +16,21 @@ from mozart_api.models import (
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
+    PlayQueueSettings,
     Preset,
     RenderingState,
     SoftwareUpdateState,
-    SoftwareUpdateStatus,
     SoundSettings,
     Source,
     SpeakerGroupOverview,
     VolumeState,
     WebsocketNotificationTag,
 )
-from urllib3.exceptions import MaxRetryError, NewConnectionError
+from mozart_api.mozart_client import MozartClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -42,34 +40,42 @@ from .const import (
     BANGOLUFSEN_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
     WEBSOCKET_NOTIFICATION,
-    BangOlufsenVariables,
-    get_device,
 )
+from .entity import BangOlufsenVariables
+from .util import get_device
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class CoordinatorData(TypedDict):
-    """TypedDict for coordinator data."""
+@dataclass
+class CoordinatorData:
+    """Dataclass for coordinator data."""
 
     favourites: dict[str, Preset]
+    queue_settings: PlayQueueSettings
 
 
 class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
     """The entity coordinator and WebSocket listener(s)."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, client: MozartClient
+    ) -> None:
         """Initialize the entity coordinator."""
         DataUpdateCoordinator.__init__(
             self,
             hass,
             _LOGGER,
             name="coordinator",
-            update_interval=timedelta(seconds=60),
+            update_interval=timedelta(seconds=15),
+            always_update=False,
         )
-        BangOlufsenVariables.__init__(self, entry)
+        BangOlufsenVariables.__init__(self, entry, client)
 
-        self._coordinator_data: CoordinatorData = {"favourites": {}}
+        self._coordinator_data: CoordinatorData = CoordinatorData(
+            favourites={},
+            queue_settings=PlayQueueSettings(),
+        )
 
         self._device: DeviceEntry | None = None
 
@@ -114,11 +120,13 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
 
     async def _update_variables(self) -> None:
         """Update the coordinator data."""
-        favourites = cast(
-            ApplyResult[dict[str, Preset]],
-            self._client.get_presets(async_req=True, _request_timeout=5),
-        ).get()
-        self._coordinator_data = {"favourites": favourites}
+        favourites = await self._client.get_presets(_request_timeout=5)
+        queue_settings = await self._client.get_settings_queue(_request_timeout=5)
+
+        self._coordinator_data = CoordinatorData(
+            favourites=favourites,
+            queue_settings=queue_settings,
+        )
 
     async def _async_update_data(self) -> CoordinatorData:
         """Get all information needed by the polling entities."""
@@ -130,16 +138,11 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
             await self._update_variables()
             return self._coordinator_data
 
-        except (
-            MaxRetryError,
-            NewConnectionError,
-            ApiException,
-            ConnectionResetError,
-            AttributeError,  # An API bug will return an invalid value when the device is not available
-        ):
-            raise UpdateFailed
+        except (TimeoutError, ClientConnectorError, ApiException) as error:
+            _LOGGER.warning(error)
+            raise UpdateFailed from error
 
-    def connect_websocket(self, _: datetime | None = None) -> None:
+    def connect_websocket(self) -> None:
         """Start the notification WebSocket listeners."""
         if self._client.websocket_connected:
             return
@@ -332,26 +335,11 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
 
     def on_software_update_state(self, notification: SoftwareUpdateState) -> None:
         """Check device sw version."""
-
-        # Get software version.
-        software_status = cast(
-            ApplyResult[SoftwareUpdateStatus],
-            self._client.get_softwareupdate_status(async_req=True),
-        ).get()
-
-        # Update the HA device if the sw version does not match
-        if not isinstance(self._device, DeviceEntry):
-            self._device = get_device(self.hass, self._unique_id)
-
-        assert isinstance(self._device, DeviceEntry)
-
-        if software_status.software_version != self._device.sw_version:
-            device_registry = dr.async_get(self.hass)
-
-            device_registry.async_update_device(
-                device_id=self._device.id,
-                sw_version=software_status.software_version,
-            )
+        async_dispatcher_send(
+            self.hass,
+            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOFTWARE_UPDATE_STATE}",
+            notification,
+        )
 
     def on_all_notifications_raw(self, notification: dict) -> None:
         """Receive all notifications."""

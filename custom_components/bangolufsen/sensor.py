@@ -5,6 +5,7 @@ from typing import cast
 
 from inflection import titleize, underscore
 from mozart_api.models import BatteryState, PlaybackContentMetadata
+from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,7 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, ENTITY_ENUM, WEBSOCKET_NOTIFICATION
+from . import BangOlufsenData
+from .const import CONNECTION_STATUS, DOMAIN, WEBSOCKET_NOTIFICATION
 from .entity import BangOlufsenEntity
 
 
@@ -26,11 +28,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensor entities from config entry."""
-    entities = []
+    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
+    entities: list[BangOlufsenSensor] = [
+        BangOlufsenSensorInputSignal(config_entry, data.client),
+        BangOlufsenSensorMediaId(config_entry, data.client),
+    ]
 
-    # Add Sensor entities.
-    for sensor in hass.data[DOMAIN][config_entry.unique_id][ENTITY_ENUM.SENSORS]:
-        entities.append(sensor)
+    # Check if device has a battery
+    battery_state = await data.client.get_battery_state()
+
+    if battery_state.battery_level and battery_state.battery_level > 0:
+        entities.extend(
+            [
+                BangOlufsenSensorBatteryChargingTime(config_entry, data.client),
+                BangOlufsenSensorBatteryLevel(config_entry, data.client),
+                BangOlufsenSensorBatteryPlayingTime(config_entry, data.client),
+            ]
+        )
 
     async_add_entities(new_entities=entities)
 
@@ -38,9 +52,9 @@ async def async_setup_entry(
 class BangOlufsenSensor(BangOlufsenEntity, SensorEntity):
     """Base Sensor class."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Init the Sensor."""
-        super().__init__(entry)
+        super().__init__(entry, client)
 
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -52,18 +66,23 @@ class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
     _attr_native_unit_of_measurement = "%"
     _attr_translation_key = "battery_level"
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Init the battery level Sensor."""
-        super().__init__(entry)
+        super().__init__(entry, client)
 
         self._attr_device_class = SensorDeviceClass.BATTERY
         self._attr_unique_id = f"{self._unique_id}-battery-level"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        await super().async_added_to_hass()
-
-        self._dispatchers.append(
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        )
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BATTERY}",
@@ -85,18 +104,23 @@ class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
     _attr_native_unit_of_measurement = "min"
     _attr_translation_key = "battery_charging_time"
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Init the battery charging time Sensor."""
-        super().__init__(entry)
+        super().__init__(entry, client)
 
         self._attr_device_class = SensorDeviceClass.DURATION
         self._attr_unique_id = f"{self._unique_id}-battery-charging-time"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        await super().async_added_to_hass()
-
-        self._dispatchers.append(
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        )
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BATTERY}",
@@ -129,17 +153,22 @@ class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
     _attr_native_unit_of_measurement = "min"
     _attr_translation_key = "battery_playing_time"
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Init the battery playing time Sensor."""
-        super().__init__(entry)
+        super().__init__(entry, client)
 
         self._attr_unique_id = f"{self._unique_id}-battery-playing-time"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        await super().async_added_to_hass()
-
-        self._dispatchers.append(
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        )
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BATTERY}",
@@ -170,9 +199,9 @@ class BangOlufsenSensorMediaId(BangOlufsenSensor):
     _attr_translation_key = "media_id"
     _attr_icon = "mdi:information"
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Init the media id Sensor."""
-        super().__init__(entry)
+        super().__init__(entry, client)
 
         self._attr_device_class = None
         self._attr_state_class = None
@@ -181,14 +210,19 @@ class BangOlufsenSensorMediaId(BangOlufsenSensor):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        await super().async_added_to_hass()
-
-        self._dispatchers.append(
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        )
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{self.entry.unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_METADATA}",
                 self._update_playback_metadata,
-            ),
+            )
         )
 
     async def _update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
@@ -204,9 +238,9 @@ class BangOlufsenSensorInputSignal(BangOlufsenSensor):
     _attr_icon = "mdi:audio-input-stereo-minijack"
     _attr_translation_key = "input_signal"
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Init the input signal Sensor."""
-        super().__init__(entry)
+        super().__init__(entry, client)
 
         self._attr_device_class = None
         self._attr_state_class = None
@@ -214,9 +248,14 @@ class BangOlufsenSensorInputSignal(BangOlufsenSensor):
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        await super().async_added_to_hass()
-
-        self._dispatchers.append(
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        )
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_METADATA}",

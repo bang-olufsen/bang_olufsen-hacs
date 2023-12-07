@@ -3,10 +3,9 @@
         "abort": {
             "already_configured": "Already configured. Only a single configuration possible.",
             "already_in_progress": "Configuration flow is already in progress",
-            "api_exception": "An error occurred while initializing the device. Try waiting or restarting the device.",
-            "max_retry_error": "Timeout establishing connection",
-            "new_connection_error": "Failed to connect",
-            "not_found_exception": "Failed to connect",
+            "api_exception": "Invalid hostname or IP address",
+            "client_connector_error": "Invalid hostname or IP address",
+            "timeout_error": "Timeout establishing connection",
             "value_error": "Invalid hostname or IP address"
         },
         "flow_title": "{name}",
@@ -17,8 +16,8 @@
             },
             "user": {
                 "data": {
-                    "host": "IP Address",
-                    "model": "Device model"
+                    "host": "IP address",
+                    "model": "Model"
                 },
                 "description": "Manually configure your Bang & Olufsen device."
             }
@@ -180,7 +179,7 @@
         },
         "text": {
             "friendly_name": {
-                "name": "Friendly name"
+                "name": "Device friendly name"
             },
             "home_control_uri": {
                 "name": "Home Control URI"
@@ -189,19 +188,16 @@
     },
     "options": {
         "abort": {
-            "already_configured": "Already configured. Only a single configuration possible.",
-            "api_exception": "An error occurred while initializing the device. Try waiting or restarting the device.",
-            "max_retry_error": "Unable to connect to the device at the address. Please check if the IP address is correct.",
-            "new_connection_error": "Unable to detect a device at the address. Please check if the IP address is correct.",
+            "api_exception": "Invalid hostname or IP address",
+            "client_connector_error": "Invalid hostname or IP address",
+            "timeout_error": "Timeout establishing connection",
             "value_error": "Invalid hostname or IP address"
         },
         "step": {
             "init": {
                 "data": {
                     "default_volume": "Default volume",
-                    "max_volume": "Max volume",
-                    "name": "Name",
-                    "volume_step": "Volume step"
+                    "max_volume": "Max volume"
                 },
                 "description": "Adjust settings."
             }

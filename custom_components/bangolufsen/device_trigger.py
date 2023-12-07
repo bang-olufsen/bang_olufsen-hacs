@@ -1,10 +1,9 @@
 """Device triggers for the Bang & Olufsen integration."""
 from __future__ import annotations
 
-from multiprocessing.pool import ApplyResult
 from typing import Any, cast
 
-from mozart_api.models import PairedRemote, PairedRemoteResponse
+from mozart_api.models import PairedRemote
 from mozart_api.mozart_client import MozartClient
 import voluptuous as vol
 
@@ -14,16 +13,16 @@ from homeassistant.components.homeassistant.triggers import event as event_trigg
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
-    CONF_HOST,
     CONF_PLATFORM,
     CONF_TYPE,
+    Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import ConfigType
 
-from .const import BANGOLUFSEN_EVENT, DOMAIN, ENTITY_ENUM
-from .media_player import BangOlufsenMediaPlayer
+from .const import BANGOLUFSEN_EVENT, DOMAIN
 
 BUTTON_TRIGGERS = (
     "Preset1_shortPress",
@@ -147,19 +146,21 @@ async def async_get_triggers(
     """List device triggers for Bang & Olufsen devices."""
     triggers = []
 
-    # Get the host IP address
+    # Get the serial number
     device_registry = dr.async_get(hass)
     serial_number = list(device_registry.devices[device_id].identifiers)[0][1]
-    media_player: BangOlufsenMediaPlayer = hass.data[DOMAIN][serial_number][
-        ENTITY_ENUM.MEDIA_PLAYER
-    ]
 
-    client = MozartClient(host=media_player.entry.data[CONF_HOST])
+    # Get the entry id
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.MEDIA_PLAYER, DOMAIN, serial_number
+    )
+    entry = cast(RegistryEntry, entity_registry.async_get(cast(str, entity_id)))
+
+    client: MozartClient = hass.data[DOMAIN][entry.config_entry_id].client
 
     # Get if a remote control is connected
-    bluetooth_remote_list = cast(
-        ApplyResult[PairedRemoteResponse], client.get_bluetooth_remotes(async_req=True)
-    ).get()
+    bluetooth_remote_list = await client.get_bluetooth_remotes()
     remote_control_available = bool(
         len(cast(list[PairedRemote], bluetooth_remote_list.items))
     )

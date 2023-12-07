@@ -1,15 +1,17 @@
 {
     "config": {
         "abort": {
+            "already_in_progress": "Enheden er i gang med at blive konfigureret.",
             "already_configured": "Enheden er allerede konfigureret.",
-            "api_exception": "En fejl opstod ved initialiseringen af enheden. Prøv at vente eller at genstarte enheden.",
-            "max_retry_error": "Kan ikke forbinde til enheden på den givne IP-adresse. Tjek om IP-adressen stemmer overens med enhedens.",
-            "new_connection_error": "Kan ikke detektere en enhed på givne IP-adresse. Tjek om IP-adressen stemmer overens med enhedens.",
+            "timeout_error": "Kan ikke finde en enhed på den givne IP-adresse.",
+            "client_connector_error": "Kan ikke forbinde til enheden på den givne IP-adresse.",
+            "api_exception": "Kan ikke forbinde til enheden på den givne IP-adresse.",
             "value_error": "Ikke en gyldig IP-adresse."
         },
         "flow_title": "{name}",
         "step": {
             "confirm":{
+                "title": "Opsæt en Bang & Olufsen enhed.",
                 "description": "Bekræft konfigurationen af {model}-{serial_number} @ {host}."
             },
             "user":{
@@ -131,19 +133,16 @@
     },
     "options":{
         "abort": {
-            "already_configured": "Enheden er allerede konfigureret.",
-            "api_exception": "En fejl opstod ved initialiseringen af enheden. Prøv at vente eller at genstarte enheden.",
-            "max_retry_error": "Kan ikke forbinde til enheden på den givne IP-adresse. Tjek om IP-adressen stemmer overens med enhedens.",
-            "new_connection_error": "Kan ikke detektere en enhed på givne IP-adresse. Tjek om IP-adressen stemmer overens med enhedens.",
+            "timeout_error": "Kan ikke finde en enhed på den givne IP-adresse.",
+            "client_connector_error": "Kan ikke forbinde til enheden på den givne IP-adresse.",
+            "api_exception": "Kan ikke forbinde til enheden på den givne IP-adresse.",
             "value_error": "Ikke en gyldig IP-adresse."
         },
         "step":{
             "init": {
                 "data": {
                     "default_volume": "Standard lydstyrke",
-                    "max_volume": "Maksimal lydstyrke",
-                    "name": "Navn",
-                    "volume_step": "Lydstyrke trin"
+                    "max_volume": "Maksimal lydstyrke"
                 },
                 "description": "Juster indstillinger."
             }
@@ -154,7 +153,7 @@
 	"entity":{
 		"binary_sensor":{
 			"battery_charging":{
-				"name":"Oplader batteri"
+				"name":"Batteri oplader"
 			},
 			"proximity":{"name":"Proksimitet"}
 		},

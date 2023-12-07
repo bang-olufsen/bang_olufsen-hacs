@@ -2,17 +2,26 @@
 from __future__ import annotations
 
 from mozart_api.models import BatteryState, WebsocketNotificationTag
+from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, ENTITY_ENUM, PROXIMITY_ENUM, WEBSOCKET_NOTIFICATION
+from . import BangOlufsenData
+from .const import (
+    CONNECTION_STATUS,
+    DOMAIN,
+    PROXIMITY_ENUM,
+    SUPPORT_ENUM,
+    WEBSOCKET_NOTIFICATION,
+)
 from .entity import BangOlufsenEntity
 
 
@@ -22,12 +31,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Binary Sensor entities from config entry."""
-    entities = []
-    configuration = hass.data[DOMAIN][config_entry.unique_id]
+    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
+    entities: list[BangOlufsenBinarySensor] = []
 
-    # Add BinarySensor entities
-    for binary_sensor in configuration[ENTITY_ENUM.BINARY_SENSORS]:
-        entities.append(binary_sensor)
+    # Check if device has a battery
+    battery_state = await data.client.get_battery_state()
+
+    if battery_state.battery_level and battery_state.battery_level > 0:
+        entities.append(
+            BangOlufsenBinarySensorBatteryCharging(config_entry, data.client)
+        )
+
+    # Check if device supports proximity detection.
+    if config_entry.data[CONF_MODEL] in SUPPORT_ENUM.PROXIMITY_SENSOR.value:
+        entities.append(BangOlufsenBinarySensorProximity(config_entry, data.client))
 
     async_add_entities(new_entities=entities)
 
@@ -35,9 +52,9 @@ async def async_setup_entry(
 class BangOlufsenBinarySensor(BangOlufsenEntity, BinarySensorEntity):
     """Base Binary Sensor class."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Init the Binary Sensor."""
-        super().__init__(entry)
+        super().__init__(entry, client)
 
         self._attr_is_on = False
 
@@ -48,17 +65,23 @@ class BangOlufsenBinarySensorBatteryCharging(BangOlufsenBinarySensor):
     _attr_icon = "mdi:battery-charging"
     _attr_translation_key = "battery_charging"
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Init the battery charging Binary Sensor."""
-        super().__init__(entry)
+        super().__init__(entry, client)
 
         self._attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
         self._attr_unique_id = f"{self._unique_id}-battery-charging"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        await super().async_added_to_hass()
-        self._dispatchers.append(
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        )
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BATTERY}",
@@ -78,16 +101,22 @@ class BangOlufsenBinarySensorProximity(BangOlufsenBinarySensor):
     _attr_icon = "mdi:account-question"
     _attr_translation_key = "proximity"
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Init the proximity Binary Sensor."""
-        super().__init__(entry)
+        super().__init__(entry, client)
 
         self._attr_unique_id = f"{self._unique_id}-proximity"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
-        await super().async_added_to_hass()
-        self._dispatchers.append(
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._update_connection_state,
+            )
+        )
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PROXIMITY}",

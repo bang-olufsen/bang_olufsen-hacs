@@ -1,13 +1,12 @@
 {
   "config": {
     "abort": {
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "api_exception": "An error occurred while initializing the device. Try waiting or restarting the device.",
-      "max_retry_error": "[%key:common::config_flow::error::timeout_connect%]",
-      "new_connection_error": "[%key:common::config_flow::error::cannot_connect%]",
-      "value_error": "[%key:common::config_flow::error::invalid_host%]",
-      "not_found_exception": "[%key:common::config_flow::error::cannot_connect%]"
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "api_exception": "[%key:common::config_flow::error::invalid_host%]",
+      "client_connector_error": "[%key:common::config_flow::error::invalid_host%]",
+      "timeout_error": "[%key:common::config_flow::error::timeout_connect%]",
+      "value_error": "[%key:common::config_flow::error::invalid_host%]"
     },
     "flow_title": "{name}",
     "step": {
@@ -18,7 +17,7 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
-          "model": "Device model"
+          "model": "[%key:common::generic::model%]"
         },
         "description": "Manually configure your Bang & Olufsen device."
       }
@@ -133,19 +132,16 @@
   },
   "options": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "api_exception": "An error occurred while initializing the device. Try waiting or restarting the device.",
-      "max_retry_error": "Unable to connect to the device at the address. Please check if the IP address is correct.",
-      "new_connection_error": "Unable to detect a device at the address. Please check if the IP address is correct.",
+      "api_exception": "[%key:common::config_flow::error::invalid_host%]",
+      "client_connector_error": "[%key:common::config_flow::error::invalid_host%]",
+      "timeout_error": "[%key:common::config_flow::error::timeout_connect%]",
       "value_error": "[%key:common::config_flow::error::invalid_host%]"
     },
     "step": {
       "init": {
         "data": {
           "default_volume": "Default volume",
-          "max_volume": "Max volume",
-          "name": "[%key:common::config_flow::data::name%]",
-          "volume_step": "Volume step"
+          "max_volume": "Max volume"
         },
         "description": "Adjust settings."
       }
@@ -281,7 +277,7 @@
       }
     },
     "text": {
-      "friendly_name": { "name": "Friendly name" },
+      "friendly_name": { "name": "Device friendly name" },
       "home_control_uri": { "name": "Home Control URI" }
     }
   }
