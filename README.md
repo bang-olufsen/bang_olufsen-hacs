@@ -35,7 +35,7 @@ This integration adds an array of different useful entities that are generated a
 ### Media Player entity
 
 - Playback control: play/pause/stop/previous/next
-- Adjust volume: set volume/step volume/mute
+- Adjust volume: set volume/mute
 - Clear playlist
 - Enable shuffle / repeat
 - Select playback source
@@ -331,7 +331,7 @@ data:
   media_content_type: radio
 ```
 
-_NOTE_: To easily obtain the media_content_id for a Deezer track or B&O Radio station, you can enable the 'Media id' sensor on Mozart device in Home Assistant (disabled by default). 
+_NOTE_: To easily obtain the media_content_id for a Deezer track or B&O Radio station, you can enable the 'Media id' sensor on Mozart device in Home Assistant (disabled by default).
 Once enabled, start playing the content you wish to activate in a service call - the Media id sensor will then provide the value to be used in the media_content_id field.
 
 ### Custom services
