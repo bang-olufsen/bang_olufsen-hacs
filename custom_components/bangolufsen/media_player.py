@@ -236,6 +236,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, CoordinatorEntity, BangOlufsenEn
 
     def __init__(self, entry: ConfigEntry, data: BangOlufsenData) -> None:
         """Initialize the media player."""
+        MediaPlayerEntity.__init__(self)
         CoordinatorEntity.__init__(self, data.coordinator)
         BangOlufsenEntity.__init__(self, entry, data.client)
 
@@ -1301,16 +1302,18 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, CoordinatorEntity, BangOlufsenEn
             _LOGGER.error("Can't define URI and TTS message at the same time")
             return
 
-        volume = None
+        overlay_play_request = OverlayPlayRequest()
 
         if absolute_volume:
-            volume = absolute_volume
+            overlay_play_request.volume_absolute = absolute_volume
         elif volume_offset:
             # Ensure that the volume is not above 100
             if not self._volume.level or not self._volume.level.level:
                 _LOGGER.warning("Error setting volume")
             else:
-                volume = min(self._volume.level.level + volume_offset, 100)
+                overlay_play_request.volume_absolute = min(
+                    self._volume.level.level + volume_offset, 100
+                )
 
         if uri:
             media_id = uri
@@ -1323,18 +1326,11 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, CoordinatorEntity, BangOlufsenEn
 
                 media_id = async_process_play_media_url(self.hass, sourced_media.url)
 
-            await self._client.post_overlay_play(
-                overlay_play_request=OverlayPlayRequest(
-                    uri=Uri(location=media_id), volume_absolute=volume
-                )
-            )
+            overlay_play_request.uri = Uri(location=media_id)
 
         elif tts:
-            await self._client.post_overlay_play(
-                overlay_play_request=OverlayPlayRequest(
-                    text_to_speech=OverlayPlayRequestTextToSpeechTextToSpeech(
-                        lang=tts_language, text=tts
-                    ),
-                    volume_absolute=volume,
-                )
+            overlay_play_request.text_to_speech = (
+                OverlayPlayRequestTextToSpeechTextToSpeech(lang=tts_language, text=tts)
             )
+
+        await self._client.post_overlay_play(overlay_play_request)
