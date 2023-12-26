@@ -251,7 +251,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, CoordinatorEntity, BangOlufsenEn
             identifiers={(DOMAIN, self._unique_id)},
             manufacturer="Bang & Olufsen",
             model=self._model,
-            serial_number=self._unique_id,
             name=self._name,
         )
         self._attr_group_members = []
