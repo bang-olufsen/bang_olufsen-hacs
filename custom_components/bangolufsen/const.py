@@ -142,7 +142,7 @@ class SUPPORT_ENUM(Enum):
 # Range for bass and treble entities
 BASS_TREBLE_RANGE = range(-6, 6, 1)
 
-DOMAIN: Final[str] = "bang_olufsen"
+DOMAIN: Final[str] = "bangolufsen"
 
 # Default values for configuration.
 DEFAULT_MODEL: Final[str] = MODEL_ENUM.BEOSOUND_BALANCE
