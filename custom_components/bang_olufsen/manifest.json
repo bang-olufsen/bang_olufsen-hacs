@@ -1,5 +1,5 @@
 {
-	"domain": "bangolufsen",
+	"domain": "bang_olufsen",
 	"name": "Bang & Olufsen",
 	"codeowners": ["@mj23000"],
 	"config_flow": true,
