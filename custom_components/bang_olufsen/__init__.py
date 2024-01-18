@@ -40,24 +40,19 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
-
     # Remove casts to str
     assert entry.unique_id
 
     device_registry = dr.async_get(hass)
 
-    # Check if there are available options.
-    if entry.options:
-        entry.data = entry.options
-    else:
-        # Create device in order to ensure entity platforms (button, binary_sensor)
-        # have device name before the primary (media_player) is initialized
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, entry.unique_id)},
-            name=entry.title,
-            model=entry.data[CONF_MODEL],
-        )
+    # Create device in order to ensure entity platforms (button, binary_sensor)
+    # have device name before the primary (media_player) is initialized
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.unique_id)},
+        name=entry.title,
+        model=entry.data[CONF_MODEL],
+    )
 
     client = MozartClient(host=entry.data[CONF_HOST], websocket_reconnect=True)
 
@@ -65,6 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await client.get_battery_state(_request_timeout=3)
     except (ApiException, ClientConnectorError, TimeoutError) as error:
+        await client.close_api_client()
         raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
 
     coordinator = BangOlufsenCoordinator(hass, entry, client)
@@ -76,17 +72,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
+    client.connect_notifications()
 
-    coordinator.connect_websocket()
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # Close the API client
-    await hass.data[DOMAIN][entry.entry_id].client.close()
+    # Close the API client and WebSocket notification listener
+    hass.data[DOMAIN][entry.entry_id].client.disconnect_notifications()
+    await hass.data[DOMAIN][entry.entry_id].client.close_api_client()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

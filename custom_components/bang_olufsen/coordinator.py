@@ -31,17 +31,17 @@ from mozart_api.mozart_client import MozartClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    BANGOLUFSEN_EVENT,
-    BANGOLUFSEN_WEBSOCKET_EVENT,
+    BANG_OLUFSEN_EVENT,
+    BANG_OLUFSEN_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
     WEBSOCKET_NOTIFICATION,
 )
-from .entity import BangOlufsenVariables
+from .entity import BangOlufsenBase
 from .util import get_device
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ class CoordinatorData:
     queue_settings: PlayQueueSettings
 
 
-class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
+class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
     """The entity coordinator and WebSocket listener(s)."""
 
     def __init__(
@@ -70,18 +70,16 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
             update_interval=timedelta(seconds=15),
             always_update=False,
         )
-        BangOlufsenVariables.__init__(self, entry, client)
+        BangOlufsenBase.__init__(self, entry, client)
 
         self._coordinator_data: CoordinatorData = CoordinatorData(
             favourites={},
             queue_settings=PlayQueueSettings(),
         )
 
-        self._device: DeviceEntry | None = None
+        self._device = get_device(hass, self._unique_id)
 
         # WebSocket callbacks
-        self._client.get_on_connection(self.on_connection)
-        self._client.get_on_connection_lost(self.on_connection_lost)
         self._client.get_active_listening_mode_notifications(
             self.on_active_listening_mode
         )
@@ -94,6 +92,8 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         )
         self._client.get_button_notifications(self.on_button_notification)
         self._client.get_notification_notifications(self.on_notification_notification)
+        self._client.get_on_connection_lost(self.on_connection_lost)
+        self._client.get_on_connection(self.on_connection)
         self._client.get_playback_error_notifications(
             self.on_playback_error_notification
         )
@@ -106,14 +106,14 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         self._client.get_playback_state_notifications(
             self.on_playback_state_notification
         )
+        self._client.get_software_update_state_notifications(
+            self.on_software_update_state
+        )
         self._client.get_sound_settings_notifications(
             self.on_sound_settings_notification
         )
         self._client.get_source_change_notifications(self.on_source_change_notification)
         self._client.get_volume_notifications(self.on_volume_notification)
-        self._client.get_software_update_state_notifications(
-            self.on_software_update_state
-        )
 
         # Used for firing events and debugging
         self._client.get_all_notifications_raw(self.on_all_notifications_raw)
@@ -139,20 +139,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
             return self._coordinator_data
 
         except (TimeoutError, ClientConnectorError, ApiException) as error:
-            _LOGGER.warning(error)
             raise UpdateFailed from error
-
-    def connect_websocket(self) -> None:
-        """Start the notification WebSocket listeners."""
-        if self._client.websocket_connected:
-            return
-
-        self._client.connect_notifications(remote_control=True)
-
-    def disconnect(self) -> None:
-        """Terminate the WebSocket connections and remove dispatchers."""
-        self._client.disconnect_notifications()
-        self._update_connection_status()
 
     def _update_connection_status(self) -> None:
         """Update all entities of the connection status."""
@@ -199,15 +186,15 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
 
     def on_beo_remote_button_notification(self, notification: BeoRemoteButton) -> None:
         """Send beo_remote_button dispatch."""
-        if not isinstance(self._device, DeviceEntry):
+        if not self._device:
             self._device = get_device(self.hass, self._unique_id)
 
-        assert isinstance(self._device, DeviceEntry)
+        assert self._device
 
         if notification.type == "KeyPress":
             # Trigger the device trigger
             self.hass.bus.async_fire(
-                BANGOLUFSEN_EVENT,
+                BANG_OLUFSEN_EVENT,
                 event_data={
                     CONF_TYPE: f"{notification.key}_{notification.type}",
                     CONF_DEVICE_ID: self._device.id,
@@ -216,14 +203,14 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
 
     def on_button_notification(self, notification: ButtonEvent) -> None:
         """Send button dispatch."""
-        if not isinstance(self._device, DeviceEntry):
+        if not self._device:
             self._device = get_device(self.hass, self._unique_id)
 
-        assert isinstance(self._device, DeviceEntry)
+        assert self._device
 
         # Trigger the device trigger
         self.hass.bus.async_fire(
-            BANGOLUFSEN_EVENT,
+            BANG_OLUFSEN_EVENT,
             event_data={
                 CONF_TYPE: f"{notification.button}_{notification.state}",
                 CONF_DEVICE_ID: self._device.id,
@@ -333,24 +320,34 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
             notification,
         )
 
-    def on_software_update_state(self, notification: SoftwareUpdateState) -> None:
+    async def on_software_update_state(self, _: SoftwareUpdateState) -> None:
         """Check device sw version."""
-        async_dispatcher_send(
-            self.hass,
-            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOFTWARE_UPDATE_STATE}",
-            notification,
-        )
+        software_status = await self._client.get_softwareupdate_status()
+
+        # Update the HA device if the sw version does not match
+        if not self._device:
+            self._device = get_device(self.hass, self._unique_id)
+
+        assert self._device
+
+        if software_status.software_version != self._device.sw_version:
+            device_registry = dr.async_get(self.hass)
+
+            device_registry.async_update_device(
+                device_id=self._device.id,
+                sw_version=software_status.software_version,
+            )
 
     def on_all_notifications_raw(self, notification: dict) -> None:
         """Receive all notifications."""
-        if not isinstance(self._device, DeviceEntry):
+        if not self._device:
             self._device = get_device(self.hass, self._unique_id)
 
-        assert isinstance(self._device, DeviceEntry)
+        assert self._device
 
         # Add the device_id and serial_number to the notification
         notification["device_id"] = self._device.id
         notification["serial_number"] = int(self._unique_id)
 
         _LOGGER.debug("%s", notification)
-        self.hass.bus.async_fire(BANGOLUFSEN_WEBSOCKET_EVENT, notification)
+        self.hass.bus.async_fire(BANG_OLUFSEN_WEBSOCKET_EVENT, notification)

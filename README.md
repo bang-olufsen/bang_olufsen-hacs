@@ -4,7 +4,7 @@
 
 [![Balance stereo](https://raw.githubusercontent.com/bang-olufsen/mozart-open-api/main/docs/media/balance_stereo.png)](https://www.bang-olufsen.com/en/dk/speakers/beosound-balance-stereo-set?variant=beosound-balance-gva-naturaloak-bundle)
 
-This integration enables control of some of the features of a Bang & Olufsen device through Home Assistant.
+The `bang_olufsen` integration enables control of some of the features of certain [Bang & Olufsen](https://www.bang-olufsen.com/) devices through Home Assistant.
 
 This integration uses the [Mozart open API](https://bang-olufsen.github.io/mozart-open-api/)
 
@@ -24,7 +24,7 @@ Devices that have been tested and _should_ work without any trouble are:
 
 ## Configuration
 
-This integration can be added to a Home Assistant installation using [HACS](https://hacs.xyz/) by adding `https://github.com/bang-olufsen/bangolufsen-hacs` as a [custom repository](https://hacs.xyz/docs/faq/custom_repositories/).
+This integration can be added to a Home Assistant installation using [HACS](https://hacs.xyz/) by adding `https://github.com/bang-olufsen/bang_olufsen-hacs` as a [custom repository](https://hacs.xyz/docs/faq/custom_repositories/).
 
 Afterwards, devices can be added to your Home Assistant installation manually by using the UI or by auto-discovery.
 
@@ -138,9 +138,9 @@ Deezer track IDs can currently only easily be found by playing the track on the 
 
 ## Automations
 
-All device triggers can be received by listinging to `bangolufsen_event` event types.
+All device triggers can be received by listening to `bang_olufsen_event` event types.
 
-Additionally the "raw" WebSocket notifications received from the device are fired as events in Home Assistant. These can be received by listening to `bangolufsen_websocket_event` event types where `device_id` is used to differentiate devices.
+Additionally the "raw" WebSocket notifications received from the device are fired as events in Home Assistant. These can be received by listening to `bang_olufsen_websocket_event` event types where `device_id` is used to differentiate devices.
 
 ### Physical buttons and sensors
 
@@ -168,7 +168,7 @@ trigger:
     type: doorbell
 condition: []
 action:
-  - service: bangolufsen.overlay_audio
+  - service: bang_olufsen.overlay_audio
     data:
       uri: media-source://media_source/local/doorbell.mp3
       absolute_volume: 60
@@ -186,7 +186,7 @@ trigger:
     at: "22:00:00"
 condition: []
 action:
-  - service: bangolufsen.overlay_audio
+  - service: bang_olufsen.overlay_audio
     data:
       absolute_volume: 70
       tts: It is 22:00. Time to go to bed!
@@ -202,7 +202,7 @@ mode: single
 trigger:
   - platform: device
     device_id: 234567890abcdef1234567890abcdef1
-    domain: bangolufsen
+    domain: bang_olufsen
     type: Light/Digit1_KeyPress
 condition: []
 action:
@@ -223,7 +223,7 @@ trigger:
     event: leave
 condition: []
 action:
-  - service: bangolufsen.beolink_allstandby
+  - service: bang_olufsen.beolink_allstandby
     data: {}
     target:
       entity_id: media_player.beosound_balance_32836899
@@ -275,7 +275,7 @@ Playing a Deezer flow. Optionally define a Deezer user ID:
 ```yaml
 service: media_player.play_media
 target:
-  entity_id: media_player.bangolufsen
+  entity_id: media_player.bang_olufsen
 data:
   media_content_type: deezer
   media_content_id: flow
@@ -338,7 +338,7 @@ Once enabled, start playing the content you wish to activate in a service call -
 
 The Bang & Olufsen integration additionally supports different custom services
 
-### Service `bangolufsen.beolink_join`
+### Service `bang_olufsen.beolink_join`
 
 Join a Beolink experience.
 
@@ -346,7 +346,7 @@ Join a Beolink experience.
 | ---------------------- | -------- | ------------------------------------- |
 | `beolink_jid`          | yes      | Manually specify Beolink JID to join. |
 
-### Service `bangolufsen.beolink_expand`
+### Service `bang_olufsen.beolink_expand`
 
 Expand current Beolink experience.
 
@@ -354,7 +354,7 @@ Expand current Beolink experience.
 | ---------------------- | -------- | ---------------------------------------------------------------- |
 | `beolink_jids`         | no       | Specify which Beolink JIDs will join current Beolink experience. |
 
-### Service `bangolufsen.beolink_unexpand`
+### Service `bang_olufsen.beolink_unexpand`
 
 Unexpand from current Beolink experience.
 
@@ -362,15 +362,15 @@ Unexpand from current Beolink experience.
 | ---------------------- | -------- | ---------------------------------------------------------------------- |
 | `beolink_jids`         | no       | Specify which Beolink JIDs will leave from current Beolink experience. |
 
-### Service `bangolufsen.beolink_leave`
+### Service `bang_olufsen.beolink_leave`
 
 Leave a Beolink experience.
 
-### Service `bangolufsen.beolink_allstandby`
+### Service `bang_olufsen.beolink_allstandby`
 
 Set all Connected Beolink devices to standby.
 
-### Service `bangolufsen.beolink_set_volume`
+### Service `bang_olufsen.beolink_set_volume`
 
 Set a volume level for all connected Beolink devices.
 
@@ -378,7 +378,7 @@ Set a volume level for all connected Beolink devices.
 | ---------------------- | -------- | ------------------------- |
 | `volume_level`         | no       | Specify the volume level. |
 
-### Service `bangolufsen.beolink_leader_command`
+### Service `bang_olufsen.beolink_leader_command`
 
 Send a media_player command to Beolink leader.
 
@@ -387,7 +387,7 @@ Send a media_player command to Beolink leader.
 | `command`              | no       | Specify the media_player command.             |
 | `parameter`            | yes      | Specify the media_player command's parameter. |
 
-### Service `bangolufsen.overlay_audio`
+### Service `bang_olufsen.overlay_audio`
 
 Overlay audio over any currently playing audio.
 TTS is generated by Bang & Olufsen and is limited to 100 unique messages a day.

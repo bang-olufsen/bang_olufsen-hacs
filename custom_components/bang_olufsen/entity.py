@@ -26,14 +26,14 @@ from mozart_api.mozart_client import MozartClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
 
-class BangOlufsenVariables:
-    """Shared variables for various classes."""
+class BangOlufsenBase:
+    """Base class for BangOlufsen Home Assistant objects."""
 
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Initialize the object."""
@@ -43,8 +43,6 @@ class BangOlufsenVariables:
 
         # Get the input from the config entry.
         self.entry = entry
-
-        self._device: DeviceEntry | None = None
 
         # Set the configuration variables.
         self._host: str = self.entry.data[CONF_HOST]
@@ -75,14 +73,14 @@ class BangOlufsenVariables:
         )
 
 
-class BangOlufsenEntity(Entity, BangOlufsenVariables):
+class BangOlufsenEntity(Entity, BangOlufsenBase):
     """Base Entity for BangOlufsen entities."""
 
     _attr_has_entity_name = True
 
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Initialize the object."""
-        BangOlufsenVariables.__init__(self, entry, client)
+        super().__init__(entry, client)
 
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
         self._attr_device_class = None

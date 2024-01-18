@@ -2,7 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Already configured. Only a single configuration possible.",
-            "already_in_progress": "Configuration flow is already in progress",
+            "already_in_progress": "Configuration flow is already in progress"
+        },
+        "error": {
             "api_exception": "Invalid hostname or IP address",
             "client_connector_error": "Invalid hostname or IP address",
             "timeout_error": "Timeout establishing connection",
@@ -10,10 +12,6 @@
         },
         "flow_title": "{name}",
         "step": {
-            "confirm": {
-                "description": "Confirm the configuration of the {model}-{serial_number} @ {host}.",
-                "title": "Setup Bang & Olufsen device."
-            },
             "user": {
                 "data": {
                     "host": "IP address",
@@ -183,23 +181,6 @@
             },
             "home_control_uri": {
                 "name": "Home Control URI"
-            }
-        }
-    },
-    "options": {
-        "abort": {
-            "api_exception": "Invalid hostname or IP address",
-            "client_connector_error": "Invalid hostname or IP address",
-            "timeout_error": "Timeout establishing connection",
-            "value_error": "Invalid hostname or IP address"
-        },
-        "step": {
-            "init": {
-                "data": {
-                    "default_volume": "Default volume",
-                    "max_volume": "Max volume"
-                },
-                "description": "Adjust settings."
             }
         }
     },

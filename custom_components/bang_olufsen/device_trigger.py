@@ -22,7 +22,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import ConfigType
 
-from .const import BANGOLUFSEN_EVENT, DOMAIN
+from .const import BANG_OLUFSEN_EVENT, DOMAIN
 
 BUTTON_TRIGGERS = (
     "Preset1_shortPress",
@@ -193,7 +193,7 @@ async def async_attach_trigger(
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
             event_trigger.CONF_PLATFORM: "event",
-            event_trigger.CONF_EVENT_TYPE: BANGOLUFSEN_EVENT,
+            event_trigger.CONF_EVENT_TYPE: BANG_OLUFSEN_EVENT,
             event_trigger.CONF_EVENT_DATA: {
                 CONF_TYPE: config[CONF_TYPE],
                 CONF_DEVICE_ID: config[CONF_DEVICE_ID],
