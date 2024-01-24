@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import BangOlufsenData
 from .const import BASS_TREBLE_RANGE, CONNECTION_STATUS, DOMAIN, WEBSOCKET_NOTIFICATION
 from .entity import BangOlufsenEntity
+from .util import set_platform_initialized
 
 
 async def async_setup_entry(
@@ -23,12 +24,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up Number entities from config entry."""
     data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[BangOlufsenNumber] = [
+    entities: list[BangOlufsenEntity] = [
         BangOlufsenNumberBass(config_entry, data.client),
         BangOlufsenNumberTreble(config_entry, data.client),
     ]
 
     async_add_entities(new_entities=entities)
+
+    set_platform_initialized(data)
 
 
 class BangOlufsenNumber(BangOlufsenEntity, NumberEntity):
@@ -82,6 +85,8 @@ class BangOlufsenNumberTreble(BangOlufsenNumber):
             )
         )
 
+        self.set_entity_initialized()
+
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""
         if data.adjustments and data.adjustments.treble:
@@ -126,6 +131,8 @@ class BangOlufsenNumberBass(BangOlufsenNumber):
                 self._update_sound_settings,
             )
         )
+
+        self.set_entity_initialized()
 
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""

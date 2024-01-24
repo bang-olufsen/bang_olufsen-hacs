@@ -17,6 +17,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import BangOlufsenData
 from .const import CONNECTION_STATUS, DOMAIN, SOURCE_ENUM
 from .entity import BangOlufsenEntity
+from .util import set_platform_initialized
 
 
 async def async_setup_entry(
@@ -26,7 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Button entities from config entry."""
     data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[BangOlufsenButton] = []
+    entities: list[BangOlufsenEntity] = []
 
     # Get available favourites from coordinator.
     favourites = data.coordinator.data.favourites
@@ -39,6 +40,8 @@ async def async_setup_entry(
     )
 
     async_add_entities(new_entities=entities)
+
+    set_platform_initialized(data)
 
 
 class BangOlufsenButton(ButtonEntity, BangOlufsenEntity):
@@ -86,6 +89,8 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
         )
 
         self._attr_extra_state_attributes = self._generate_favourite_attributes()
+
+        self.set_entity_initialized()
 
     async def async_press(self) -> None:
         """Handle the action."""

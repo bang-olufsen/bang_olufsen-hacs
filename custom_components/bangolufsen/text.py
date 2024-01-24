@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import BangOlufsenData
 from .const import CONNECTION_STATUS, DOMAIN, SUPPORT_ENUM, WEBSOCKET_NOTIFICATION
 from .entity import BangOlufsenEntity
+from .util import set_platform_initialized
 
 
 async def async_setup_entry(
@@ -25,7 +26,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Text entities from config entry."""
     data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[BangOlufsenText] = [
+    entities: list[BangOlufsenEntity] = [
         BangOlufsenTextFriendlyName(config_entry, data.client)
     ]
 
@@ -34,6 +35,8 @@ async def async_setup_entry(
         entities.append(BangOlufsenTextHomeControlUri(config_entry, data.client))
 
     async_add_entities(new_entities=entities)
+
+    set_platform_initialized(data)
 
 
 class BangOlufsenText(TextEntity, BangOlufsenEntity):
@@ -78,6 +81,8 @@ class BangOlufsenTextFriendlyName(BangOlufsenText):
         beolink_self = await self._client.get_beolink_self()
         self._attr_native_value = beolink_self.friendly_name
 
+        self.set_entity_initialized()
+
     async def async_set_value(self, value: str) -> None:
         """Set the friendly name."""
         self._attr_native_value = value
@@ -119,6 +124,8 @@ class BangOlufsenTextHomeControlUri(BangOlufsenText):
 
         home_control = await self._client.get_remote_home_control_uri()
         self._attr_native_value = home_control.uri
+
+        self.set_entity_initialized()
 
     async def async_set_value(self, value: str) -> None:
         """Set the Home Control URI name."""

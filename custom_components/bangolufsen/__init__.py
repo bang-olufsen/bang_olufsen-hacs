@@ -1,6 +1,7 @@
 """The Bang & Olufsen integration."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -11,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -20,10 +21,12 @@ from .coordinator import BangOlufsenCoordinator
 
 @dataclass
 class BangOlufsenData:
-    """Dataclass for API client and coordinator containing WebSocket client."""
+    """Dataclass for API client, coordinator containing WebSocket client and WebSocket initialization variables."""
 
     coordinator: DataUpdateCoordinator
     client: MozartClient
+    entities_initialized: int = 0
+    platforms_initialized: int = 0
 
 
 PLATFORMS = [
@@ -38,15 +41,38 @@ PLATFORMS = [
 ]
 
 
+async def _start_websocket_listener(
+    hass: HomeAssistant, entry: ConfigEntry, data: BangOlufsenData
+) -> None:
+    """Start WebSocket listener when all entities have been initialized."""
+    entity_registry = er.async_get(hass)
+
+    while True:
+        # Get all entries for entities and filter all disabled entities
+        entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        expected_entities = len(
+            [entry for entry in entries if not entry.disabled or not entry.disabled_by]
+        )
+
+        # Check if all entities and platforms have been initialized and start WebSocket listener
+        if (
+            expected_entities == data.entities_initialized
+            and len(PLATFORMS) == data.platforms_initialized
+        ):
+            await data.client.connect_notifications(remote_control=True)
+            return
+
+        await asyncio.sleep(0)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
     # Remove casts to str
     assert entry.unique_id
 
+    # Create device now as BangOlufsenWebsocket needs a device for debug logging, firing events etc.
+    # And in order to ensure entity platforms (button, binary_sensor) have device name before the primary (media_player) is initialized
     device_registry = dr.async_get(hass)
-
-    # Create device in order to ensure entity platforms (button, binary_sensor)
-    # have device name before the primary (media_player) is initialized
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},
@@ -56,25 +82,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client = MozartClient(host=entry.data[CONF_HOST], websocket_reconnect=True)
 
-    # Check connection and try to initialize it.
+    # Check API connection and try to initialize it.
     try:
         await client.get_battery_state(_request_timeout=3)
     except (ApiException, ClientConnectorError, TimeoutError) as error:
         await client.close_api_client()
         raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
 
+    # Check WebSocket connection
+    if not await client.check_websocket_connection():
+        raise ConfigEntryNotReady(
+            f"Unable to connect to {entry.title} WebSocket notification channel"
+        )
+
+    # Initialize coordinator
     coordinator = BangOlufsenCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
+    # Add the websocket and API client
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BangOlufsenData(
-        coordinator=coordinator,
-        client=client,
+        coordinator, client
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    client.connect_notifications()
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
+    # Start WebSocket connection when all entities have been initialized
+    hass.async_create_background_task(
+        _start_websocket_listener(hass, entry, hass.data[DOMAIN][entry.entry_id]),
+        f"{DOMAIN}-{entry.unique_id}-websocket_starter",
+    )
 
     return True
 
@@ -91,8 +127,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)

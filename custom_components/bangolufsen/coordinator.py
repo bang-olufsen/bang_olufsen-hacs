@@ -32,6 +32,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -39,10 +40,10 @@ from .const import (
     BANG_OLUFSEN_EVENT,
     BANG_OLUFSEN_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
+    DOMAIN,
     WEBSOCKET_NOTIFICATION,
 )
 from .entity import BangOlufsenBase
-from .util import get_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
             queue_settings=PlayQueueSettings(),
         )
 
-        self._device = get_device(hass, self._unique_id)
+        self._device = self._get_device()
 
         # WebSocket callbacks
         self._client.get_active_listening_mode_notifications(
@@ -150,6 +151,17 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
             self._client.websocket_connected,
         )
 
+    def _get_device(self) -> DeviceEntry | None:
+        """Get the Home Assistant device."""
+        if not isinstance(self.hass, HomeAssistant):
+            return None
+
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device({(DOMAIN, self._unique_id)})
+        assert device
+
+        return device
+
     def on_connection(self) -> None:
         """Handle WebSocket connection made."""
         _LOGGER.debug("Connected to the %s notification channel", self._name)
@@ -187,7 +199,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
     def on_beo_remote_button_notification(self, notification: BeoRemoteButton) -> None:
         """Send beo_remote_button dispatch."""
         if not self._device:
-            self._device = get_device(self.hass, self._unique_id)
+            self._device = self._get_device()
 
         assert self._device
 
@@ -204,7 +216,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
     def on_button_notification(self, notification: ButtonEvent) -> None:
         """Send button dispatch."""
         if not self._device:
-            self._device = get_device(self.hass, self._unique_id)
+            self._device = self._get_device()
 
         assert self._device
 
@@ -326,7 +338,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
 
         # Update the HA device if the sw version does not match
         if not self._device:
-            self._device = get_device(self.hass, self._unique_id)
+            self._device = self._get_device()
 
         assert self._device
 
@@ -341,7 +353,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
     def on_all_notifications_raw(self, notification: dict) -> None:
         """Receive all notifications."""
         if not self._device:
-            self._device = get_device(self.hass, self._unique_id)
+            self._device = self._get_device()
 
         assert self._device
 

@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import BangOlufsenData
 from .const import CONNECTION_STATUS, DOMAIN, WEBSOCKET_NOTIFICATION
 from .entity import BangOlufsenEntity
+from .util import set_platform_initialized
 
 
 async def async_setup_entry(
@@ -29,7 +30,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sensor entities from config entry."""
     data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[BangOlufsenSensor] = [
+    entities: list[BangOlufsenEntity] = [
         BangOlufsenSensorInputSignal(config_entry, data.client),
         BangOlufsenSensorMediaId(config_entry, data.client),
     ]
@@ -47,6 +48,8 @@ async def async_setup_entry(
         )
 
     async_add_entities(new_entities=entities)
+
+    set_platform_initialized(data)
 
 
 class BangOlufsenSensor(BangOlufsenEntity, SensorEntity):
@@ -90,6 +93,8 @@ class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
             )
         )
 
+        self.set_entity_initialized()
+
     async def _update_battery(self, data: BatteryState) -> None:
         """Update sensor value."""
         self._attr_native_value = data.battery_level
@@ -127,6 +132,8 @@ class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
                 self._update_battery,
             )
         )
+
+        self.set_entity_initialized()
 
     async def _update_battery(self, data: BatteryState) -> None:
         """Update sensor value."""
@@ -175,6 +182,8 @@ class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
                 self._update_battery,
             )
         )
+
+        self.set_entity_initialized()
 
     async def _update_battery(self, data: BatteryState) -> None:
         """Update sensor value."""
@@ -225,6 +234,8 @@ class BangOlufsenSensorMediaId(BangOlufsenSensor):
             )
         )
 
+        self.set_entity_initialized()
+
     async def _update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
         """Update Sensor value."""
         self._attr_native_value = data.source_internal_id
@@ -262,6 +273,8 @@ class BangOlufsenSensorInputSignal(BangOlufsenSensor):
                 self._update_playback_metadata,
             )
         )
+
+        self.set_entity_initialized()
 
     async def _update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
         """Update Sensor value."""

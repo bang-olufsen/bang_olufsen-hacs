@@ -23,6 +23,7 @@ from .const import (
     WEBSOCKET_NOTIFICATION,
 )
 from .entity import BangOlufsenEntity
+from .util import set_platform_initialized
 
 
 async def async_setup_entry(
@@ -32,7 +33,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Binary Sensor entities from config entry."""
     data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[BangOlufsenBinarySensor] = []
+    entities: list[BangOlufsenEntity] = []
 
     # Check if device has a battery
     battery_state = await data.client.get_battery_state()
@@ -47,6 +48,8 @@ async def async_setup_entry(
         entities.append(BangOlufsenBinarySensorProximity(config_entry, data.client))
 
     async_add_entities(new_entities=entities)
+
+    set_platform_initialized(data)
 
 
 class BangOlufsenBinarySensor(BangOlufsenEntity, BinarySensorEntity):
@@ -89,6 +92,8 @@ class BangOlufsenBinarySensorBatteryCharging(BangOlufsenBinarySensor):
             )
         )
 
+        self.set_entity_initialized()
+
     async def _update_battery_charging(self, data: BatteryState) -> None:
         """Update battery charging."""
         self._attr_is_on = data.is_charging
@@ -123,6 +128,8 @@ class BangOlufsenBinarySensorProximity(BangOlufsenBinarySensor):
                 self._update_proximity,
             )
         )
+
+        self.set_entity_initialized()
 
     async def _update_proximity(self, data: WebsocketNotificationTag) -> None:
         """Update proximity."""

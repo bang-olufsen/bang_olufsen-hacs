@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import BangOlufsenData
 from .const import CONNECTION_STATUS, DOMAIN, WEBSOCKET_NOTIFICATION
 from .entity import BangOlufsenEntity
+from .util import set_platform_initialized
 
 
 async def async_setup_entry(
@@ -25,11 +26,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switches from config_entry."""
     data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[BangOlufsenSwitch] = [
+    entities: list[BangOlufsenEntity] = [
         BangOlufsenSwitchLoudness(config_entry, data.client)
     ]
 
     async_add_entities(new_entities=entities)
+
+    set_platform_initialized(data)
 
 
 class BangOlufsenSwitch(BangOlufsenEntity, SwitchEntity):
@@ -38,6 +41,7 @@ class BangOlufsenSwitch(BangOlufsenEntity, SwitchEntity):
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Init the Switch."""
         super().__init__(entry, client)
+
         self._attr_device_class = SwitchDeviceClass.SWITCH
         self._attr_entity_category = EntityCategory.CONFIG
 
@@ -82,6 +86,8 @@ class BangOlufsenSwitchLoudness(BangOlufsenSwitch):
                 self._update_sound_settings,
             )
         )
+
+        self.set_entity_initialized()
 
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""

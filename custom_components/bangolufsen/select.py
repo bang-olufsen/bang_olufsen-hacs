@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import BangOlufsenData
 from .const import CONNECTION_STATUS, DOMAIN, MODEL_ENUM, WEBSOCKET_NOTIFICATION
 from .entity import BangOlufsenEntity
+from .util import set_platform_initialized
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Select entities from config entry."""
     data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[BangOlufsenSelect] = []
+    entities: list[BangOlufsenEntity] = []
 
     # Create the listening position entity if supported
     scenes = await data.client.get_all_scenes()
@@ -49,6 +50,8 @@ async def async_setup_entry(
             entities.append(BangOlufsenSelectSoundMode(config_entry, data.client))
 
     async_add_entities(new_entities=entities)
+
+    set_platform_initialized(data)
 
 
 class BangOlufsenSelect(BangOlufsenEntity, SelectEntity):
@@ -96,6 +99,8 @@ class BangOlufsenSelectSoundMode(BangOlufsenSelect):
         )
 
         await self._update_sound_modes()
+
+        self.set_entity_initialized()
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
@@ -165,6 +170,8 @@ class BangOlufsenSelectListeningPosition(BangOlufsenSelect):
         )
 
         await self._update_listening_positions()
+
+        self.set_entity_initialized()
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

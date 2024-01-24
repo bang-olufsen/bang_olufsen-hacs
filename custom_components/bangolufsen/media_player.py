@@ -86,6 +86,7 @@ from .const import (
     WEBSOCKET_NOTIFICATION,
 )
 from .entity import BangOlufsenEntity
+from .util import set_platform_initialized
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,9 +118,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Media Player entity from config entry."""
     data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
+    entities: list[BangOlufsenEntity] = []
 
-    # Add MediaPlayer entity
-    async_add_entities(new_entities=[BangOlufsenMediaPlayer(config_entry, data)])
+    entities.append(BangOlufsenMediaPlayer(config_entry, data))
+
+    set_platform_initialized(data)
+
+    async_add_entities(new_entities=entities)
 
     # Register services.
     platform = async_get_current_platform()
@@ -382,6 +387,8 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, CoordinatorEntity, BangOlufsenEn
         self.async_on_remove(
             self.coordinator.async_add_listener(self._update_queue_settings)
         )
+
+        self.set_entity_initialized()
 
     async def _initialize(self) -> None:
         """Initialize connection dependent variables."""
