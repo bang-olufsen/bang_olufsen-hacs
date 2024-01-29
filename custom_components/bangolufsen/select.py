@@ -57,12 +57,11 @@ async def async_setup_entry(
 class BangOlufsenSelect(BangOlufsenEntity, SelectEntity):
     """Select for Mozart settings."""
 
-    _attr_entity_category = EntityCategory.CONFIG
-
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Init the Select."""
         super().__init__(entry, client)
 
+        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_current_option = None
         self._attr_options = []
 
