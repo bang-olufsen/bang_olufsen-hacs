@@ -30,6 +30,8 @@ class SOURCE_ENUM(StrEnum):
     deezer = "Deezer"
     beolink = "Networklink"
     tidalConnect = "Tidal Connect"  # noqa: N815
+    # Source may be unknown, which is equal to no source on startup on some devices
+    unknown = "Unknown Source"
 
 
 class REPEAT_ENUM(StrEnum):

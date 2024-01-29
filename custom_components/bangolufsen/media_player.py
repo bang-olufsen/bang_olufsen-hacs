@@ -422,7 +422,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, CoordinatorEntity, BangOlufsenEn
             if product_state.playback.progress:
                 self._playback_progress = product_state.playback.progress
             if product_state.playback.source:
-                self._source_change = product_state.playback.source
+                await self._update_source_change(product_state.playback.source)
             if product_state.playback.state:
                 self._playback_state = product_state.playback.state
                 # Set initial state
@@ -693,8 +693,15 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, CoordinatorEntity, BangOlufsenEn
         if self._source_change.id in (SOURCE_ENUM.lineIn, SOURCE_ENUM.spdif):
             self._playback_progress = PlaybackProgress(progress=0)
 
+        # Ensure that a source is active (not unknown). Default to lineIn.
+        elif self._source_change.name == SOURCE_ENUM.unknown.value:
+            _LOGGER.debug(
+                "No source available. Defaulting to %s", SOURCE_ENUM.lineIn.value
+            )
+            await self._client.set_active_source(source_id=SOURCE_ENUM.lineIn.name)
+
         # Update bluetooth device attribute.
-        if self._source_change.id and self._source_change.id == SOURCE_ENUM.bluetooth:
+        elif self._source_change.id == SOURCE_ENUM.bluetooth:
             await self._update_bluetooth()
 
         self.async_write_ha_state()

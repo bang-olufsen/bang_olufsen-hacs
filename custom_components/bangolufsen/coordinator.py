@@ -144,7 +144,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
 
     def _update_connection_status(self) -> None:
         """Update all entities of the connection status."""
-        self.last_update_success = self._client.websocket_connected
         async_dispatcher_send(
             self.hass,
             f"{self._unique_id}_{CONNECTION_STATUS}",
@@ -169,7 +168,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
 
     def on_connection_lost(self) -> None:
         """Handle WebSocket connection lost."""
-        _LOGGER.error("Lost connection to the %s", self._name)
+        _LOGGER.error("Lost connection to the %s notification channel", self._name)
         self._update_connection_status()
 
     def on_active_listening_mode(self, notification: ListeningModeProps) -> None:
