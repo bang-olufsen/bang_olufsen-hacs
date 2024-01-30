@@ -93,6 +93,6 @@ class BangOlufsenEntity(Entity, BangOlufsenBase):
 
         self.async_write_ha_state()
 
-    def set_entity_initialized(self):
+    def set_entity_initialized(self) -> None:
         """Increment number of initialized entities."""
         self.hass.data[DOMAIN][self.entry.entry_id].entities_initialized += 1

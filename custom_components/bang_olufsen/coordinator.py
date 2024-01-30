@@ -152,7 +152,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
 
     def _get_device(self) -> DeviceEntry | None:
         """Get the Home Assistant device."""
-        if not isinstance(self.hass, HomeAssistant):
+        if not self.hass:
             return None
 
         device_registry = dr.async_get(self.hass)

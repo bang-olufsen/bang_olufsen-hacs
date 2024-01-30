@@ -1,10 +1,10 @@
 beolink_join:
   target:
     entity:
-      integration: bangolufsen
+      integration: bang_olufsen
       domain: media_player
     device:
-      integration: bangolufsen
+      integration: bang_olufsen
   fields:
     beolink_jid:
       required: false
@@ -15,10 +15,10 @@ beolink_join:
 beolink_expand:
   target:
     entity:
-      integration: bangolufsen
+      integration: bang_olufsen
       domain: media_player
     device:
-      integration: bangolufsen
+      integration: bang_olufsen
   fields:
     beolink_jids:
       required: true
@@ -33,10 +33,10 @@ beolink_expand:
 beolink_unexpand:
   target:
     entity:
-      integration: bangolufsen
+      integration: bang_olufsen
       domain: media_player
     device:
-      integration: bangolufsen
+      integration: bang_olufsen
   fields:
     beolink_jids:
       required: true
@@ -51,26 +51,26 @@ beolink_unexpand:
 beolink_leave:
   target:
     entity:
-      integration: bangolufsen
+      integration: bang_olufsen
       domain: media_player
     device:
-      integration: bangolufsen
+      integration: bang_olufsen
 
 beolink_allstandby:
   target:
     entity:
-      integration: bangolufsen
+      integration: bang_olufsen
       domain: media_player
     device:
-      integration: bangolufsen
+      integration: bang_olufsen
 
 beolink_set_volume:
   target:
     entity:
-      integration: bangolufsen
+      integration: bang_olufsen
       domain: media_player
     device:
-      integration: bangolufsen
+      integration: bang_olufsen
   fields:
     volume_level:
       required: true
@@ -81,10 +81,10 @@ beolink_set_volume:
 beolink_set_relative_volume:
   target:
     entity:
-      integration: bangolufsen
+      integration: bang_olufsen
       domain: media_player
     device:
-      integration: bangolufsen
+      integration: bang_olufsen
   fields:
     volume_level:
       required: true
@@ -95,10 +95,10 @@ beolink_set_relative_volume:
 beolink_leader_command:
   target:
     entity:
-      integration: bangolufsen
+      integration: bang_olufsen
       domain: media_player
     device:
-      integration: bangolufsen
+      integration: bang_olufsen
   fields:
     command:
       required: true
@@ -129,10 +129,10 @@ beolink_leader_command:
 overlay_audio:
   target:
     entity:
-      integration: bangolufsen
+      integration: bang_olufsen
       domain: media_player
     device:
-      integration: bangolufsen
+      integration: bang_olufsen
   fields:
     uri:
       required: false

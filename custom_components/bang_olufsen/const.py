@@ -12,26 +12,26 @@ from homeassistant.components.media_player import MediaPlayerState, MediaType
 class SOURCE_ENUM(StrEnum):
     """Enum used for associating device source ids with friendly names. May not include all sources."""
 
-    uriStreamer = "Audio Streamer"  # noqa: N815
-    bluetooth = "Bluetooth"
     airPlay = "AirPlay"  # noqa: N815
+    beolink = "Networklink"
+    bluetooth = "Bluetooth"
     chromeCast = "Chromecast built-in"  # noqa: N815
-    spotify = "Spotify Connect"
+    deezer = "Deezer"
+    dlna = "DLNA"
     generator = "Tone Generator"
     lineIn = "Line-In"  # noqa: N815
-    spdif = "Optical"
-    netRadio = "B&O Radio"  # noqa: N815
     local = "Local"
-    dlna = "DLNA"
-    qplay = "QPlay"
-    wpl = "Wireless Powerlink"
+    netRadio = "B&O Radio"  # noqa: N815
     pl = "Powerlink"
-    tv = "TV"
-    deezer = "Deezer"
-    beolink = "Networklink"
+    qplay = "QPlay"
+    spdif = "Optical"
+    spotify = "Spotify Connect"
     tidalConnect = "Tidal Connect"  # noqa: N815
-    # Source may be unknown, which is equal to no source on startup on some devices
+    tv = "TV"
     unknown = "Unknown Source"
+    uriStreamer = "Audio Streamer"  # noqa: N815
+    usbIn = "USB"  # noqa: N815
+    wpl = "Wireless Powerlink"
 
 
 class REPEAT_ENUM(StrEnum):
@@ -144,7 +144,7 @@ class SUPPORT_ENUM(Enum):
 # Range for bass and treble entities
 BASS_TREBLE_RANGE = range(-6, 6, 1)
 
-DOMAIN: Final[str] = "bangolufsen"
+DOMAIN: Final[str] = "bang_olufsen"
 
 # Default values for configuration.
 DEFAULT_MODEL: Final[str] = MODEL_ENUM.BEOSOUND_BALANCE

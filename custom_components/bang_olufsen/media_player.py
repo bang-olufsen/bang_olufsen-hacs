@@ -693,12 +693,28 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, CoordinatorEntity, BangOlufsenEn
         if self._source_change.id in (SOURCE_ENUM.lineIn, SOURCE_ENUM.spdif):
             self._playback_progress = PlaybackProgress(progress=0)
 
-        # Ensure that a source is active (not unknown). Default to lineIn.
+        # Try to ensure that a source is active (not unknown).
         elif self._source_change.name == SOURCE_ENUM.unknown.value:
+            sources = await self._client.get_available_sources(target_remote=False)
+
+            default_source = None
+
+            # Get USB or Line-in, depending on which one of them is enabled
+            for source in cast(list[Source], sources.items):
+                if source.is_enabled and source.id in (
+                    SOURCE_ENUM.lineIn.name,
+                    SOURCE_ENUM.usbIn.name,
+                ):
+                    default_source = source.id
+                    break
+
+            # Set either USB or Line-in as the active source
+            if default_source:
+                await self._client.set_active_source(source_id=default_source)
             _LOGGER.debug(
-                "No source available. Defaulting to %s", SOURCE_ENUM.lineIn.value
+                "No current source%s",
+                f". Defaulting to {default_source}" if default_source else "",
             )
-            await self._client.set_active_source(source_id=SOURCE_ENUM.lineIn.name)
 
         # Update bluetooth device attribute.
         elif self._source_change.id == SOURCE_ENUM.bluetooth:
