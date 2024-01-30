@@ -131,9 +131,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
 
     async def _async_update_data(self) -> CoordinatorData:
         """Get all information needed by the polling entities."""
-        if not self.last_update_success:
-            raise UpdateFailed
-
         # Try to update coordinator_data.
         try:
             await self._update_variables()
