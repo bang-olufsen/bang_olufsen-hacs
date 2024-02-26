@@ -440,3 +440,19 @@ This Blueprint allows for 3 "zones". See the setup for detailed information on h
 To use Control-commands, press “List” on your Beoremote One, navigate down to “Control” and press the center-button. From here, use the described buttons on the remote below to modify the position.
 
 [![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgist.github.com%2Fcklit%2Fd81d36c525936ab8f9309a226287ff91)
+
+### Control scenes using Light and Control menu items on Beoremote One BT
+
+A Blueprint to set up scene control with Beoremote One BT and a Mozart-based product.
+
+Select your Mozart product in the dropdown menu.
+
+Enter the function (e.g. Light/Func1) you want to trigger the scene with. All functions are described in the Blueprint.
+
+Select the action that should be triggered by the defined function. This can be any service call, e.g. scene.turn_on.
+
+In case you have renamed the scenes on your remote, they will not match the documentation. To find the function name of a renamed button, enable the debug mode toggle. Every time a Light or Control item is activated, a notification with the name of the selected function will show up in the Home Assistant dashboard notification panel. We recommend to disable debug mode as soon as the automation is working as expected.
+
+To activate a scene, press “List” on your Beoremote One BT, navigate down to “Light” or "Control" and press the right-arrow key. Navigate to the function you want to activate and confirm with the center-button.
+
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgist.github.com%2Fcklit%2Fd3ee25fa0576da38ca8dede75cf49c04)
