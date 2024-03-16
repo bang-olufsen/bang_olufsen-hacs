@@ -1,4 +1,5 @@
 """Sensor entities for the Bang & Olufsen integration."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -18,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BangOlufsenData
-from .const import CONNECTION_STATUS, DOMAIN, WEBSOCKET_NOTIFICATION
+from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import BangOlufsenEntity
 from .util import set_platform_initialized
 
@@ -88,7 +89,7 @@ class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BATTERY}",
+                f"{self._unique_id}_{WebsocketNotification.BATTERY}",
                 self._update_battery,
             )
         )
@@ -128,7 +129,7 @@ class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BATTERY}",
+                f"{self._unique_id}_{WebsocketNotification.BATTERY}",
                 self._update_battery,
             )
         )
@@ -178,7 +179,7 @@ class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BATTERY}",
+                f"{self._unique_id}_{WebsocketNotification.BATTERY}",
                 self._update_battery,
             )
         )
@@ -229,7 +230,7 @@ class BangOlufsenSensorMediaId(BangOlufsenSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self.entry.unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_METADATA}",
+                f"{self.entry.unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
                 self._update_playback_metadata,
             )
         )
@@ -269,7 +270,7 @@ class BangOlufsenSensorInputSignal(BangOlufsenSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PLAYBACK_METADATA}",
+                f"{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
                 self._update_playback_metadata,
             )
         )

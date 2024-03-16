@@ -1,4 +1,5 @@
 """Binary Sensor entities for the Bang & Olufsen integration."""
+
 from __future__ import annotations
 
 from mozart_api.models import BatteryState, WebsocketNotificationTag
@@ -18,9 +19,9 @@ from . import BangOlufsenData
 from .const import (
     CONNECTION_STATUS,
     DOMAIN,
-    PROXIMITY_ENUM,
-    SUPPORT_ENUM,
-    WEBSOCKET_NOTIFICATION,
+    BangOlufsenModelSupport,
+    BangOlufsenProximity,
+    WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
 from .util import set_platform_initialized
@@ -44,7 +45,7 @@ async def async_setup_entry(
         )
 
     # Check if device supports proximity detection.
-    if config_entry.data[CONF_MODEL] in SUPPORT_ENUM.PROXIMITY_SENSOR.value:
+    if config_entry.data[CONF_MODEL] in BangOlufsenModelSupport.PROXIMITY_SENSOR.value:
         entities.append(BangOlufsenBinarySensorProximity(config_entry, data.client))
 
     async_add_entities(new_entities=entities)
@@ -87,7 +88,7 @@ class BangOlufsenBinarySensorBatteryCharging(BangOlufsenBinarySensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BATTERY}",
+                f"{self._unique_id}_{WebsocketNotification.BATTERY}",
                 self._update_battery_charging,
             )
         )
@@ -124,7 +125,7 @@ class BangOlufsenBinarySensorProximity(BangOlufsenBinarySensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.PROXIMITY}",
+                f"{self._unique_id}_{WebsocketNotification.PROXIMITY}",
                 self._update_proximity,
             )
         )
@@ -134,5 +135,5 @@ class BangOlufsenBinarySensorProximity(BangOlufsenBinarySensor):
     async def _update_proximity(self, data: WebsocketNotificationTag) -> None:
         """Update proximity."""
         if data.value:
-            self._attr_is_on = PROXIMITY_ENUM[data.value].value
+            self._attr_is_on = BangOlufsenProximity[data.value].value
             self.async_write_ha_state()

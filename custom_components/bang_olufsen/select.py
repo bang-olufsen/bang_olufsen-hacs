@@ -1,4 +1,5 @@
 """Select entities for the Bang & Olufsen Mozart integration."""
+
 from __future__ import annotations
 
 import logging
@@ -14,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BangOlufsenData
-from .const import CONNECTION_STATUS, DOMAIN, MODEL_ENUM, WEBSOCKET_NOTIFICATION
+from .const import CONNECTION_STATUS, DOMAIN, BangOlufsenModel, WebsocketNotification
 from .entity import BangOlufsenEntity
 from .util import set_platform_initialized
 
@@ -44,7 +45,7 @@ async def async_setup_entry(
 
     # Create the sound mode select entity if supported
     # Currently the Balance does not expose any useful Sound Modes and should be excluded
-    if config_entry.data[CONF_MODEL] != MODEL_ENUM.BEOSOUND_BALANCE:
+    if config_entry.data[CONF_MODEL] != BangOlufsenModel.BEOSOUND_BALANCE:
         listening_modes = await data.client.get_listening_mode_set()
         if len(listening_modes) > 0:
             entities.append(BangOlufsenSelectSoundMode(config_entry, data.client))
@@ -92,7 +93,7 @@ class BangOlufsenSelectSoundMode(BangOlufsenSelect):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.ACTIVE_LISTENING_MODE}",
+                f"{self._unique_id}_{WebsocketNotification.ACTIVE_LISTENING_MODE}",
                 self._update_sound_modes,
             )
         )
@@ -156,14 +157,14 @@ class BangOlufsenSelectListeningPosition(BangOlufsenSelect):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.ACTIVE_SPEAKER_GROUP}",
+                f"{self._unique_id}_{WebsocketNotification.ACTIVE_SPEAKER_GROUP}",
                 self._update_listening_positions,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.REMOTE_MENU_CHANGED}",
+                f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
                 self._update_listening_positions,
             )
         )

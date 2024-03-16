@@ -1,6 +1,5 @@
 """Button entities for the Bang & Olufsen integration."""
 
-
 from __future__ import annotations
 
 from typing import cast
@@ -15,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BangOlufsenData
-from .const import CONNECTION_STATUS, DOMAIN, SOURCE_ENUM
+from .const import CONNECTION_STATUS, DOMAIN, BangOlufsenSource
 from .entity import BangOlufsenEntity
 from .util import set_platform_initialized
 
@@ -51,6 +50,8 @@ class BangOlufsenButton(ButtonEntity, BangOlufsenEntity):
 class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
     """Favourite Button."""
 
+    _attr_translation_key = "favourite"
+
     def __init__(
         self,
         entry: ConfigEntry,
@@ -64,8 +65,8 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
         self._favourite_id: int = int(cast(str, favourite.name)[6:])
         self._favourite: Preset = favourite
 
-        self._attr_name = f"Favourite {self._favourite_id}"
         self._attr_unique_id = f"{self._unique_id}-favourite-{self._favourite_id}"
+        self._attr_translation_placeholders = {"id": str(self._favourite_id)}
 
         if self._favourite_id in range(10):
             self._attr_icon = f"mdi:numeric-{self._favourite_id}-box"
@@ -128,15 +129,15 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
                         or favourite_type == "playQueue"
                         and favourite_queue.provider.value == "deezer"
                     ):
-                        favourite_attribute["source"] = SOURCE_ENUM.deezer
+                        favourite_attribute["source"] = BangOlufsenSource.deezer.value
 
                     # Add netradio as "source".
                     elif favourite_type == "radio":
-                        favourite_attribute["source"] = SOURCE_ENUM.netRadio
+                        favourite_attribute["source"] = BangOlufsenSource.netRadio.value
 
                     # Add the source name if it is not none.
                     elif self._favourite.source and self._favourite.source.value:
-                        favourite_attribute["source"] = SOURCE_ENUM[
+                        favourite_attribute["source"] = BangOlufsenSource[
                             self._favourite.source.value
                         ].value
 

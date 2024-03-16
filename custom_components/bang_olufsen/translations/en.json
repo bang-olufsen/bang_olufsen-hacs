@@ -141,6 +141,11 @@
                 "name": "Proximity"
             }
         },
+        "button": {
+            "favourite": {
+                "name": "Favourite {id}"
+            }
+        },
         "number": {
             "bass": {
                 "name": "Bass"

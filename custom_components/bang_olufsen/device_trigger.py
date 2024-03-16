@@ -1,4 +1,5 @@
 """Device triggers for the Bang & Olufsen integration."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -19,12 +20,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import ConfigType
 
 from .const import BANG_OLUFSEN_EVENT, DOMAIN
 
-BUTTON_TRIGGERS = (
+DEFAULT_TRIGGERS = (
     "Preset1_shortPress",
     "Preset2_shortPress",
     "Preset3_shortPress",
@@ -135,7 +135,7 @@ REMOTE_TRIGGERS = (
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(REMOTE_TRIGGERS + BUTTON_TRIGGERS),
+        vol.Required(CONF_TYPE): vol.In(REMOTE_TRIGGERS + DEFAULT_TRIGGERS),
     }
 )
 
@@ -144,18 +144,21 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """List device triggers for Bang & Olufsen devices."""
-    triggers = []
+    # Check if a Beoremote One is connected to the device and remote triggers should be added
 
     # Get the serial number
     device_registry = dr.async_get(hass)
     serial_number = list(device_registry.devices[device_id].identifiers)[0][1]
 
-    # Get the entry id
+    # Get the entity id
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id(
         Platform.MEDIA_PLAYER, DOMAIN, serial_number
     )
-    entry = cast(RegistryEntry, entity_registry.async_get(cast(str, entity_id)))
+    assert entity_id
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
 
     client: MozartClient = hass.data[DOMAIN][entry.config_entry_id].client
 
@@ -165,21 +168,21 @@ async def async_get_triggers(
         len(cast(list[PairedRemote], bluetooth_remote_list.items))
     )
 
-    trigger_types: list[str] = list(BUTTON_TRIGGERS)
+    # Always add default triggers
+    trigger_types: list[str] = list(DEFAULT_TRIGGERS)
 
     if remote_control_available:
         trigger_types.extend(REMOTE_TRIGGERS)
 
-    for trigger_type in trigger_types:
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: trigger_type,
-            }
-        )
-    return triggers
+    return [
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: trigger_type,
+        }
+        for trigger_type in trigger_types
+    ]
 
 
 async def async_attach_trigger(

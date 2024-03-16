@@ -1,4 +1,5 @@
 """Number entities for the Bang & Olufsen integration."""
+
 from __future__ import annotations
 
 from mozart_api.models import Bass, SoundSettings, Treble
@@ -12,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BangOlufsenData
-from .const import BASS_TREBLE_RANGE, CONNECTION_STATUS, DOMAIN, WEBSOCKET_NOTIFICATION
+from .const import BASS_TREBLE_RANGE, CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import BangOlufsenEntity
 from .util import set_platform_initialized
 
@@ -80,7 +81,7 @@ class BangOlufsenNumberTreble(BangOlufsenNumber):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOUND_SETTINGS}",
+                f"{self._unique_id}_{WebsocketNotification.SOUND_SETTINGS}",
                 self._update_sound_settings,
             )
         )
@@ -127,7 +128,7 @@ class BangOlufsenNumberBass(BangOlufsenNumber):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOUND_SETTINGS}",
+                f"{self._unique_id}_{WebsocketNotification.SOUND_SETTINGS}",
                 self._update_sound_settings,
             )
         )

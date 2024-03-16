@@ -1,4 +1,5 @@
 """Constants for the Bang & Olufsen integration."""
+
 from __future__ import annotations
 
 from enum import Enum, StrEnum
@@ -9,32 +10,21 @@ from mozart_api.models import Source, SourceArray, SourceTypeEnum
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 
 
-class SOURCE_ENUM(StrEnum):
+class BangOlufsenSource(StrEnum):
     """Enum used for associating device source ids with friendly names. May not include all sources."""
 
-    airPlay = "AirPlay"  # noqa: N815
-    beolink = "Networklink"
+    lineIn = "Line-In"  # noqa: N815
+    unknown = "Unknown Source"
     bluetooth = "Bluetooth"
+    usbIn = "USB"  # noqa: N815
+    spdif = "Optical"
+    uriStreamer = "Audio Streamer"  # noqa: N815
     chromeCast = "Chromecast built-in"  # noqa: N815
     deezer = "Deezer"
-    dlna = "DLNA"
-    generator = "Tone Generator"
-    lineIn = "Line-In"  # noqa: N815
-    local = "Local"
     netRadio = "B&O Radio"  # noqa: N815
-    pl = "Powerlink"
-    qplay = "QPlay"
-    spdif = "Optical"
-    spotify = "Spotify Connect"
-    tidalConnect = "Tidal Connect"  # noqa: N815
-    tv = "TV"
-    unknown = "Unknown Source"
-    uriStreamer = "Audio Streamer"  # noqa: N815
-    usbIn = "USB"  # noqa: N815
-    wpl = "Wireless Powerlink"
 
 
-class REPEAT_ENUM(StrEnum):
+class BangOlufsenRepeat(StrEnum):
     """Enum used for translating device repeat settings to Home Assistant settings."""
 
     all = "all"
@@ -53,12 +43,11 @@ BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
     "error": MediaPlayerState.IDLE,
     # A devices initial state is "unknown" and should be treated as "idle"
     "unknown": MediaPlayerState.IDLE,
-    # Power states
 }
 
 
 # Media types for play_media
-class BANG_OLUFSEN_MEDIA_TYPE(StrEnum):
+class BangOlufsenMediaType(StrEnum):
     """Bang & Olufsen specific media types."""
 
     FAVOURITE = "favourite"
@@ -68,14 +57,14 @@ class BANG_OLUFSEN_MEDIA_TYPE(StrEnum):
 
 
 # Proximity detection for binary_sensor
-class PROXIMITY_ENUM(Enum):
+class BangOlufsenProximity(Enum):
     """Proximity detection mapping.."""
 
     proximityPresenceDetected = True  # noqa: N815
     proximityPresenceNotDetected = False  # noqa: N815
 
 
-class MODEL_ENUM(StrEnum):
+class BangOlufsenModel(StrEnum):
     """Enum for compatible model names."""
 
     BEOLAB_8 = "BeoLab 8"
@@ -90,7 +79,7 @@ class MODEL_ENUM(StrEnum):
 
 
 # Dispatcher events
-class WEBSOCKET_NOTIFICATION(StrEnum):
+class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
     ACTIVE_LISTENING_MODE: Final[str] = "active_listening_mode"
@@ -115,30 +104,33 @@ class WEBSOCKET_NOTIFICATION(StrEnum):
     VOLUME: Final[str] = "volume"
 
     # Sub-notifications
+    BEOLINK_AVAILABLE_LISTENERS: Final[str] = "beolinkAvailableListeners"
+    BEOLINK_LISTENERS: Final[str] = "beolinkListeners"
+    BEOLINK_PEERS: Final[str] = "beolinkPeers"
+    BEOLINK: Final[str] = "beolink"
+    BLUETOOTH_DEVICES: Final[str] = "bluetooth"
+    CONFIGURATION: Final[str] = "configuration"
     NOTIFICATION: Final[str] = "notification"
     PROXIMITY: Final[str] = "proximity"
-    BEOLINK: Final[str] = "beolink"
-    REMOTE_MENU_CHANGED: Final[str] = "remoteMenuChanged"
-    CONFIGURATION: Final[str] = "configuration"
-    BLUETOOTH_DEVICES: Final[str] = "bluetooth"
     REMOTE_CONTROL_DEVICES: Final[str] = "remoteControlDevices"
+    REMOTE_MENU_CHANGED: Final[str] = "remoteMenuChanged"
 
     ALL: Final[str] = "all"
 
 
-class SUPPORT_ENUM(Enum):
+class BangOlufsenModelSupport(Enum):
     """Enum for storing compatibility of devices."""
 
     PROXIMITY_SENSOR = (
-        MODEL_ENUM.BEOLAB_8,
-        MODEL_ENUM.BEOLAB_28,
-        MODEL_ENUM.BEOSOUND_2,
-        MODEL_ENUM.BEOSOUND_BALANCE,
-        MODEL_ENUM.BEOSOUND_LEVEL,
-        MODEL_ENUM.BEOSOUND_THEATRE,
+        BangOlufsenModel.BEOLAB_8,
+        BangOlufsenModel.BEOLAB_28,
+        BangOlufsenModel.BEOSOUND_2,
+        BangOlufsenModel.BEOSOUND_BALANCE,
+        BangOlufsenModel.BEOSOUND_LEVEL,
+        BangOlufsenModel.BEOSOUND_THEATRE,
     )
 
-    HOME_CONTROL = (MODEL_ENUM.BEOSOUND_THEATRE,)
+    HOME_CONTROL = (BangOlufsenModel.BEOSOUND_THEATRE,)
 
 
 # Range for bass and treble entities
@@ -147,14 +139,14 @@ BASS_TREBLE_RANGE = range(-6, 6, 1)
 DOMAIN: Final[str] = "bang_olufsen"
 
 # Default values for configuration.
-DEFAULT_MODEL: Final[str] = MODEL_ENUM.BEOSOUND_BALANCE
+DEFAULT_MODEL: Final[str] = BangOlufsenModel.BEOSOUND_BALANCE
 
 # Configuration.
 CONF_BEOLINK_JID: Final = "jid"
 CONF_SERIAL_NUMBER: Final = "serial_number"
 
 # Models to choose from in manual configuration.
-COMPATIBLE_MODELS: list[str] = [x.value for x in MODEL_ENUM]
+COMPATIBLE_MODELS: list[str] = [x.value for x in BangOlufsenModel]
 
 # Attribute names for zeroconf discovery.
 ATTR_TYPE_NUMBER: Final[str] = "tn"
@@ -166,10 +158,10 @@ ATTR_FRIENDLY_NAME: Final[str] = "fn"
 BANG_OLUFSEN_ON: Final[str] = "on"
 
 VALID_MEDIA_TYPES: Final[tuple] = (
-    BANG_OLUFSEN_MEDIA_TYPE.FAVOURITE,
-    BANG_OLUFSEN_MEDIA_TYPE.DEEZER,
-    BANG_OLUFSEN_MEDIA_TYPE.RADIO,
-    BANG_OLUFSEN_MEDIA_TYPE.TTS,
+    BangOlufsenMediaType.FAVOURITE,
+    BangOlufsenMediaType.DEEZER,
+    BangOlufsenMediaType.RADIO,
+    BangOlufsenMediaType.TTS,
     MediaType.MUSIC,
     MediaType.URL,
     MediaType.CHANNEL,

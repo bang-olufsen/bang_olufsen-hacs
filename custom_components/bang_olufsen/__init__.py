@@ -1,11 +1,10 @@
 """The Bang & Olufsen integration."""
+
 from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
 
-from aiohttp.client_exceptions import ClientConnectorError
-from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -59,7 +58,7 @@ async def _start_websocket_listener(
             expected_entities == data.entities_initialized
             and len(PLATFORMS) == data.platforms_initialized
         ):
-            await data.client.connect_notifications(remote_control=True)
+            await data.client.connect_notifications(remote_control=True, reconnect=True)
             return
 
         await asyncio.sleep(0)
@@ -80,26 +79,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=entry.data[CONF_MODEL],
     )
 
-    client = MozartClient(host=entry.data[CONF_HOST], websocket_reconnect=True)
+    client = MozartClient(host=entry.data[CONF_HOST])
 
-    # Check API connection and try to initialize it.
-    try:
-        await client.get_battery_state(_request_timeout=3)
-    except (ApiException, ClientConnectorError, TimeoutError) as error:
+    # Check API and WebSocket connection
+    if not await client.check_device_connection():
         await client.close_api_client()
-        raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
-
-    # Check WebSocket connection
-    if not await client.check_websocket_connection():
-        raise ConfigEntryNotReady(
-            f"Unable to connect to {entry.title} WebSocket notification channel"
-        )
+        raise ConfigEntryNotReady(f"Unable to connect to {entry.title}")
 
     # Initialize coordinator
     coordinator = BangOlufsenCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
-    # Add the websocket and API client
+    # Add the coordinator and API client
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BangOlufsenData(
         coordinator, client
     )
@@ -107,7 +98,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Start WebSocket connection when all entities have been initialized
-    hass.async_create_background_task(
+    entry.async_create_background_task(
+        hass,
         _start_websocket_listener(hass, entry, hass.data[DOMAIN][entry.entry_id]),
         f"{DOMAIN}-{entry.unique_id}-websocket_starter",
     )

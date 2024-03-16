@@ -1,4 +1,5 @@
 """Config flow for the Bang & Olufsen integration."""
+
 from __future__ import annotations
 
 from ipaddress import AddressValueError, IPv4Address
@@ -10,9 +11,8 @@ from mozart_api.mozart_client import MozartClient
 import voluptuous as vol
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
@@ -49,7 +49,6 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     _beolink_jid = ""
-    _client: MozartClient
     _host = ""
     _model = ""
     _name = ""
@@ -62,7 +61,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         data_schema = vol.Schema(
             {
@@ -87,14 +86,10 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     errors={"base": _exception_map[type(error)]},
                 )
 
-            self._client = MozartClient(self._host)
-
             # Try to get information from Beolink self method.
-            async with self._client:
+            async with MozartClient(self._host) as client:
                 try:
-                    beolink_self = await self._client.get_beolink_self(
-                        _request_timeout=3
-                    )
+                    beolink_self = await client.get_beolink_self(_request_timeout=3)
                 except (
                     ApiException,
                     ClientConnectorError,
@@ -121,7 +116,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle discovery using Zeroconf."""
 
         # Check if the discovered device is a Mozart device
@@ -149,7 +144,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_zeroconf_confirm()
 
-    async def _create_entry(self) -> FlowResult:
+    async def _create_entry(self) -> ConfigFlowResult:
         """Create the config entry for a discovered or manually configured Bang & Olufsen device."""
         # Ensure that created entities have a unique and easily identifiable id and not a "friendly name"
         self._name = f"{self._model}-{self._serial_number}"
@@ -166,7 +161,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm the configuration of the device."""
         if user_input is not None:
             return await self._create_entry()

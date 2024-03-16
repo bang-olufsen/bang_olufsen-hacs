@@ -166,6 +166,11 @@
             "home_control_uri": {
                 "name": "Home Control URI"
             }
-        }
+        },
+        "button": {
+			"favourite": {
+				"name": "Favorit {id}"
+			}
+		}
 	}
 }

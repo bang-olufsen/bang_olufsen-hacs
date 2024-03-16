@@ -1,6 +1,5 @@
 """Text entities for the Bang & Olufsen integration."""
 
-
 from __future__ import annotations
 
 from mozart_api.models import HomeControlUri, ProductFriendlyName
@@ -14,7 +13,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BangOlufsenData
-from .const import CONNECTION_STATUS, DOMAIN, SUPPORT_ENUM, WEBSOCKET_NOTIFICATION
+from .const import (
+    CONNECTION_STATUS,
+    DOMAIN,
+    BangOlufsenModelSupport,
+    WebsocketNotification,
+)
 from .entity import BangOlufsenEntity
 from .util import set_platform_initialized
 
@@ -31,7 +35,7 @@ async def async_setup_entry(
     ]
 
     # Add the Home Control URI entity if the device supports it
-    if config_entry.data[CONF_MODEL] in SUPPORT_ENUM.HOME_CONTROL.value:
+    if config_entry.data[CONF_MODEL] in BangOlufsenModelSupport.HOME_CONTROL.value:
         entities.append(BangOlufsenTextHomeControlUri(config_entry, data.client))
 
     async_add_entities(new_entities=entities)
@@ -73,7 +77,7 @@ class BangOlufsenTextFriendlyName(BangOlufsenText):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self.entry.unique_id}_{WEBSOCKET_NOTIFICATION.CONFIGURATION}",
+                f"{self.entry.unique_id}_{WebsocketNotification.CONFIGURATION}",
                 self._update_friendly_name,
             )
         )
