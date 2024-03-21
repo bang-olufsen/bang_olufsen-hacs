@@ -92,6 +92,6 @@ class BangOlufsenSwitchLoudness(BangOlufsenSwitch):
 
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""
-        if data.adjustments and data.adjustments.loudness:
+        if data.adjustments and data.adjustments.loudness is not None:
             self._attr_is_on = data.adjustments.loudness
             self.async_write_ha_state()
