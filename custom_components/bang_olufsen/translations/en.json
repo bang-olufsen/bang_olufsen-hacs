@@ -201,6 +201,10 @@
         "beolink_expand": {
             "description": "Expand current Beolink experience.",
             "fields": {
+                "all_discovered": {
+                    "description": "Expand Beolink experience to all discovered devices.",
+                    "name": "All discovered"
+                },
                 "beolink_jids": {
                     "description": "Specify which Beolink JIDs will join current Beolink experience.",
                     "name": "Beolink JIDs"

@@ -196,6 +196,7 @@ HIDDEN_SOURCE_IDS: Final[tuple] = (
     "beolink",
     "classicsAdapter",
     "usbIn",
+    "tidal",
 )
 
 # Fallback sources to use in case of API failure.

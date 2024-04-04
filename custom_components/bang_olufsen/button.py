@@ -29,7 +29,7 @@ async def async_setup_entry(
     entities: list[BangOlufsenEntity] = []
 
     # Get available favourites from coordinator.
-    favourites = data.coordinator.data.favourites
+    favourites = data.coordinator.data
 
     entities.extend(
         [
@@ -100,7 +100,7 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
     @callback
     def _update_favourite(self) -> None:
         """Update favourite attribute."""
-        self._favourite = self.coordinator.data.favourites[str(self._favourite_id)]
+        self._favourite = self.coordinator.data[str(self._favourite_id)]
 
         self._attr_extra_state_attributes = self._generate_favourite_attributes()
 

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from mozart_api.exceptions import ApiException
@@ -16,8 +16,6 @@ from mozart_api.models import (
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
-    PlayQueueSettings,
-    Preset,
     RenderingState,
     SoftwareUpdateState,
     SoundSettings,
@@ -48,14 +46,6 @@ from .entity import BangOlufsenBase
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class CoordinatorData:
-    """Dataclass for coordinator data."""
-
-    favourites: dict[str, Preset]
-    queue_settings: PlayQueueSettings
-
-
 class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
     """The entity coordinator and WebSocket listener(s)."""
 
@@ -72,11 +62,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
             always_update=False,
         )
         BangOlufsenBase.__init__(self, entry, client)
-
-        self._coordinator_data: CoordinatorData = CoordinatorData(
-            favourites={},
-            queue_settings=PlayQueueSettings(),
-        )
 
         self._device = self._get_device()
 
@@ -119,22 +104,13 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
         # Used for firing events and debugging
         self._client.get_all_notifications_raw(self.on_all_notifications_raw)
 
-    async def _update_variables(self) -> None:
-        """Update the coordinator data."""
-        favourites = await self._client.get_presets(_request_timeout=5)
-        queue_settings = await self._client.get_settings_queue(_request_timeout=5)
-
-        self._coordinator_data = CoordinatorData(
-            favourites=favourites,
-            queue_settings=queue_settings,
-        )
-
-    async def _async_update_data(self) -> CoordinatorData:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Get all information needed by the polling entities."""
         # Try to update coordinator_data.
         try:
-            await self._update_variables()
-            return self._coordinator_data
+            favourites = await self._client.get_presets(_request_timeout=5)
+
+            return favourites
 
         except (TimeoutError, ClientConnectorError, ApiException) as error:
             raise UpdateFailed from error
@@ -350,5 +326,5 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
         notification["device_id"] = self._device.id
         notification["serial_number"] = int(self._unique_id)
 
-        _LOGGER.warning("%s", notification)
+        _LOGGER.debug("%s", notification)
         self.hass.bus.async_fire(BANG_OLUFSEN_WEBSOCKET_EVENT, notification)
