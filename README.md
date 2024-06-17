@@ -44,6 +44,7 @@ This integration adds an array of different useful entities that are generated a
 - Displaying currently playing artist and track
 - Displaying playback progress
 - Media seeking (Currently only when using Deezer)
+- Sound mode selection
 - Media browsing:
   - Playback of local media
   - Radio Browsing
@@ -66,9 +67,11 @@ This integration adds an array of different useful entities that are generated a
   - Play an album from Deezer (with optional starting position)
   - Play a playlist from Deezer (with optional starting position)
   - Play a track from Deezer
+  - Play an album from Tidal (with optional starting position)
+  - Play a playlist from Tidal (with optional starting position)
+  - Play a track from Tidal
+  - Announce using B&O TTS
 - Custom services:
-  - Overlay
-    - overlay_audio: Overlaying audio over any currently playing audio.
   - Beolink:
     - beolink_allstandby: Set all connected Beolink devices to standby
     - beolink_expand: Expand the Beolink experience with a device
@@ -117,7 +120,6 @@ This integration adds an array of different useful entities that are generated a
 
 ### Select entity
 
-- Sound mode (If available)
 - Listening Position (If available)
 
 ### Switch entity
@@ -131,11 +133,13 @@ This integration adds an array of different useful entities that are generated a
 
 ## Getting Deezer URIs
 
-In order to find Deezer playlist, album URIs and user IDs for Deezer flows, the Deezer website has to be accessed. When navigating to an album, the URL will look something like: <https://www.deezer.com/en/album/ALBUM_ID>, and this simply needs to be converted to: `album:ALBUM_ID` and the same applies to playlist, which have the format: `playlist:PLAYLIST_ID`.
+In order to find Deezer playlists, album URIs and user IDs for Deezer flows, the Deezer website has to be accessed. When navigating to an album, the URL will look something like: <https://www.deezer.com/en/album/ALBUM_ID>, and this simply needs to be converted to: `album:ALBUM_ID` and the same applies to playlist, which have the format: `playlist:PLAYLIST_ID`.
 
 Additionally a Deezer user ID can be found at <https://www.deezer.com/en/profile/USER_ID> by selecting the active user in a web browser.
 
-Deezer track IDs can currently only easily be found by playing the track on the device and looking at the extra state attributes, where it is shown with the key "deezer_track_id". Tracks do not have a prefix so the ID needs to be used directly.
+## Getting Tidal URIs
+
+To find Tidal playlists, album URIs and track IDs, the Tidal website has to be accessed. When navigating to an album, the URL will look something like: <https://listen.tidal.com/album/ALBUM_ID/>, and this needs to be converted to: `album:ALBUM_ID` and the same applies to playlists, which have the format: `playlist:PLAYLIST_ID`. Individual tracks can also be found by sharing the track and selecting the `Copy track link` method, which should yield a link with this format: <https://tidal.com/browse/track/TRACK_ID?u>, this can be played by extracting the track id `TRACK_ID`.
 
 ## Automations
 
@@ -321,6 +325,43 @@ data:
   media_content_id: 1234567890
 ```
 
+Playing a Tidal playlist. Optionally define starting position for the playlist:
+
+```yaml
+service: media_player.play_media
+target:
+  entity_id: media_player.beosound_balance_12345678
+data:
+  media_content_type: tidal
+  media_content_id: playlist:01234567-89ab-cdfe-0123-456789abcdef
+  extra:
+    start_from: 123
+```
+
+Playing a Tidal album. Optionally define starting position for the album:
+
+```yaml
+service: media_player.play_media
+target:
+  entity_id: media_player.beosound_balance_12345678
+data:
+  media_content_type: tidal
+  media_content_id: album:123456789
+  extra:
+    start_from: 123
+```
+
+Playing a Tidal track:
+
+```yaml
+service: media_player.play_media
+target:
+  entity_id: media_player.beosound_balance_12345678
+data:
+  media_content_type: tidal
+  media_content_id: 123456789
+```
+
 Playing a B&O Radio station:
 
 ```yaml
@@ -332,7 +373,7 @@ data:
   media_content_type: radio
 ```
 
-_NOTE_: To easily obtain the media_content_id for a Deezer track or B&O Radio station, you can enable the 'Media id' sensor on Mozart device in Home Assistant (disabled by default).
+_NOTE_: To easily obtain the media_content_id for a Deezer/Tidal track or B&O Radio station, you can enable the 'Media id' sensor on Mozart device in Home Assistant (disabled by default).
 Once enabled, start playing the content you wish to activate in a service call - the Media id sensor will then provide the value to be used in the media_content_id field.
 
 ### Custom services

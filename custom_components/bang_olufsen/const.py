@@ -61,9 +61,11 @@ BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
 class BangOlufsenMediaType(StrEnum):
     """Bang & Olufsen specific media types."""
 
-    FAVOURITE = "favourite"
     DEEZER = "deezer"
+    FAVOURITE = "favourite"
+    OVERLAY_TTS = "overlay_tts"
     RADIO = "radio"
+    TIDAL = "tidal"
     TTS = "provider"
 
 
@@ -169,9 +171,11 @@ ATTR_FRIENDLY_NAME: Final[str] = "fn"
 BANG_OLUFSEN_ON: Final[str] = "on"
 
 VALID_MEDIA_TYPES: Final[tuple] = (
-    BangOlufsenMediaType.FAVOURITE,
     BangOlufsenMediaType.DEEZER,
+    BangOlufsenMediaType.FAVOURITE,
+    BangOlufsenMediaType.OVERLAY_TTS,
     BangOlufsenMediaType.RADIO,
+    BangOlufsenMediaType.TIDAL,
     BangOlufsenMediaType.TTS,
     MediaType.MUSIC,
     MediaType.URL,
@@ -196,7 +200,6 @@ HIDDEN_SOURCE_IDS: Final[tuple] = (
     "beolink",
     "classicsAdapter",
     "usbIn",
-    "tidal",
 )
 
 # Fallback sources to use in case of API failure.

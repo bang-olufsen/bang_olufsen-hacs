@@ -82,7 +82,7 @@ class BangOlufsenBinarySensorBatteryCharging(BangOlufsenBinarySensor):
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._update_connection_state,
+                self._async_update_connection_state,
             )
         )
         self.async_on_remove(
@@ -119,7 +119,7 @@ class BangOlufsenBinarySensorProximity(BangOlufsenBinarySensor):
             async_dispatcher_connect(
                 self.hass,
                 f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._update_connection_state,
+                self._async_update_connection_state,
             )
         )
         self.async_on_remove(
