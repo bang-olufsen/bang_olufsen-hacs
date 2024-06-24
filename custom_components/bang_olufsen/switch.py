@@ -88,8 +88,6 @@ class BangOlufsenSwitchLoudness(BangOlufsenSwitch):
             )
         )
 
-        self.set_entity_initialized()
-
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""
         if data.adjustments and data.adjustments.loudness is not None:

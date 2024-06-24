@@ -101,8 +101,6 @@ class BangOlufsenSelectListeningPosition(BangOlufsenSelect):
 
         await self._update_listening_positions()
 
-        self.set_entity_initialized()
-
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._client.post_scene_trigger(id=self._listening_positions[option])

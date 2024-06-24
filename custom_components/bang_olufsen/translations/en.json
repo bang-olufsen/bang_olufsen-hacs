@@ -190,6 +190,11 @@
             }
         }
     },
+    "exceptions": {
+        "m3u_invalid_format": {
+            "message": "Media sources with the .m3u extension are not supported."
+        }
+    },
     "services": {
         "beolink_allstandby": {
             "description": "Set all Connected Beolink devices to standby.",

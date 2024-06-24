@@ -91,8 +91,6 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
 
         self._attr_extra_state_attributes = self._generate_favourite_attributes()
 
-        self.set_entity_initialized()
-
     async def async_press(self) -> None:
         """Handle the action."""
         await self._client.activate_preset(id=self._favourite_id)

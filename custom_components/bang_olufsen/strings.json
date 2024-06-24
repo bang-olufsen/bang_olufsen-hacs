@@ -247,5 +247,10 @@
       "friendly_name": { "name": "Device friendly name" },
       "home_control_uri": { "name": "Home Control URI" }
     }
+  },
+  "exceptions": {
+    "m3u_invalid_format": {
+      "message": "Media sources with the .m3u extension are not supported."
+    }
   }
 }

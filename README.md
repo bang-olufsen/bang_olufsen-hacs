@@ -161,44 +161,6 @@ The favourite buttons correspond to the physical favourite buttons on the device
 
 ### Automation examples
 
-#### Using the overlay as doorbell
-
-```yaml
-description: Play doorbell sound overlay on doorbell press.
-mode: single
-trigger:
-  - platform: device
-    device_id: 1234567890abcdef1234567890abcdef
-    domain: example
-    type: doorbell
-condition: []
-action:
-  - service: bang_olufsen.overlay_audio
-    data:
-      uri: media-source://media_source/local/doorbell.mp3
-      absolute_volume: 60
-    target:
-      entity_id: media_player.beosound_balance_12345678
-```
-
-#### Using the overlay TTS as a bedtime reminder
-
-```yaml
-description: "Daily bedtime reminder using overlay TTS."
-mode: single
-trigger:
-  - platform: time
-    at: "22:00:00"
-condition: []
-action:
-  - service: bang_olufsen.overlay_audio
-    data:
-      absolute_volume: 70
-      tts: It is 22:00. Time to go to bed!
-    target:
-      entity_id: media_player.beosound_balance_12345678
-```
-
 #### Using the Beoremote One to control lights
 
 ```yaml
@@ -238,7 +200,7 @@ action:
 
 ### play_media services
 
-The Bang & Olufsen integration supports different playback types in the `media_player.play_media` service: playback from URL, activating a favourite, playback from a local file, playing a radio station, activating a Deezer flow and Deezer playlists, albums and tracks.
+The Bang & Olufsen integration supports different playback types in the `media_player.play_media` service: playback from URL, activating a favourite, playback from a local file, playing a radio station, activating a Deezer flow and Deezer/Tidal playlists, albums and tracks. Additionally `announce` can be set to `True` to play TTS or files as an overlay.
 
 #### play_media examples
 
@@ -371,6 +333,50 @@ target:
 data:
   media_content_id: 1234567890123456
   media_content_type: radio
+```
+
+Playing a doorbell file with an absolute volume
+
+```yaml
+service: media_player.play_media
+target:
+  entity_id: media_player.beosound_balance_12345678
+data:
+  media_content_type: music
+  media_content_id: media-source://media_source/local/doorbell.mp3
+  announce: true
+  extra:
+    overlay_absolute_volume: 60
+```
+
+Playing an overlay TTS with an offset volume
+
+TTS messages can be quiet, so an offset is useful in this scenario.
+
+```yaml
+service: media_player.play_media
+target:
+  entity_id: media_player.beosound_balance_12345678
+data:
+  media_content_type: overlay_tts
+  media_content_id: This is a test
+  announce: true
+  extra:
+    overlay_offset_volume: 10
+```
+
+Playing a Bang & Olufsen Cloud TTS message with a local language
+
+```yaml
+service: media_player.play_media
+target:
+  entity_id: media_player.beosound_balance_12345678
+data:
+  media_content_type: overlay_tts
+  media_content_id: Dette er en test
+  announce: true
+  extra:
+    overlay_tts_language: da-dk
 ```
 
 _NOTE_: To easily obtain the media_content_id for a Deezer/Tidal track or B&O Radio station, you can enable the 'Media id' sensor on Mozart device in Home Assistant (disabled by default).

@@ -7,7 +7,7 @@
 	"documentation": "https://github.com/bang-olufsen/bang_olufsen-hacs",
 	"iot_class": "local_push",
 	"issue_tracker": "https://github.com/bang-olufsen/bang_olufsen-hacs/issues",
-	"requirements": ["mozart-api==3.4.1.8.5"],
-	"version": "2.3.0",
+	"requirements": ["mozart-api==3.4.1.8.6"],
+	"version": "2.3.1",
 	"zeroconf": ["_bangolufsen._tcp.local."]
 }

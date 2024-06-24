@@ -1,12 +1,12 @@
 {
-	"services": {
-		"beolink_join": "mdi:location-enter",
-		"beolink_expand": "mdi:location-enter",
-		"beolink_unexpand": "mdi:location-exit",
-		"beolink_leave": "mdi:close-circle-outline",
-		"beolink_allstandby": "mdi:close-circle-multiple-outline",
-		"beolink_set_volume": "mdi:volume-equal",
-		"beolink_set_relative_volume": "mdi:volume-plus",
-		"beolink_leader_command": "mdi:location-enter"
-	}
+  "services": {
+    "beolink_join": "mdi:location-enter",
+    "beolink_expand": "mdi:location-enter",
+    "beolink_unexpand": "mdi:location-exit",
+    "beolink_leave": "mdi:close-circle-outline",
+    "beolink_allstandby": "mdi:close-circle-multiple-outline",
+    "beolink_set_volume": "mdi:volume-equal",
+    "beolink_set_relative_volume": "mdi:volume-plus",
+    "beolink_leader_command": "mdi:location-enter"
+  }
 }

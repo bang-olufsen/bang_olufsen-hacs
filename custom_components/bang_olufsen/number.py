@@ -86,8 +86,6 @@ class BangOlufsenNumberTreble(BangOlufsenNumber):
             )
         )
 
-        self.set_entity_initialized()
-
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""
         if data.adjustments and data.adjustments.treble:
@@ -132,8 +130,6 @@ class BangOlufsenNumberBass(BangOlufsenNumber):
                 self._update_sound_settings,
             )
         )
-
-        self.set_entity_initialized()
 
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""

@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -24,7 +24,6 @@ class BangOlufsenData:
 
     coordinator: DataUpdateCoordinator
     client: MozartClient
-    entities_initialized: int = 0
     platforms_initialized: int = 0
 
 
@@ -40,28 +39,17 @@ PLATFORMS = [
 ]
 
 
-async def _start_websocket_listener(
-    hass: HomeAssistant, entry: ConfigEntry, data: BangOlufsenData
-) -> None:
-    """Start WebSocket listener when all entities have been initialized."""
-    entity_registry = er.async_get(hass)
+async def _start_websocket_listener(data: BangOlufsenData) -> None:
+    """Start WebSocket listener when all platforms have been initialized."""
 
     while True:
-        # Get all entries for entities and filter all disabled entities
-        entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-        expected_entities = len(
-            [entry for entry in entries if not entry.disabled or not entry.disabled_by]
-        )
-
-        # Check if all entities and platforms have been initialized and start WebSocket listener
-        if (
-            expected_entities == data.entities_initialized
-            and len(PLATFORMS) == data.platforms_initialized
-        ):
-            await data.client.connect_notifications(remote_control=True, reconnect=True)
-            return
+        # Check if all platforms have been initialized and start WebSocket listener
+        if len(PLATFORMS) == data.platforms_initialized:
+            break
 
         await asyncio.sleep(0)
+
+    await data.client.connect_notifications(remote_control=True, reconnect=True)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -102,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Start WebSocket connection when all entities have been initialized
     entry.async_create_background_task(
         hass,
-        _start_websocket_listener(hass, entry, hass.data[DOMAIN][entry.entry_id]),
+        _start_websocket_listener(hass.data[DOMAIN][entry.entry_id]),
         f"{DOMAIN}-{entry.unique_id}-websocket_starter",
     )
 

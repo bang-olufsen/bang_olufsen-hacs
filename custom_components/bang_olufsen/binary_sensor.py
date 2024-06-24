@@ -93,8 +93,6 @@ class BangOlufsenBinarySensorBatteryCharging(BangOlufsenBinarySensor):
             )
         )
 
-        self.set_entity_initialized()
-
     async def _update_battery_charging(self, data: BatteryState) -> None:
         """Update battery charging."""
         self._attr_is_on = data.is_charging
@@ -129,8 +127,6 @@ class BangOlufsenBinarySensorProximity(BangOlufsenBinarySensor):
                 self._update_proximity,
             )
         )
-
-        self.set_entity_initialized()
 
     async def _update_proximity(self, data: WebsocketNotificationTag) -> None:
         """Update proximity."""

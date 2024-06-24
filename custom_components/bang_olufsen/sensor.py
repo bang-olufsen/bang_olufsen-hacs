@@ -94,8 +94,6 @@ class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
             )
         )
 
-        self.set_entity_initialized()
-
     async def _update_battery(self, data: BatteryState) -> None:
         """Update sensor value."""
         self._attr_native_value = data.battery_level
@@ -133,8 +131,6 @@ class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
                 self._update_battery,
             )
         )
-
-        self.set_entity_initialized()
 
     async def _update_battery(self, data: BatteryState) -> None:
         """Update sensor value."""
@@ -183,8 +179,6 @@ class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
                 self._update_battery,
             )
         )
-
-        self.set_entity_initialized()
 
     async def _update_battery(self, data: BatteryState) -> None:
         """Update sensor value."""
@@ -235,8 +229,6 @@ class BangOlufsenSensorMediaId(BangOlufsenSensor):
             )
         )
 
-        self.set_entity_initialized()
-
     async def _update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
         """Update Sensor value."""
         self._attr_native_value = data.source_internal_id
@@ -274,8 +266,6 @@ class BangOlufsenSensorInputSignal(BangOlufsenSensor):
                 self._update_playback_metadata,
             )
         )
-
-        self.set_entity_initialized()
 
     async def _update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
         """Update Sensor value."""
