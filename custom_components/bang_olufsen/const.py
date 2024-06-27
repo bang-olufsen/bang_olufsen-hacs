@@ -295,7 +295,6 @@ NONE_PARAMETERS: Final[tuple] = (
     "media_stop",
     "media_next_track",
     "media_previous_track",
-    "toggle",
     None,
 )
 

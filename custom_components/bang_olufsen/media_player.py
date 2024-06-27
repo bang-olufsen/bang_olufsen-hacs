@@ -59,7 +59,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -698,7 +698,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     @callback
     def _async_update_playback_error(self, data: PlaybackError) -> None:
         """Show playback error."""
-        _LOGGER.error(data.error)
+        raise HomeAssistantError(data.error)
 
     @callback
     def _async_update_playback_progress(self, data: PlaybackProgress) -> None:
@@ -995,7 +995,9 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
             self.async_write_ha_state()
         else:
-            _LOGGER.error("Seeking is currently only supported when using Deezer")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="non_deezer_seeking"
+            )
 
     async def async_media_previous_track(self) -> None:
         """Send the previous track command."""
@@ -1028,12 +1030,14 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""
         if source not in self._sources.values():
-            _LOGGER.error(
-                "Invalid source: %s. Valid sources are: %s",
-                source,
-                list(self._sources.values()),
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_source",
+                translation_placeholders={
+                    "invalid_source": source,
+                    "valid_sources": ",".join(list(self._sources.values())),
+                },
             )
-            return
 
         key = [x for x in self._sources if self._sources[x] == source][0]
 
@@ -1089,12 +1093,14 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             media_type = MediaType.MUSIC
 
         if media_type not in VALID_MEDIA_TYPES:
-            _LOGGER.error(
-                "%s is an invalid type. Valid values are: %s",
-                media_type,
-                VALID_MEDIA_TYPES,
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_media_type",
+                translation_placeholders={
+                    "invalid_media_type": media_type,
+                    "valid_media_types": ",".join(VALID_MEDIA_TYPES),
+                },
             )
-            return
 
         if media_source.is_media_source_id(media_id):
             sourced_media = await media_source.async_resolve_media(
@@ -1211,7 +1217,14 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                     )
 
             except ApiException as error:
-                _LOGGER.error(json.loads(error.body)["message"])
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="play_media_error",
+                    translation_placeholders={
+                        "media_type": media_type,
+                        "error_message": json.loads(error.body)["message"],
+                    },
+                ) from error
 
     async def async_browse_media(
         self,
@@ -1311,14 +1324,29 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 # Check for valid parameter type.
                 if parameter_type is not None:
                     try:
+                        # Test the cast before assigning
                         parameter = parameter_type(parameter)
-                    except (ValueError, TypeError):
-                        _LOGGER.error("Invalid parameter")
-                        return
+                    except (ValueError, TypeError, Exception) as error:
+                        raise HomeAssistantError(
+                            translation_domain=DOMAIN,
+                            translation_key="invalid_beolink_parameter",
+                            translation_placeholders={
+                                "parameter": str(parameter),
+                                "parameter_type": parameter_type.__name__,
+                                "command": command,
+                            },
+                        ) from error
 
                 elif parameter_type is None and parameter is not None:
-                    _LOGGER.error("Invalid parameter")
-                    return
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_beolink_parameter",
+                        translation_placeholders={
+                            "parameter": parameter,
+                            "parameter_type": str(parameter_type),
+                            "command": command,
+                        },
+                    )
 
                 # Forward the command to the leader if a listener.
                 if self._remote_leader is not None:
