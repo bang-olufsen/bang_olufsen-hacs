@@ -10,29 +10,19 @@ from mozart_api.models import Source, SourceArray, SourceTypeEnum
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 
 
-class BangOlufsenSource(StrEnum):
-    """Enum used for associating device source ids with friendly names. May not include all sources."""
+class BangOlufsenSource:
+    """Class used for associating device source ids with friendly names. May not include all sources."""
 
-    airPlay = "AirPlay"  # noqa: N815
-    beolink = "Networklink"
-    bluetooth = "Bluetooth"
-    chromeCast = "Chromecast built-in"  # noqa: N815
-    deezer = "Deezer"
-    dlna = "DLNA"
-    generator = "Tone Generator"
-    lineIn = "Line-In"  # noqa: N815
-    local = "Local"
-    netRadio = "B&O Radio"  # noqa: N815
-    pl = "Powerlink"
-    qplay = "QPlay"
-    spdif = "Optical"
-    spotify = "Spotify Connect"
-    tidalConnect = "Tidal Connect"  # noqa: N815
-    tv = "TV"
-    unknown = "Unknown Source"
-    uriStreamer = "Audio Streamer"  # noqa: N815
-    usbIn = "USB"  # noqa: N815
-    wpl = "Wireless Powerlink"
+    URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
+    BLUETOOTH: Final[Source] = Source(name="Bluetooth", id="bluetooth")
+    CHROMECAST: Final[Source] = Source(name="Chromecast built-in", id="chromeCast")
+    LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
+    SPDIF: Final[Source] = Source(name="Optical", id="spdif")
+    NET_RADIO: Final[Source] = Source(name="B&O Radio", id="netRadio")
+    DEEZER: Final[Source] = Source(name="Deezer", id="deezer")
+    TIDAL: Final[Source] = Source(name="Tidal", id="tidal")
+    USB_IN: Final[Source] = Source(name="USB", id="usbIn")
+    UNKNOWN: Final[Source] = Source(name="Unknown Source", id="unknown")
 
 
 class BangOlufsenRepeat(StrEnum):

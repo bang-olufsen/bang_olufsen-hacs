@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 from typing import Any, cast
@@ -74,7 +75,6 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.util.dt import utcnow
 
 from . import BangOlufsenData
@@ -142,13 +142,13 @@ async def async_setup_entry(
     # Register services.
     platform = async_get_current_platform()
 
+    jid_regex = vol.Match(
+        r"(^\d{4})[.](\d{7})[.](\d{8})(@products\.bang-olufsen\.com)$"
+    )
+
     platform.async_register_entity_service(
         name="beolink_join",
-        schema={
-            vol.Optional("beolink_jid"): vol.Match(
-                r"(^\d{4})[.](\d{7})[.](\d{8})(@products\.bang-olufsen\.com)$"
-            )
-        },
+        schema={vol.Optional("beolink_jid"): jid_regex},
         func="async_beolink_join",
         supports_response=SupportsResponse.OPTIONAL,
     )
@@ -163,11 +163,7 @@ async def async_setup_entry(
                 "Define either specific Beolink JIDs or all discovered",
             ): vol.All(
                 cv.ensure_list,
-                [
-                    vol.Match(
-                        r"(^\d{4})[.](\d{7})[.](\d{8})(@products\.bang-olufsen\.com)$"
-                    )
-                ],
+                [jid_regex],
             ),
         },
         func="async_beolink_expand",
@@ -179,11 +175,7 @@ async def async_setup_entry(
         schema={
             vol.Required("beolink_jids"): vol.All(
                 cv.ensure_list,
-                [
-                    vol.Match(
-                        r"(^\d{4})[.](\d{7})[.](\d{8})(@products\.bang-olufsen\.com)$"
-                    )
-                ],
+                [jid_regex],
             ),
         },
         func="async_beolink_unexpand",
@@ -537,21 +529,21 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     def _get_beolink_jid(self, entity_id: str) -> str | None:
         """Get beolink JID from entity_id."""
+        jid = None
+
         entity_registry = er.async_get(self.hass)
 
-        # Make mypy happy
-        entity_entry = cast(RegistryEntry, entity_registry.async_get(entity_id))
-        config_entry = cast(
-            ConfigEntry,
-            self.hass.config_entries.async_get_entry(
-                cast(str, entity_entry.config_entry_id)
-            ),
-        )
+        entity_entry = entity_registry.async_get(entity_id)
+        if entity_entry:
+            config_entry = cast(
+                ConfigEntry,
+                self.hass.config_entries.async_get_entry(
+                    cast(str, entity_entry.config_entry_id)
+                ),
+            )
 
-        try:
-            jid = cast(str, config_entry.data[CONF_BEOLINK_JID])
-        except KeyError:
-            jid = None
+            with contextlib.suppress(KeyError):
+                jid = cast(str, config_entry.data[CONF_BEOLINK_JID])
 
         return jid
 
@@ -591,9 +583,9 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self._remote_leader = self._playback_metadata.remote_leader
 
         # Temp fix for mismatch in WebSocket metadata and "real" REST endpoint where the remote leader is not deleted.
-        if self.source in (
-            BangOlufsenSource.lineIn.value,
-            BangOlufsenSource.uriStreamer.value,
+        if self._source_change.id in (
+            BangOlufsenSource.LINE_IN.id,
+            BangOlufsenSource.SPDIF.id,
         ):
             self._remote_leader = None
 
@@ -726,13 +718,13 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
         # Check if source is line-in or optical and progress should be updated
         if self._source_change.id in (
-            BangOlufsenSource.lineIn.value,
-            BangOlufsenSource.spdif.value,
+            BangOlufsenSource.LINE_IN.id,
+            BangOlufsenSource.SPDIF.id,
         ):
             self._playback_progress = PlaybackProgress(progress=0)
 
         # Try to ensure that a source is active (not unknown).
-        elif self._source_change.name == BangOlufsenSource.unknown.value:
+        elif self._source_change.id == BangOlufsenSource.UNKNOWN.id:
             sources = await self._client.get_available_sources(target_remote=False)
 
             default_source = None
@@ -740,8 +732,8 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             # Get USB or Line-in, depending on which one of them is enabled
             for source in cast(list[Source], sources.items):
                 if source.is_enabled and source.id in (
-                    BangOlufsenSource.lineIn.name,
-                    BangOlufsenSource.usbIn.name,
+                    BangOlufsenSource.LINE_IN.id,
+                    BangOlufsenSource.USB_IN.id,
                 ):
                     default_source = source.id
                     break
@@ -756,7 +748,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             )
 
         # Update bluetooth device attribute.
-        elif self._source_change.id == BangOlufsenSource.bluetooth.name:
+        elif self._source_change.id == BangOlufsenSource.BLUETOOTH.id:
             await self._async_update_bluetooth()
 
         self.async_write_ha_state()
@@ -815,7 +807,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     def media_content_type(self) -> str:
         """Return the current media type."""
         # Hard to determine content type
-        if self.source == BangOlufsenSource.uriStreamer.value:
+        if self._source_change.id == BangOlufsenSource.URI_STREAMER.id:
             return MediaType.URL
         return MediaType.MUSIC
 
@@ -874,33 +866,31 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # Try to fix some of the source_change chromecast weirdness.
         if hasattr(self._playback_metadata, "title"):
             # source_change is chromecast but line in is selected.
-            if self._playback_metadata.title == BangOlufsenSource.lineIn.value:
-                return BangOlufsenSource.lineIn
+            if self._playback_metadata.title == BangOlufsenSource.LINE_IN.name:
+                return BangOlufsenSource.LINE_IN.name
 
             # source_change is chromecast but bluetooth is selected.
-            if self._playback_metadata.title == BangOlufsenSource.bluetooth.value:
-                return BangOlufsenSource.bluetooth.value
+            if self._playback_metadata.title == BangOlufsenSource.BLUETOOTH.name:
+                return BangOlufsenSource.BLUETOOTH.name
 
             # source_change is line in, bluetooth or optical but stale metadata is sent through the WebSocket,
             # And the source has not changed.
             if self._source_change.id in (
-                BangOlufsenSource.bluetooth.name,
-                BangOlufsenSource.lineIn.name,
-                BangOlufsenSource.spdif.name,
+                BangOlufsenSource.BLUETOOTH.id,
+                BangOlufsenSource.LINE_IN.id,
+                BangOlufsenSource.SPDIF.id,
             ):
-                return BangOlufsenSource.chromeCast.value
+                return BangOlufsenSource.CHROMECAST.name
 
         # source_change is chromecast and there is metadata but no artwork. Bluetooth does support metadata but not artwork
         # So i assume that it is bluetooth and not chromecast
         if (
             hasattr(self._playback_metadata, "art")
             and self._playback_metadata.art is not None
+            and len(self._playback_metadata.art) == 0
+            and self._source_change.id == BangOlufsenSource.CHROMECAST.id
         ):
-            if (
-                len(self._playback_metadata.art) == 0
-                and self._source_change.id == BangOlufsenSource.bluetooth.value
-            ):
-                return BangOlufsenSource.bluetooth.name
+            return BangOlufsenSource.BLUETOOTH.name
 
         return self._source_change.name
 
@@ -985,7 +975,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def async_media_seek(self, position: float) -> None:
         """Seek to position in ms."""
-        if self.source == BangOlufsenSource.deezer.value:
+        if self._source_change.id == BangOlufsenSource.DEEZER.id:
             await self._client.seek_to_position(position_ms=int(position * 1000))
             # Try to prevent the playback progress from bouncing in the UI.
             self._attr_media_position_updated_at = utcnow()
@@ -1255,8 +1245,9 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         response: dict[str, Any] = {"not_on_network": []}
 
         # Ensure that the current source is expandable
-        if not self._beolink_sources[cast(str, self._source_change.id)]:
-            return {"invalid_source": self.source}
+        with contextlib.suppress(KeyError):
+            if not self._beolink_sources[cast(str, self._source_change.id)]:
+                return {"invalid_source": self.source}
 
         # Expand to all discovered devices
         if all_discovered:

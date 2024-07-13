@@ -106,9 +106,9 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
 
     def _generate_favourite_attributes(
         self,
-    ) -> dict[str, str | int | dict[str, str | bool]]:
+    ) -> dict[str, str | None | int | dict[str, str | bool]]:
         """Generate extra state attributes for a favourite."""
-        favourite_attribute: dict[str, str | int | dict[str, str | bool]] = {}
+        favourite_attribute: dict[str, str | int | None | dict[str, str | bool]] = {}
 
         # Ensure that favourites with volume are properly shown.
         if self._favourite.action_list:
@@ -127,17 +127,15 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
                         or favourite_type == "playQueue"
                         and favourite_queue.provider.value == "deezer"
                     ):
-                        favourite_attribute["source"] = BangOlufsenSource.deezer.value
+                        favourite_attribute["source"] = BangOlufsenSource.DEEZER.name
 
                     # Add netradio as "source".
                     elif favourite_type == "radio":
-                        favourite_attribute["source"] = BangOlufsenSource.netRadio.value
+                        favourite_attribute["source"] = BangOlufsenSource.NET_RADIO.name
 
                     # Add the source name if it is not none.
                     elif self._favourite.source and self._favourite.source.value:
-                        favourite_attribute["source"] = BangOlufsenSource[
-                            self._favourite.source.value
-                        ].value
+                        favourite_attribute["source"] = self._favourite.source.value
 
                     # Add title if available.
                     if self._favourite.title:
