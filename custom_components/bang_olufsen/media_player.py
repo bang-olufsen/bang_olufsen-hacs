@@ -1148,7 +1148,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
             await self._client.post_overlay_play(overlay_play_request)
 
-        if media_type in (MediaType.URL, MediaType.MUSIC):
+        elif media_type in (MediaType.URL, MediaType.MUSIC):
             await self._client.post_uri_source(uri=Uri(location=media_id))
 
         # The "provider" media_type may not be suitable for overlay all the time.
