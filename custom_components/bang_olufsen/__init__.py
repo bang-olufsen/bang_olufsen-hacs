@@ -82,7 +82,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Add the coordinator and API client
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BangOlufsenData(
-        coordinator, client
+        coordinator,
+        client,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

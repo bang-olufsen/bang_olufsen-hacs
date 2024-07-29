@@ -49,6 +49,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     _beolink_jid = ""
+    _client: MozartClient
     _host = ""
     _model = ""
     _name = ""
@@ -86,10 +87,14 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     errors={"base": _exception_map[type(error)]},
                 )
 
+            self._client = MozartClient(self._host)
+
             # Try to get information from Beolink self method.
-            async with MozartClient(self._host) as client:
+            async with self._client:
                 try:
-                    beolink_self = await client.get_beolink_self(_request_timeout=3)
+                    beolink_self = await self._client.get_beolink_self(
+                        _request_timeout=3
+                    )
                 except (
                     ApiException,
                     ClientConnectorError,
@@ -129,6 +134,15 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             IPv4Address(self._host)
         except AddressValueError:
             return self.async_abort(reason="ipv6_address")
+
+        # Check connection to ensure valid address is received
+        self._client = MozartClient(self._host)
+
+        async with self._client:
+            try:
+                await self._client.get_beolink_self(_request_timeout=3)
+            except (ClientConnectorError, TimeoutError):
+                return self.async_abort(reason="invalid_address")
 
         self._model = discovery_info.hostname[:-16].replace("-", " ")
         self._serial_number = discovery_info.properties[ATTR_SERIAL_NUMBER]
