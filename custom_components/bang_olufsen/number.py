@@ -88,7 +88,7 @@ class BangOlufsenNumberTreble(BangOlufsenNumber):
 
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""
-        if data.adjustments and data.adjustments.treble:
+        if data.adjustments and data.adjustments.treble is not None:
             self._attr_native_value = data.adjustments.treble
             self.async_write_ha_state()
 
@@ -133,6 +133,6 @@ class BangOlufsenNumberBass(BangOlufsenNumber):
 
     async def _update_sound_settings(self, data: SoundSettings) -> None:
         """Update sound settings."""
-        if data.adjustments and data.adjustments.bass:
+        if data.adjustments and data.adjustments.bass is not None:
             self._attr_native_value = data.adjustments.bass
             self.async_write_ha_state()
