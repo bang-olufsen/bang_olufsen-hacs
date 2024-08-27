@@ -70,6 +70,7 @@ class BangOlufsenProximity(Enum):
 class BangOlufsenModel(StrEnum):
     """Enum for compatible model names."""
 
+    BEOCONNECT_CORE = "Beoconnect Core"
     BEOLAB_8 = "BeoLab 8"
     BEOLAB_28 = "BeoLab 28"
     BEOSOUND_2 = "Beosound 2 3rd Gen"
@@ -85,40 +86,40 @@ class BangOlufsenModel(StrEnum):
 class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
-    ACTIVE_LISTENING_MODE: Final[str] = "active_listening_mode"
-    ACTIVE_SPEAKER_GROUP: Final[str] = "active_speaker_group"
-    ALARM_TRIGGERED: Final[str] = "alarm_triggered"
-    BATTERY: Final[str] = "battery"
-    BEOLINK_EXPERIENCES_RESULT: Final[str] = "beolink_experiences_result"
-    BEOLINK_JOIN_RESULT: Final[str] = "beolink_join_result"
-    BEO_REMOTE_BUTTON: Final[str] = "beo_remote_button"
-    BUTTON: Final[str] = "button"
-    CURTAINS: Final[str] = "curtains"
-    PLAYBACK_ERROR: Final[str] = "playback_error"
-    PLAYBACK_METADATA: Final[str] = "playback_metadata"
-    PLAYBACK_PROGRESS: Final[str] = "playback_progress"
-    PLAYBACK_SOURCE: Final[str] = "playback_source"
-    PLAYBACK_STATE: Final[str] = "playback_state"
-    POWER_STATE: Final[str] = "power_state"
-    ROLE: Final[str] = "role"
-    SOFTWARE_UPDATE_STATE: Final[str] = "software_update_state"
-    SOUND_SETTINGS: Final[str] = "sound_settings"
-    SOURCE_CHANGE: Final[str] = "source_change"
-    VOLUME: Final[str] = "volume"
+    ACTIVE_LISTENING_MODE = "active_listening_mode"
+    ACTIVE_SPEAKER_GROUP = "active_speaker_group"
+    ALARM_TRIGGERED = "alarm_triggered"
+    BATTERY = "battery"
+    BEOLINK_EXPERIENCES_RESULT = "beolink_experiences_result"
+    BEOLINK_JOIN_RESULT = "beolink_join_result"
+    BEO_REMOTE_BUTTON = "beo_remote_button"
+    BUTTON = "button"
+    CURTAINS = "curtains"
+    PLAYBACK_ERROR = "playback_error"
+    PLAYBACK_METADATA = "playback_metadata"
+    PLAYBACK_PROGRESS = "playback_progress"
+    PLAYBACK_SOURCE = "playback_source"
+    PLAYBACK_STATE = "playback_state"
+    POWER_STATE = "power_state"
+    ROLE = "role"
+    SOFTWARE_UPDATE_STATE = "software_update_state"
+    SOUND_SETTINGS = "sound_settings"
+    SOURCE_CHANGE = "source_change"
+    VOLUME = "volume"
 
     # Sub-notifications
-    BEOLINK_AVAILABLE_LISTENERS: Final[str] = "beolinkAvailableListeners"
-    BEOLINK_LISTENERS: Final[str] = "beolinkListeners"
-    BEOLINK_PEERS: Final[str] = "beolinkPeers"
-    BEOLINK: Final[str] = "beolink"
-    BLUETOOTH_DEVICES: Final[str] = "bluetooth"
-    CONFIGURATION: Final[str] = "configuration"
-    NOTIFICATION: Final[str] = "notification"
-    PROXIMITY: Final[str] = "proximity"
-    REMOTE_CONTROL_DEVICES: Final[str] = "remoteControlDevices"
-    REMOTE_MENU_CHANGED: Final[str] = "remoteMenuChanged"
+    BEOLINK_AVAILABLE_LISTENERS = "beolinkAvailableListeners"
+    BEOLINK_LISTENERS = "beolinkListeners"
+    BEOLINK_PEERS = "beolinkPeers"
+    BEOLINK = "beolink"
+    BLUETOOTH_DEVICES = "bluetooth"
+    CONFIGURATION = "configuration"
+    NOTIFICATION = "notification"
+    PROXIMITY = "proximity"
+    REMOTE_CONTROL_DEVICES = "remoteControlDevices"
+    REMOTE_MENU_CHANGED = "remoteMenuChanged"
 
-    ALL: Final[str] = "all"
+    ALL = "all"
 
 
 class BangOlufsenModelSupport(Enum):
@@ -268,15 +269,15 @@ BEOLINK_RELATIVE_VOLUME: Final[str] = "BEOLINK_RELATIVE_VOLUME"
 
 
 # Valid commands and their expected parameter type for beolink_command service
-FLOAT_PARAMETERS: Final[tuple] = (
+FLOAT_PARAMETERS: Final[tuple[str, str, str, type[float]]] = (
     "set_volume_level",
     "media_seek",
     "set_relative_volume_level",
     float,
 )
-BOOL_PARAMETERS: Final[tuple] = ("mute_volume", bool)
-STR_PARAMETERS: Final[tuple] = ("select_source", str)
-NONE_PARAMETERS: Final[tuple] = (
+BOOL_PARAMETERS: Final[tuple[str, type[bool]]] = ("mute_volume", bool)
+STR_PARAMETERS: Final[tuple[str, type[str]]] = ("select_source", str)
+NONE_PARAMETERS: Final[tuple[str, str, str, str, str, str, str, str, None]] = (
     "volume_up",
     "volume_down",
     "media_play_pause",
@@ -289,15 +290,20 @@ NONE_PARAMETERS: Final[tuple] = (
 )
 
 # Tuple of accepted commands for input validation
-ACCEPTED_COMMANDS: Final[tuple] = (
-    FLOAT_PARAMETERS[:-1]
+ACCEPTED_COMMANDS: Final[tuple[tuple[str]]] = (
+    FLOAT_PARAMETERS[:-1]  # type: ignore[assignment]
     + BOOL_PARAMETERS[:-1]
     + STR_PARAMETERS[:-1]
     + NONE_PARAMETERS[:-1]
 )
 
 # Tuple of all commands and their types for executing commands.
-ACCEPTED_COMMANDS_LISTS: Final[tuple] = (
+ACCEPTED_COMMANDS_LISTS: tuple[
+    tuple[str, str, str, type[float]],
+    tuple[str, type[bool]],
+    tuple[str, type[str]],
+    tuple[str, str, str, str, str, str, str, str, None],
+] = (
     FLOAT_PARAMETERS,
     BOOL_PARAMETERS,
     STR_PARAMETERS,

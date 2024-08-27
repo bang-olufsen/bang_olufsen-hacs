@@ -30,9 +30,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     BANG_OLUFSEN_EVENT,
@@ -63,7 +63,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
         )
         BangOlufsenBase.__init__(self, entry, client)
 
-        self._device = self._get_device()
+        self._device = self.get_device()
 
         # WebSocket callbacks
         self._client.get_active_listening_mode_notifications(
@@ -104,6 +104,14 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
         # Used for firing events and debugging
         self._client.get_all_notifications_raw(self.on_all_notifications_raw)
 
+    def get_device(self) -> dr.DeviceEntry:
+        """Get the device."""
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device({(DOMAIN, self._unique_id)})
+        assert device
+
+        return device
+
     async def _async_update_data(self) -> dict[str, Any]:
         """Get all information needed by the polling entities."""
         # Try to update coordinator_data.
@@ -121,17 +129,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
             f"{self._unique_id}_{CONNECTION_STATUS}",
             self._client.websocket_connected,
         )
-
-    def _get_device(self) -> DeviceEntry | None:
-        """Get the Home Assistant device."""
-        if not self.hass:
-            return None
-
-        device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device({(DOMAIN, self._unique_id)})
-        assert device
-
-        return device
 
     def on_connection(self) -> None:
         """Handle WebSocket connection made."""
@@ -169,11 +166,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
 
     def on_beo_remote_button_notification(self, notification: BeoRemoteButton) -> None:
         """Send beo_remote_button dispatch."""
-        if not self._device:
-            self._device = self._get_device()
-
-        assert self._device
-
         if notification.type == "KeyPress":
             # Trigger the device trigger
             self.hass.bus.async_fire(
@@ -186,11 +178,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
 
     def on_button_notification(self, notification: ButtonEvent) -> None:
         """Send button dispatch."""
-        if not self._device:
-            self._device = self._get_device()
-
-        assert self._device
-
         # Trigger the device trigger
         self.hass.bus.async_fire(
             BANG_OLUFSEN_EVENT,
@@ -204,39 +191,45 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
         self, notification: WebsocketNotificationTag
     ) -> None:
         """Send notification dispatch."""
-        if notification.value:
-            if notification.value is WebsocketNotification.PROXIMITY:
-                async_dispatcher_send(
-                    self.hass,
-                    f"{self._unique_id}_{WebsocketNotification.PROXIMITY}",
-                    notification,
-                )
+        # Try to match the notification type with available WebsocketNotification members
+        notification_type = try_parse_enum(WebsocketNotification, notification.value)
 
-            elif notification.value is WebsocketNotification.REMOTE_MENU_CHANGED.value:
-                async_dispatcher_send(
-                    self.hass,
-                    f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
-                )
+        if notification_type is WebsocketNotification.PROXIMITY:
+            async_dispatcher_send(
+                self.hass,
+                f"{self._unique_id}_{WebsocketNotification.PROXIMITY}",
+                notification,
+            )
 
-            elif notification.value is WebsocketNotification.CONFIGURATION.value:
-                async_dispatcher_send(
-                    self.hass,
-                    f"{self._unique_id}_{WebsocketNotification.CONFIGURATION}",
-                )
+        elif notification_type is WebsocketNotification.REMOTE_MENU_CHANGED:
+            async_dispatcher_send(
+                self.hass,
+                f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
+            )
 
-            elif notification.value in (
-                WebsocketNotification.BLUETOOTH_DEVICES.value,
-                WebsocketNotification.REMOTE_CONTROL_DEVICES.value,
-            ):
-                async_dispatcher_send(
-                    self.hass,
-                    f"{self._unique_id}_{WebsocketNotification.BLUETOOTH_DEVICES}",
-                )
-            elif WebsocketNotification.BEOLINK.value in notification.value:
-                async_dispatcher_send(
-                    self.hass,
-                    f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
-                )
+        elif notification_type is WebsocketNotification.CONFIGURATION:
+            async_dispatcher_send(
+                self.hass,
+                f"{self._unique_id}_{WebsocketNotification.CONFIGURATION}",
+            )
+
+        elif notification_type in (
+            WebsocketNotification.BLUETOOTH_DEVICES,
+            WebsocketNotification.REMOTE_CONTROL_DEVICES,
+        ):
+            async_dispatcher_send(
+                self.hass,
+                f"{self._unique_id}_{WebsocketNotification.BLUETOOTH_DEVICES}",
+            )
+        elif notification_type in (
+            WebsocketNotification.BEOLINK_PEERS,
+            WebsocketNotification.BEOLINK_LISTENERS,
+            WebsocketNotification.BEOLINK_AVAILABLE_LISTENERS,
+        ):
+            async_dispatcher_send(
+                self.hass,
+                f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
+            )
 
     def on_playback_error_notification(self, notification: PlaybackError) -> None:
         """Send playback_error dispatch."""
@@ -301,11 +294,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
         software_status = await self._client.get_softwareupdate_status()
 
         # Update the HA device if the sw version does not match
-        if not self._device:
-            self._device = self._get_device()
-
-        assert self._device
-
         if software_status.software_version != self._device.sw_version:
             device_registry = dr.async_get(self.hass)
 
@@ -316,10 +304,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
 
     def on_all_notifications_raw(self, notification: dict) -> None:
         """Receive all notifications."""
-        if not self._device:
-            self._device = self._get_device()
-
-        assert self._device
 
         # Add the device_id and serial_number to the notification
         notification["device_id"] = self._device.id
