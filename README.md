@@ -96,6 +96,7 @@ This integration adds an array of different useful entities that are generated a
       - media_next_track
       - media_previous_track
       - toggle
+  - reboot: Reboot the device.
 
 ### Binary Sensor entity
 
@@ -449,6 +450,10 @@ Generated TTS messages are cached for 24 hours.
 | `volume_offset`        | yes      | Specify a volume offset to be added to the current volume level. |
 | `tts`                  | yes      | Specify a string to be converted to a TTS message.               |
 | `tts_language`         | yes      | Specify TTS language.                                            |
+
+### Service `bang_olufsen.reboot`
+
+Reboot the device.
 
 ## Blueprints
 
