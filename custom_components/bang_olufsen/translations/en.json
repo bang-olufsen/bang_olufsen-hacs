@@ -286,6 +286,10 @@
                 }
             },
             "name": "Beolink unexpand"
+        },
+        "reboot": {
+            "description": "Reboot the device.",
+            "name": "Reboot"
         }
     }
 }

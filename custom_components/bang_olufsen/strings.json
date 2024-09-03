@@ -208,6 +208,10 @@
           "description": "Specify the media_player command's parameter."
         }
       }
+    },
+    "reboot": {
+      "name": "Reboot",
+      "description": "Reboot the device."
     }
   },
   "entity": {

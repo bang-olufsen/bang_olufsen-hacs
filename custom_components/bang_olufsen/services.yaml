@@ -130,3 +130,11 @@ beolink_leader_command:
       example: 0.4
       selector:
         text:
+
+reboot:
+  target:
+    entity:
+      integration: bang_olufsen
+      domain: media_player
+    device:
+      integration: bang_olufsen

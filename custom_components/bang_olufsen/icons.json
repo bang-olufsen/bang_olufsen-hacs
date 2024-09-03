@@ -7,6 +7,7 @@
     "beolink_allstandby": "mdi:close-circle-multiple-outline",
     "beolink_set_volume": "mdi:volume-equal",
     "beolink_set_relative_volume": "mdi:volume-plus",
-    "beolink_leader_command": "mdi:location-enter"
+    "beolink_leader_command": "mdi:location-enter",
+    "reboot": "mdi:restart"
   }
 }

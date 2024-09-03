@@ -214,6 +214,11 @@ async def async_setup_entry(
         },
         func="async_beolink_leader_command",
     )
+    platform.async_register_entity_service(
+        name="reboot",
+        schema=None,
+        func="async_reboot",
+    )
 
 
 class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
@@ -1332,3 +1337,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                     "set_relative_volume_level",
                     volume_level,
                 )
+
+    async def async_reboot(self) -> None:
+        """Reboot the device."""
+        await self._client.post_reboot()
