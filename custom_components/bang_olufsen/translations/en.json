@@ -194,6 +194,9 @@
         "invalid_beolink_parameter": {
             "message": "Invalid parameter: {parameter} for {command} which expects a parameter of type: {parameter_type}."
         },
+        "invalid_grouping_entity": {
+            "message": "Entity with id: {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
+        },
         "invalid_media_type": {
             "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
         },
