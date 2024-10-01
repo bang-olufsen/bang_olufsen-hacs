@@ -39,6 +39,7 @@ from .const import (
     BANG_OLUFSEN_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
     DOMAIN,
+    EVENT_TRANSLATION_MAP,
     WebsocketNotification,
 )
 from .entity import BangOlufsenBase
@@ -166,18 +167,27 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
 
     def on_beo_remote_button_notification(self, notification: BeoRemoteButton) -> None:
         """Send beo_remote_button dispatch."""
-        if notification.type == "KeyPress":
-            # Trigger the device trigger
-            self.hass.bus.async_fire(
-                BANG_OLUFSEN_EVENT,
-                event_data={
-                    CONF_TYPE: f"{notification.key}_{notification.type}",
-                    CONF_DEVICE_ID: self._device.id,
-                },
-            )
+        assert notification.type
+
+        # Trigger the device trigger
+        self.hass.bus.async_fire(
+            BANG_OLUFSEN_EVENT,
+            event_data={
+                CONF_TYPE: f"{notification.key}_{notification.type}",
+                CONF_DEVICE_ID: self._device.id,
+            },
+        )
+        # Send to event entity
+        async_dispatcher_send(
+            self.hass,
+            f"{self._unique_id}_{WebsocketNotification.BEO_REMOTE_BUTTON}_{notification.key}",
+            EVENT_TRANSLATION_MAP[notification.type],
+        )
 
     def on_button_notification(self, notification: ButtonEvent) -> None:
         """Send button dispatch."""
+        assert notification.state
+
         # Trigger the device trigger
         self.hass.bus.async_fire(
             BANG_OLUFSEN_EVENT,
@@ -186,19 +196,30 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
                 CONF_DEVICE_ID: self._device.id,
             },
         )
+        # Send to event entity
+        async_dispatcher_send(
+            self.hass,
+            f"{self._unique_id}_{WebsocketNotification.BUTTON}_{notification.button}",
+            EVENT_TRANSLATION_MAP[notification.state],
+        )
 
     def on_notification_notification(
         self, notification: WebsocketNotificationTag
     ) -> None:
         """Send notification dispatch."""
+        assert notification.value
+
         # Try to match the notification type with available WebsocketNotification members
         notification_type = try_parse_enum(WebsocketNotification, notification.value)
 
-        if notification_type is WebsocketNotification.PROXIMITY:
+        if notification_type in (
+            WebsocketNotification.PROXIMITY_PRESENCE_DETECTED,
+            WebsocketNotification.PROXIMITY_PRESENCE_NOT_DETECTED,
+        ):
             async_dispatcher_send(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.PROXIMITY}",
-                notification,
+                EVENT_TRANSLATION_MAP[notification.value],
             )
 
         elif notification_type is WebsocketNotification.REMOTE_MENU_CHANGED:

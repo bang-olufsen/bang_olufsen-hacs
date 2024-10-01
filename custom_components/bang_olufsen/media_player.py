@@ -362,7 +362,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         """Update queue settings."""
         self._queue_settings = await self._client.get_settings_queue()
 
-    @callback
     async def _async_update_name_and_beolink(self) -> None:
         """Update the device friendly name."""
         beolink_self = await self._client.get_beolink_self()
@@ -378,7 +377,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
         self.async_write_ha_state()
 
-    @callback
     async def _async_update_sources(self) -> None:
         """Get sources for the specific product."""
 
@@ -491,7 +489,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             Platform.MEDIA_PLAYER, DOMAIN, unique_id
         )
 
-    @callback
     async def _async_update_beolink(self, should_update: bool = True) -> None:
         """Update the current Beolink leader, listeners, peers and self."""
 
@@ -577,7 +574,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         if should_update:
             self.async_write_ha_state()
 
-    @callback
     async def _async_update_bluetooth(self) -> None:
         """Update the current bluetooth devices that are connected and paired remotes."""
 
@@ -608,7 +604,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         if not self._bluetooth_attribute["bluetooth"]:
             self._bluetooth_attribute = None
 
-    @callback
     async def _async_update_playback_metadata_and_beolink(
         self, data: PlaybackContentMetadata
     ) -> None:
@@ -645,7 +640,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
             self.async_write_ha_state()
 
-    @callback
     async def _async_update_source_change(self, data: Source) -> None:
         """Update _source_change and related."""
         self._source_change = data
@@ -694,7 +688,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
         self.async_write_ha_state()
 
-    @callback
     async def _async_update_sound_modes(
         self, active_sound_mode: ListeningModeProps | ListeningModeRef | None = None
     ) -> None:
@@ -714,7 +707,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 self._attr_sound_mode = label
 
         # Set available options
-        self._attr_sound_mode_list = list(self._sound_modes.keys())
+        self._attr_sound_mode_list = list(self._sound_modes)
 
         self.async_write_ha_state()
 
@@ -970,6 +963,17 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a sound mode."""
+        # Ensure only known sound modes known by the integration can be activated.
+        if sound_mode not in self._sound_modes:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sound_mode",
+                translation_placeholders={
+                    "invalid_sound_mode": sound_mode,
+                    "valid_sound_modes": ", ".join(list(self._sound_modes)),
+                },
+            )
+
         await self._client.activate_listening_mode(id=self._sound_modes[sound_mode])
 
     async def async_join_players(self, group_members: list[str]) -> None:
@@ -1009,7 +1013,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 translation_key="invalid_media_type",
                 translation_placeholders={
                     "invalid_media_type": media_type,
-                    "valid_media_types": ",".join(VALID_MEDIA_TYPES),
+                    "valid_media_types": ", ".join(VALID_MEDIA_TYPES),
                 },
             )
 
@@ -1173,7 +1177,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 translation_key="invalid_source",
                 translation_placeholders={
                     "invalid_source": cast(str, self._source_change.id),
-                    "valid_sources": ", ".join(list(self._beolink_sources.keys())),
+                    "valid_sources": ", ".join(list(self._beolink_sources)),
                 },
             )
 
@@ -1212,7 +1216,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         """Set all connected Beolink devices to standby."""
         await self._client.post_beolink_allstandby()
 
-    @callback
     async def async_beolink_listener_command(
         self, command: str, parameter: str | None = None
     ) -> None:
@@ -1231,7 +1234,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
                 return
 
-    @callback
     async def async_beolink_leader_command(
         self, command: str, parameter: float | bool | str | None = None
     ) -> None:
@@ -1286,7 +1288,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
                 return
 
-    @callback
     async def async_beolink_set_volume(self, volume_level: str) -> None:
         """Set volume level for all connected Beolink devices."""
 
@@ -1309,7 +1310,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                     volume_level,
                 )
 
-    @callback
     async def async_set_relative_volume_level(self, volume: float) -> None:
         """Set a volume level relative to the current level."""
 

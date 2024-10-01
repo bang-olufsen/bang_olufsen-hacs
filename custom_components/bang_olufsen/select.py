@@ -141,6 +141,6 @@ class BangOlufsenSelectListeningPosition(BangOlufsenSelect):
                 if active_speaker_group.id == scene.action_list[0].speaker_group_id:
                     self._attr_current_option = scene.label
 
-        self._attr_options = list(self._listening_positions.keys())
+        self._attr_options = list(self._listening_positions)
 
         self.async_write_ha_state()

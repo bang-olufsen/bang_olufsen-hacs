@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.ssl import get_default_context
 
 from .const import DOMAIN
 from .coordinator import BangOlufsenCoordinator
@@ -32,6 +33,7 @@ class BangOlufsenData:
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
@@ -70,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=entry.data[CONF_MODEL],
     )
 
-    client = MozartClient(host=entry.data[CONF_HOST])
+    client = MozartClient(host=entry.data[CONF_HOST], ssl_context=get_default_context())
 
     # Check API and WebSocket connection
     try:

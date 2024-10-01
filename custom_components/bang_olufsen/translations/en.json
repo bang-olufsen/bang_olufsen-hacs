@@ -1,4 +1,13 @@
 {
+    "common": {
+        "key_press": "Press",
+        "key_release": "Release",
+        "long_press_release": "Release of long press",
+        "long_press_timeout": "Long press",
+        "short_press_release": "Release of short press",
+        "very_long_press_release": "Release of very long press",
+        "very_long_press_timeout": "Very long press"
+    },
     "config": {
         "abort": {
             "already_configured": "Already configured. Only a single configuration possible.",
@@ -136,14 +145,802 @@
         "binary_sensor": {
             "battery_charging": {
                 "name": "Battery charging"
-            },
-            "proximity": {
-                "name": "Proximity"
             }
         },
         "button": {
             "favourite": {
                 "name": "Favourite {id}"
+            }
+        },
+        "event": {
+            "bluetooth": {
+                "name": "Bluetooth",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "control_blue": {
+                "name": "Control - Blue",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit0": {
+                "name": "Control - Digit 0",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit1": {
+                "name": "Control - Digit 1",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit2": {
+                "name": "Control - Digit 2",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit3": {
+                "name": "Control - Digit 3",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit4": {
+                "name": "Control - Digit 4",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit5": {
+                "name": "Control - Digit 5",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit6": {
+                "name": "Control - Digit 6",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit7": {
+                "name": "Control - Digit 7",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit8": {
+                "name": "Control - Digit 8",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit9": {
+                "name": "Control - Digit 9",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_down": {
+                "name": "Control - Down",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func1": {
+                "name": "Control - Function 1",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func11": {
+                "name": "Control - Function 11",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func16": {
+                "name": "Control - Function 16",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func6": {
+                "name": "Control - Function 6",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_green": {
+                "name": "Control - Green",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_left": {
+                "name": "Control - Left",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_play": {
+                "name": "Control - Play",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_red": {
+                "name": "Control - Red",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_rewind": {
+                "name": "Control - Rewind",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_right": {
+                "name": "Control - Right",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_select": {
+                "name": "Control - Select",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_stop": {
+                "name": "Control - Stop",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_up": {
+                "name": "Control - Up",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_wind": {
+                "name": "Control - Wind",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_yellow": {
+                "name": "Control - Yellow",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_blue": {
+                "name": "Light - Blue",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit0": {
+                "name": "Light - Digit 0",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit1": {
+                "name": "Light - Digit 1",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit2": {
+                "name": "Light - Digit 2",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit3": {
+                "name": "Light - Digit 3",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit4": {
+                "name": "Light - Digit 4",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit5": {
+                "name": "Light - Digit 5",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit6": {
+                "name": "Light - Digit 6",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit7": {
+                "name": "Light - Digit 7",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit8": {
+                "name": "Light - Digit 8",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit9": {
+                "name": "Light - Digit 9",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_down": {
+                "name": "Light - Down",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func1": {
+                "name": "Light - Function 1",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func11": {
+                "name": "Light - Function 11",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func12": {
+                "name": "Light - Function 12",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func13": {
+                "name": "Light - Function 13",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func14": {
+                "name": "Light - Function 14",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func15": {
+                "name": "Light - Function 15",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func16": {
+                "name": "Light - Function 16",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func17": {
+                "name": "Light- Function 17",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_green": {
+                "name": "Light - Green",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_left": {
+                "name": "Light - Left",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_play": {
+                "name": "Light - Play",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_red": {
+                "name": "Light - Red",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_rewind": {
+                "name": "Light - Rewind",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_right": {
+                "name": "Light - Right",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_select": {
+                "name": "Light - Select",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_stop": {
+                "name": "Light - Stop",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_up": {
+                "name": "Light - Up",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_wind": {
+                "name": "Light - Wind",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_yellow": {
+                "name": "Light - Yellow",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "microphone": {
+                "name": "Microphone",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "next": {
+                "name": "Next",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "playpause": {
+                "name": "Play / Pause",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "preset1": {
+                "name": "Preset 1",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "preset2": {
+                "name": "Preset 2",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "preset3": {
+                "name": "Preset 3",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "preset4": {
+                "name": "Preset 4",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "previous": {
+                "name": "Previous",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "proximity": {
+                "name": "Proximity",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "proximity_presence_detected": "Presence detected",
+                            "proximity_presence_not_detected": "No presence detected"
+                        }
+                    }
+                }
+            },
+            "volume": {
+                "name": "Volume",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
             }
         },
         "number": {
@@ -174,6 +971,9 @@
             },
             "media_id": {
                 "name": "Media id"
+            },
+            "remote_battery_level": {
+                "name": "Battery level"
             }
         },
         "switch": {
@@ -199,6 +999,9 @@
         },
         "invalid_media_type": {
             "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
+        },
+        "invalid_sound_mode": {
+            "message": "{invalid_sound_mode} is an invalid sound mode. Valid values are: {valid_sound_modes}."
         },
         "invalid_source": {
             "message": "Invalid source: {invalid_source}. Valid sources are: {valid_sources}"

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import cast
 
 from inflection import titleize, underscore
-from mozart_api.models import BatteryState, PlaybackContentMetadata
+from mozart_api.models import BatteryState, PairedRemote, PlaybackContentMetadata
 from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.sensor import (
@@ -15,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -22,6 +24,8 @@ from . import BangOlufsenData
 from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import BangOlufsenEntity
 from .util import set_platform_initialized
+
+SCAN_INTERVAL = timedelta(minutes=15)
 
 
 async def async_setup_entry(
@@ -46,6 +50,17 @@ async def async_setup_entry(
                 BangOlufsenSensorBatteryLevel(config_entry, data.client),
                 BangOlufsenSensorBatteryPlayingTime(config_entry, data.client),
             ]
+        )
+
+    # Get if a remote control is connected and the remote
+    bluetooth_remote_list = await data.client.get_bluetooth_remotes()
+
+    if bool(len(cast(list[PairedRemote], bluetooth_remote_list.items))):
+        # Support only the first remote for now.
+        remote: PairedRemote = cast(list[PairedRemote], bluetooth_remote_list.items)[0]
+
+        entities.append(
+            BangOlufsenSensorRemoteBatteryLevel(config_entry, data.client, remote)
         )
 
     async_add_entities(new_entities=entities)
@@ -98,6 +113,39 @@ class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
         """Update sensor value."""
         self._attr_native_value = data.battery_level
         self.async_write_ha_state()
+
+
+class BangOlufsenSensorRemoteBatteryLevel(BangOlufsenSensor):
+    """Battery level Sensor for the Beoremote One."""
+
+    _attr_icon = "mdi:battery"
+    _attr_native_unit_of_measurement = "%"
+    _attr_translation_key = "remote_battery_level"
+    _attr_should_poll = True
+
+    def __init__(
+        self, entry: ConfigEntry, client: MozartClient, remote: PairedRemote
+    ) -> None:
+        """Init the battery level Sensor."""
+        super().__init__(entry, client)
+        assert remote.serial_number
+
+        self._attr_device_class = SensorDeviceClass.BATTERY
+        self._attr_unique_id = f"{remote.serial_number}_remote_battery_level"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, remote.serial_number)}
+        )
+        self._attr_native_value = remote.battery_level
+
+    async def async_update(self) -> None:
+        """Poll battery status."""
+        bluetooth_remote_list = await self._client.get_bluetooth_remotes()
+
+        if bool(len(cast(list[PairedRemote], bluetooth_remote_list.items))):
+            remote: PairedRemote = cast(
+                list[PairedRemote], bluetooth_remote_list.items
+            )[0]
+            self._attr_native_value = remote.battery_level
 
 
 class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):

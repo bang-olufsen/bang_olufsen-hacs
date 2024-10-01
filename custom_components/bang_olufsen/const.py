@@ -90,9 +90,9 @@ class WebsocketNotification(StrEnum):
     ACTIVE_SPEAKER_GROUP = "active_speaker_group"
     ALARM_TRIGGERED = "alarm_triggered"
     BATTERY = "battery"
+    BEO_REMOTE_BUTTON = "beo_remote_button"
     BEOLINK_EXPERIENCES_RESULT = "beolink_experiences_result"
     BEOLINK_JOIN_RESULT = "beolink_join_result"
-    BEO_REMOTE_BUTTON = "beo_remote_button"
     BUTTON = "button"
     CURTAINS = "curtains"
     PLAYBACK_ERROR = "playback_error"
@@ -108,14 +108,16 @@ class WebsocketNotification(StrEnum):
     VOLUME = "volume"
 
     # Sub-notifications
+    BEOLINK = "beolink"
     BEOLINK_AVAILABLE_LISTENERS = "beolinkAvailableListeners"
     BEOLINK_LISTENERS = "beolinkListeners"
     BEOLINK_PEERS = "beolinkPeers"
-    BEOLINK = "beolink"
     BLUETOOTH_DEVICES = "bluetooth"
     CONFIGURATION = "configuration"
     NOTIFICATION = "notification"
     PROXIMITY = "proximity"
+    PROXIMITY_PRESENCE_DETECTED = "proximityPresenceDetected"
+    PROXIMITY_PRESENCE_NOT_DETECTED = "proximityPresenceNotDetected"
     REMOTE_CONTROL_DEVICES = "remoteControlDevices"
     REMOTE_MENU_CHANGED = "remoteMenuChanged"
 
@@ -262,6 +264,100 @@ BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
+
+# Dict used to translate native Bang & Olufsen event names to string.json compatible ones
+EVENT_TRANSLATION_MAP: dict[str, str] = {
+    "KeyPress": "key_press",
+    "KeyRelease": "key_release",
+    "shortPress (Release)": "short_press_release",
+    "longPress (Timeout)": "long_press_timeout",
+    "longPress (Release)": "long_press_release",
+    "veryLongPress (Timeout)": "very_long_press_timeout",
+    "veryLongPress (Release)": "very_long_press_release",
+    "proximityPresenceDetected": "proximity_presence_detected",
+    "proximityPresenceNotDetected": "proximity_presence_not_detected",
+}
+
+DEVICE_BUTTONS: Final[list[str]] = [
+    "Bluetooth",
+    "Microphone",
+    "Next",
+    "PlayPause",
+    "Preset1",
+    "Preset2",
+    "Preset3",
+    "Preset4",
+    "Previous",
+    "Volume",
+]
+
+
+DEVICE_BUTTON_EVENTS: Final[list[str]] = [
+    "short_press_release",
+    "long_press_timeout",
+    "long_press_release",
+    "very_long_press_timeout",
+    "very_long_press_release",
+]
+
+
+BEO_REMOTE_SUBMENU_CONTROL: Final[str] = "Control"
+BEO_REMOTE_SUBMENU_LIGHT: Final[str] = "Light"
+
+# Common for both submenus
+BEO_REMOTE_KEYS: Final[tuple[str, ...]] = (
+    "Blue",
+    "Digit0",
+    "Digit1",
+    "Digit2",
+    "Digit3",
+    "Digit4",
+    "Digit5",
+    "Digit6",
+    "Digit7",
+    "Digit8",
+    "Digit9",
+    "Down",
+    "Green",
+    "Left",
+    "Play",
+    "Red",
+    "Rewind",
+    "Right",
+    "Select",
+    "Stop",
+    "Up",
+    "Wind",
+    "Yellow",
+)
+
+# "keys" that are unique to the Control and Light submenus
+BEO_REMOTE_CONTROL_KEYS: Final[tuple[str, ...]] = (
+    "Func1",
+    "Func11",
+    "Func16",
+    "Func6",
+)
+
+BEO_REMOTE_LIGHT_KEYS: Final[tuple[str, ...]] = (
+    "Func1",
+    "Func11",
+    "Func12",
+    "Func13",
+    "Func14",
+    "Func15",
+    "Func16",
+    "Func17",
+)
+
+BEO_REMOTE_KEY_EVENTS: Final[list[str]] = ["key_press", "key_release"]
+
+PROXIMITY_EVENTS: Final[list[str]] = [
+    "proximity_presence_detected",
+    "proximity_presence_not_detected",
+]
+
+
 BEOLINK_LEADER_COMMAND: Final[str] = "BEOLINK_LEADER_COMMAND"
 BEOLINK_LISTENER_COMMAND: Final[str] = "BEOLINK_LISTENER_COMMAND"
 BEOLINK_VOLUME: Final[str] = "BEOLINK_VOLUME"
