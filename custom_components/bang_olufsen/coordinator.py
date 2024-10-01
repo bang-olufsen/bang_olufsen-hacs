@@ -27,7 +27,6 @@ from mozart_api.models import (
 from mozart_api.mozart_client import MozartClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -35,7 +34,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
-    BANG_OLUFSEN_EVENT,
     BANG_OLUFSEN_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
     DOMAIN,
@@ -168,15 +166,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
     def on_beo_remote_button_notification(self, notification: BeoRemoteButton) -> None:
         """Send beo_remote_button dispatch."""
         assert notification.type
-
-        # Trigger the device trigger
-        self.hass.bus.async_fire(
-            BANG_OLUFSEN_EVENT,
-            event_data={
-                CONF_TYPE: f"{notification.key}_{notification.type}",
-                CONF_DEVICE_ID: self._device.id,
-            },
-        )
         # Send to event entity
         async_dispatcher_send(
             self.hass,
@@ -187,15 +176,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
     def on_button_notification(self, notification: ButtonEvent) -> None:
         """Send button dispatch."""
         assert notification.state
-
-        # Trigger the device trigger
-        self.hass.bus.async_fire(
-            BANG_OLUFSEN_EVENT,
-            event_data={
-                CONF_TYPE: f"{notification.button}_{notification.state}",
-                CONF_DEVICE_ID: self._device.id,
-            },
-        )
         # Send to event entity
         async_dispatcher_send(
             self.hass,

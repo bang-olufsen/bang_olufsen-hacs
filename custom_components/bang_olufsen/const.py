@@ -258,8 +258,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
 )
 
 
-# Device trigger events
-BANG_OLUFSEN_EVENT: Final[str] = f"{DOMAIN}_event"
+# Device events
 BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 

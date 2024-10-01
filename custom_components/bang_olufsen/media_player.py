@@ -947,7 +947,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 translation_key="invalid_source",
                 translation_placeholders={
                     "invalid_source": source,
-                    "valid_sources": ",".join(list(self._sources.values())),
+                    "valid_sources": ", ".join(list(self._sources.values())),
                 },
             )
 
@@ -1013,7 +1013,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 translation_key="invalid_media_type",
                 translation_placeholders={
                     "invalid_media_type": media_type,
-                    "valid_media_types": ", ".join(VALID_MEDIA_TYPES),
+                    "valid_media_types": ",".join(VALID_MEDIA_TYPES),
                 },
             )
 
