@@ -101,11 +101,16 @@ This integration adds an array of different useful entities that are generated a
 ### Binary Sensor entity
 
 - Battery Charging (If available)
-- Proximity sensor (If available)
 
 ### Button entity
 
 - Favourite entities
+
+### Event entity
+
+- Device button entities
+- Beoremote One key entities
+- Proximity
 
 ### Number entity
 
@@ -145,25 +150,23 @@ To find Tidal playlists, album URIs and track IDs, the Tidal website has to be a
 
 ## Automations
 
-All device triggers can be received by listening to `bang_olufsen_event` event types.
-
-Additionally the "raw" WebSocket notifications received from the device are fired as events in Home Assistant. These can be received by listening to `bang_olufsen_websocket_event` event types where `device_id` is used to differentiate devices.
+"raw" WebSocket notifications received from the device are fired as events in Home Assistant. These can be received by listening to `bang_olufsen_websocket_event` event types where `device_id` is used to differentiate devices.
 
 ### Physical buttons and sensors
 
-The "shortPress" of all the buttons, except for volume control, are available as device triggers.
+The "shortPress (Release)", "longPress (Timeout)", "longPress (Release)", "veryLongPress (Timeout)", "veryLongPress (Release)", of all the buttons are available Event entities.
 
-If the device has a proximity sensor, then a proximity sensor binary sensor will be available in Home Assistant.
+If the device has a proximity sensor, then a proximity event Entity will be available in Home Assistant.
 
 ### Beoremote One
 
-Device triggers for the [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one) are supported and will be available once the integration detects that it has been paired with the device. To trigger these triggers, enter the "Control" or "Light" submenu, and press any of the compatible buttons. Each button press will send a "press" and a "release" event and therefore also a "press" and a "release" device trigger.
+Event entities are available for each of the compatible keys on the [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one). To trigger these triggers, enter the "Control" or "Light" submenu, and press any of the compatible buttons. Each button press will send a "press" and a "release" event. The functions in these submenus are also supported.
 
 The favourite buttons correspond to the physical favourite buttons on the device.
 
 ### Automation examples
 
-#### Using the Beoremote One to control lights
+#### Using the Beoremote One to control lights (OUTDATED)
 
 ```yaml
 description: Use the Beoremote One to control living room lights.
@@ -180,7 +183,7 @@ action:
       entity_id: light.living_room
 ```
 
-#### Setting all devices to standby when leaving home
+#### Setting all devices to standby when leaving home (OUTDATED)
 
 ```yaml
 description: Set all Bang & Olufsen devices to standby when leaving home.
@@ -471,7 +474,7 @@ Create an automation for each Mozart product that should announce when joining a
 
 [![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgist.github.com%2Fcklit%2Fe7126c9fda1195bd88bcaefb45fe493e)
 
-### Control lights using Beoremote One BT
+### Control lights using Beoremote One BT (OUTDATED)
 
 A Blueprint to easily set up light control with Beoremote One BT and a Mozart-based product.
 
@@ -483,7 +486,7 @@ To use Light-commands, press “List” on your Beoremote One, navigate down to 
 
 [![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgist.github.com%2Fcklit%2F816e6fd144ff91559548e1bf0eb3bf84)
 
-### Control shades using Beoremote One BT
+### Control shades using Beoremote One BT (OUTDATED)
 
 A Blueprint to easily set up shade control with Beoremote One BT and a Mozart-based product.
 
@@ -495,7 +498,7 @@ To use Control-commands, press “List” on your Beoremote One, navigate down t
 
 [![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgist.github.com%2Fcklit%2Fd81d36c525936ab8f9309a226287ff91)
 
-### Control scenes using Light and Control menu items on Beoremote One BT
+### Control scenes using Light and Control menu items on Beoremote One BT (OUTDATED)
 
 A Blueprint to set up scene control with Beoremote One BT and a Mozart-based product.
 
