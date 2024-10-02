@@ -214,14 +214,15 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
                 f"{self._unique_id}_{WebsocketNotification.CONFIGURATION}",
             )
 
-        elif notification_type in (
-            WebsocketNotification.BLUETOOTH_DEVICES,
-            WebsocketNotification.REMOTE_CONTROL_DEVICES,
-        ):
-            async_dispatcher_send(
-                self.hass,
-                f"{self._unique_id}_{WebsocketNotification.BLUETOOTH_DEVICES}",
+        elif notification_type is WebsocketNotification.REMOTE_CONTROL_DEVICES:
+            # Reinitialize the config entry to update Beoremote One entities and device
+            # Wait 5 seconds for the remote to be properly available to the device
+            self.hass.loop.call_later(
+                5,
+                self.hass.config_entries.async_schedule_reload,
+                self.entry.entry_id,
             )
+
         elif notification_type in (
             WebsocketNotification.BEOLINK_PEERS,
             WebsocketNotification.BEOLINK_LISTENERS,

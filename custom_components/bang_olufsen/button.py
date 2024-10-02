@@ -13,10 +13,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BangOlufsenData
 from .const import CONNECTION_STATUS, DOMAIN, BangOlufsenSource
 from .entity import BangOlufsenEntity
-from .util import set_platform_initialized
+from .util import BangOlufsenData, set_platform_initialized
 
 
 async def async_setup_entry(

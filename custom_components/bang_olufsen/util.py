@@ -2,7 +2,22 @@
 
 from __future__ import annotations
 
-from . import BangOlufsenData
+from dataclasses import dataclass
+from typing import cast
+
+from mozart_api.models import PairedRemote
+from mozart_api.mozart_client import MozartClient
+
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+
+@dataclass
+class BangOlufsenData:
+    """Dataclass for API client, coordinator containing WebSocket client and WebSocket initialization variables."""
+
+    coordinator: DataUpdateCoordinator
+    client: MozartClient
+    platforms_initialized: int = 0
 
 
 def set_platform_initialized(data: BangOlufsenData) -> None:
@@ -13,3 +28,17 @@ def set_platform_initialized(data: BangOlufsenData) -> None:
 def get_serial_number_from_jid(jid: str) -> str:
     """Get serial number from Beolink JID."""
     return jid.split(".")[2].split("@")[0]
+
+
+async def get_remote(client: MozartClient) -> PairedRemote | None:
+    """Get remote status easier."""
+    remote: PairedRemote | None = None
+
+    # Get if a remote control is connected and the remote
+    bluetooth_remote_list = await client.get_bluetooth_remotes()
+
+    if bool(len(cast(list[PairedRemote], bluetooth_remote_list.items))):
+        # Support only the first remote for now.
+        remote = cast(list[PairedRemote], bluetooth_remote_list.items)[0]
+
+    return remote

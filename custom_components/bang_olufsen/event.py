@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-from typing import cast
-
 from mozart_api.models import PairedRemote
 from mozart_api.mozart_client import MozartClient
 
@@ -12,12 +9,10 @@ from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BangOlufsenData
 from .const import (
     BEO_REMOTE_CONTROL_KEYS,
     BEO_REMOTE_KEY_EVENTS,
@@ -34,9 +29,7 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
-from .util import set_platform_initialized
-
-_LOGGER = logging.getLogger(__name__)
+from .util import BangOlufsenData, get_remote, set_platform_initialized
 
 
 async def async_setup_entry(
@@ -57,28 +50,8 @@ async def async_setup_entry(
     if config_entry.data[CONF_MODEL] in BangOlufsenModelSupport.PROXIMITY_SENSOR.value:
         entities.append(BangOlufsenEventProximity(config_entry, data.client))
 
-    # Get if a remote control is connected and the remote
-    bluetooth_remote_list = await data.client.get_bluetooth_remotes()
-
-    if bool(len(cast(list[PairedRemote], bluetooth_remote_list.items))):
-        # Support only the first remote for now.
-        remote: PairedRemote = cast(list[PairedRemote], bluetooth_remote_list.items)[0]
-        assert remote.serial_number
-
-        # Create Beoremote One device
-        assert config_entry.unique_id
-        device_registry = dr.async_get(hass)
-        device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
-            identifiers={(DOMAIN, remote.serial_number)},
-            name=f"Beoremote One {remote.serial_number}",
-            model="Beoremote One",
-            serial_number=remote.serial_number,
-            sw_version=remote.app_version,
-            manufacturer="Bang & Olufsen",
-            via_device=(DOMAIN, config_entry.unique_id),
-        )
-
+    # Check for connected Beoremote One
+    if remote := await get_remote(data.client):
         # Add Light keys
         entities.extend(
             [
@@ -110,7 +83,19 @@ async def async_setup_entry(
     set_platform_initialized(data)
 
 
-class BangOlufsenButtonEvent(BangOlufsenEntity, EventEntity):
+class BangOlufsenEvent(BangOlufsenEntity, EventEntity):
+    """Base Event class."""
+
+    _attr_entity_registry_enabled_default = False
+
+    @callback
+    def _async_handle_event(self, event: str) -> None:
+        """Handle event."""
+        self._trigger_event(event)
+        self.async_write_ha_state()
+
+
+class BangOlufsenButtonEvent(BangOlufsenEvent):
     """Event class for Button events."""
 
     _attr_device_class = EventDeviceClass.BUTTON
@@ -130,12 +115,6 @@ class BangOlufsenButtonEvent(BangOlufsenEntity, EventEntity):
 
         self._button_type = button_type
 
-    @callback
-    def _async_handle_event(self, event: str) -> None:
-        """Handle Beoremote One key event."""
-        self._trigger_event(event)
-        self.async_write_ha_state()
-
     async def async_added_to_hass(self) -> None:
         """Listen to WebSocket button events."""
         self.async_on_remove(
@@ -154,7 +133,7 @@ class BangOlufsenButtonEvent(BangOlufsenEntity, EventEntity):
         )
 
 
-class BangOlufsenRemoteKeyEvent(BangOlufsenEntity, EventEntity):
+class BangOlufsenRemoteKeyEvent(BangOlufsenEvent):
     """Event class for Beoremote One key events."""
 
     _attr_device_class = EventDeviceClass.BUTTON
@@ -181,12 +160,6 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEntity, EventEntity):
 
         self._key_type = key_type
 
-    @callback
-    def _async_handle_event(self, event: str) -> None:
-        """Handle Beoremote One key event."""
-        self._trigger_event(event)
-        self.async_write_ha_state()
-
     async def async_added_to_hass(self) -> None:
         """Listen to WebSocket Beoremote One key events."""
         self.async_on_remove(
@@ -205,25 +178,19 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEntity, EventEntity):
         )
 
 
-class BangOlufsenEventProximity(BangOlufsenEntity, EventEntity):
+class BangOlufsenEventProximity(BangOlufsenEvent):
     """Event class for proximity sensor events."""
 
+    _attr_device_class = EventDeviceClass.MOTION
+    _attr_event_types = PROXIMITY_EVENTS
     _attr_icon = "mdi:account-question"
     _attr_translation_key = "proximity"
-    _attr_event_types = PROXIMITY_EVENTS
-    _attr_device_class = EventDeviceClass.MOTION
 
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Init the proximity event."""
         super().__init__(entry, client)
 
         self._attr_unique_id = f"{self._unique_id}_proximity"
-
-    @callback
-    def _async_handle_event(self, event: str) -> None:
-        """Handle Beoremote One key event."""
-        self._trigger_event(event)
-        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""

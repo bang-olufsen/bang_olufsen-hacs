@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 
 from aiohttp import ClientConnectorError, ClientOSError, ServerTimeoutError
 from mozart_api.exceptions import ApiException
@@ -14,21 +13,11 @@ from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.ssl import get_default_context
 
 from .const import DOMAIN
 from .coordinator import BangOlufsenCoordinator
-
-
-@dataclass
-class BangOlufsenData:
-    """Dataclass for API client, coordinator containing WebSocket client and WebSocket initialization variables."""
-
-    coordinator: DataUpdateCoordinator
-    client: MozartClient
-    platforms_initialized: int = 0
-
+from .util import BangOlufsenData, get_remote
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -96,6 +85,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator,
         client,
     )
+
+    # Check for connected Beoremote One
+    if remote := await get_remote(client):
+        assert remote.serial_number
+
+        # Create Beoremote One device
+        assert entry.unique_id
+        device_registry = dr.async_get(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, remote.serial_number)},
+            name=f"Beoremote One {remote.serial_number}",
+            model="Beoremote One",
+            serial_number=remote.serial_number,
+            sw_version=remote.app_version,
+            manufacturer="Bang & Olufsen",
+            via_device=(DOMAIN, entry.unique_id),
+        )
+    else:
+        # If the remote is no longer available, then delete the device.
+        # The remote may appear as being available to the device after is has been unpaired on the remote
+        # As it has to be removed from the device on the app.
+
+        device_registry = dr.async_get(hass)
+        devices = device_registry.devices.get_devices_for_config_entry_id(
+            entry.entry_id
+        )
+        for device in devices:
+            assert device.model is not None
+            if device.model == "Beoremote One":
+                device_registry.async_remove_device(device.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

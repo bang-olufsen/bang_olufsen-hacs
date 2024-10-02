@@ -20,10 +20,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BangOlufsenData
 from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import BangOlufsenEntity
-from .util import set_platform_initialized
+from .util import BangOlufsenData, get_remote, set_platform_initialized
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
@@ -52,13 +51,8 @@ async def async_setup_entry(
             ]
         )
 
-    # Get if a remote control is connected and the remote
-    bluetooth_remote_list = await data.client.get_bluetooth_remotes()
-
-    if bool(len(cast(list[PairedRemote], bluetooth_remote_list.items))):
-        # Support only the first remote for now.
-        remote: PairedRemote = cast(list[PairedRemote], bluetooth_remote_list.items)[0]
-
+    # Check for connected Beoremote One
+    if remote := await get_remote(data.client):
         entities.append(
             BangOlufsenSensorRemoteBatteryLevel(config_entry, data.client, remote)
         )

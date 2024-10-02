@@ -14,12 +14,10 @@ from mozart_api.models import (
     Art,
     BeolinkLeader,
     BeolinkListener,
-    BluetoothDevice,
     ListeningModeProps,
     ListeningModeRef,
     OverlayPlayRequest,
     OverlayPlayRequestTextToSpeechTextToSpeech,
-    PairedRemote,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
@@ -77,7 +75,6 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.util.dt import utcnow
 
-from . import BangOlufsenData
 from .const import (
     ACCEPTED_COMMANDS,
     ACCEPTED_COMMANDS_LISTS,
@@ -98,7 +95,7 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
-from .util import get_serial_number_from_jid, set_platform_initialized
+from .util import BangOlufsenData, get_serial_number_from_jid, set_platform_initialized
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -265,9 +262,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self._beolink_attribute: dict[str, dict] = {}
         self._beolink_listeners: list[BeolinkListener] = []
 
-        # Extra state attributes.
-        self._bluetooth_attribute: dict[str, dict] | None = None
-
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
         await super().async_added_to_hass()
@@ -285,7 +279,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 CONNECTION_STATUS: self._async_update_connection_state,
                 WebsocketNotification.ACTIVE_LISTENING_MODE: self._async_update_sound_modes,
                 WebsocketNotification.BEOLINK: self._async_update_beolink,
-                WebsocketNotification.BLUETOOTH_DEVICES: self._async_update_bluetooth,
                 WebsocketNotification.CONFIGURATION: self._async_update_name_and_beolink,
                 WebsocketNotification.PLAYBACK_ERROR: self._async_update_playback_error,
                 WebsocketNotification.PLAYBACK_METADATA: self._async_update_playback_metadata_and_beolink,
@@ -352,9 +345,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         await self._async_update_sources()
 
         await self._async_update_sound_modes()
-
-        # Get paired remotes and bluetooth devices
-        await self._async_update_bluetooth()
 
         await self._async_update_name_and_beolink()
 
@@ -574,36 +564,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         if should_update:
             self.async_write_ha_state()
 
-    async def _async_update_bluetooth(self) -> None:
-        """Update the current bluetooth devices that are connected and paired remotes."""
-
-        self._bluetooth_attribute = {"bluetooth": {}}
-
-        # Add paired remotes
-        bluetooth_remote_list = await self._client.get_bluetooth_remotes()
-
-        if len(cast(list[PairedRemote], bluetooth_remote_list.items)) > 0:
-            self._bluetooth_attribute["bluetooth"]["remote"] = {}
-
-            for remote in cast(list[PairedRemote], bluetooth_remote_list.items):
-                self._bluetooth_attribute["bluetooth"]["remote"][remote.name] = (
-                    remote.address
-                )
-
-        # Add currently connected bluetooth device
-        bluetooth_device_list = await self._client.get_bluetooth_devices_status()
-
-        for bluetooth_device in cast(
-            list[BluetoothDevice], bluetooth_device_list.items
-        ):
-            if bluetooth_device.connected:
-                self._bluetooth_attribute["bluetooth"]["device"] = {
-                    bluetooth_device.name: bluetooth_device.address
-                }
-
-        if not self._bluetooth_attribute["bluetooth"]:
-            self._bluetooth_attribute = None
-
     async def _async_update_playback_metadata_and_beolink(
         self, data: PlaybackContentMetadata
     ) -> None:
@@ -674,10 +634,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 "No current source%s",
                 f". Defaulting to {default_source}" if default_source else "",
             )
-
-        # Update bluetooth device attribute.
-        elif self._source_change.id == BangOlufsenSource.BLUETOOTH.id:
-            await self._async_update_bluetooth()
 
         self.async_write_ha_state()
 
@@ -838,9 +794,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # Add Beolink attributes
         if self._beolink_attribute:
             attributes.update(self._beolink_attribute)
-
-        if self._bluetooth_attribute is not None:
-            attributes.update(self._bluetooth_attribute)
 
         return attributes
 
