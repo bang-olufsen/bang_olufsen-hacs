@@ -56,9 +56,6 @@ This integration adds an array of different useful entities that are generated a
     - Beolink leader (if available)
     - Beolink listeners (if available)
     - Beolink peers (if available)
-  - Bluetooth devices:
-    - Currently connected bluetooth devices such as phones (if available)
-    - Paired remotes (if available)
 - Using the play_media service:
   - Activate a favourite
   - Play from a URI
@@ -108,9 +105,9 @@ This integration adds an array of different useful entities that are generated a
 
 ### Event entity
 
-- Device button entities
-- Beoremote One key entities
-- Proximity
+- Device button entities (Disabled by default)
+- Beoremote One key entities (If available) (Disabled by default)
+- Proximity (If available) (Disabled by default)
 
 ### Number entity
 
