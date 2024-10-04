@@ -24,7 +24,7 @@ from .const import (
     DEVICE_BUTTON_EVENTS,
     DEVICE_BUTTONS,
     DOMAIN,
-    MODEL_SUPPORT_DEVICE_CONTROLS,
+    MODEL_SUPPORT_DEVICE_BUTTONS,
     MODEL_SUPPORT_MAP,
     MODEL_SUPPORT_PROXIMITY,
     PROXIMITY_EVENTS,
@@ -45,10 +45,7 @@ async def async_setup_entry(
     entities: list[EventEntity] = []
 
     # Add physical "buttons"
-    if (
-        config_entry.data[CONF_MODEL]
-        in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_CONTROLS]
-    ):
+    if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_BUTTONS]:
         entities.extend(
             [
                 BangOlufsenButtonEvent(config_entry, data.client, button_type)

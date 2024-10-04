@@ -247,7 +247,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
 
 MODEL_SUPPORT_PROXIMITY: Final[str] = "proximity_sensor"
 MODEL_SUPPORT_HOME_CONTROL: Final[str] = "home_control"
-MODEL_SUPPORT_DEVICE_CONTROLS: Final[str] = "device_controls"
+MODEL_SUPPORT_DEVICE_BUTTONS: Final[str] = "device_buttons"
 
 MODEL_SUPPORT_MAP = {
     MODEL_SUPPORT_PROXIMITY: (
@@ -259,7 +259,7 @@ MODEL_SUPPORT_MAP = {
         BangOlufsenModel.BEOSOUND_THEATRE,
     ),
     MODEL_SUPPORT_HOME_CONTROL: (BangOlufsenModel.BEOSOUND_THEATRE,),
-    MODEL_SUPPORT_DEVICE_CONTROLS: (
+    MODEL_SUPPORT_DEVICE_BUTTONS: (
         BangOlufsenModel.BEOLAB_8,
         BangOlufsenModel.BEOLAB_28,
         BangOlufsenModel.BEOSOUND_2,
