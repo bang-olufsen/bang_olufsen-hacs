@@ -124,21 +124,6 @@ class WebsocketNotification(StrEnum):
     ALL = "all"
 
 
-class BangOlufsenModelSupport(Enum):
-    """Enum for storing compatibility of devices."""
-
-    PROXIMITY_SENSOR = (
-        BangOlufsenModel.BEOLAB_8,
-        BangOlufsenModel.BEOLAB_28,
-        BangOlufsenModel.BEOSOUND_2,
-        BangOlufsenModel.BEOSOUND_BALANCE,
-        BangOlufsenModel.BEOSOUND_LEVEL,
-        BangOlufsenModel.BEOSOUND_THEATRE,
-    )
-
-    HOME_CONTROL = (BangOlufsenModel.BEOSOUND_THEATRE,)
-
-
 # Range for bass and treble entities
 BASS_TREBLE_RANGE = range(-6, 6, 1)
 
@@ -256,6 +241,36 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         ),
     ]
 )
+
+
+# Map for storing compatibility of devices.
+
+MODEL_SUPPORT_PROXIMITY: Final[str] = "proximity_sensor"
+MODEL_SUPPORT_HOME_CONTROL: Final[str] = "home_control"
+MODEL_SUPPORT_DEVICE_CONTROLS: Final[str] = "device_controls"
+
+MODEL_SUPPORT_MAP = {
+    MODEL_SUPPORT_PROXIMITY: (
+        BangOlufsenModel.BEOLAB_8,
+        BangOlufsenModel.BEOLAB_28,
+        BangOlufsenModel.BEOSOUND_2,
+        BangOlufsenModel.BEOSOUND_BALANCE,
+        BangOlufsenModel.BEOSOUND_LEVEL,
+        BangOlufsenModel.BEOSOUND_THEATRE,
+    ),
+    MODEL_SUPPORT_HOME_CONTROL: (BangOlufsenModel.BEOSOUND_THEATRE,),
+    MODEL_SUPPORT_DEVICE_CONTROLS: (
+        BangOlufsenModel.BEOLAB_8,
+        BangOlufsenModel.BEOLAB_28,
+        BangOlufsenModel.BEOSOUND_2,
+        BangOlufsenModel.BEOSOUND_A5,
+        BangOlufsenModel.BEOSOUND_A9,
+        BangOlufsenModel.BEOSOUND_BALANCE,
+        BangOlufsenModel.BEOSOUND_EMERGE,
+        BangOlufsenModel.BEOSOUND_LEVEL,
+        BangOlufsenModel.BEOSOUND_THEATRE,
+    ),
+}
 
 
 # Device events

@@ -15,7 +15,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONNECTION_STATUS,
     DOMAIN,
-    BangOlufsenModelSupport,
+    MODEL_SUPPORT_HOME_CONTROL,
+    MODEL_SUPPORT_MAP,
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
@@ -34,7 +35,7 @@ async def async_setup_entry(
     ]
 
     # Add the Home Control URI entity if the device supports it
-    if config_entry.data[CONF_MODEL] in BangOlufsenModelSupport.HOME_CONTROL.value:
+    if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_HOME_CONTROL]:
         entities.append(BangOlufsenTextHomeControlUri(config_entry, data.client))
 
     async_add_entities(new_entities=entities)

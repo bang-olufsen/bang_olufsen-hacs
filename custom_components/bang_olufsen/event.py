@@ -24,8 +24,10 @@ from .const import (
     DEVICE_BUTTON_EVENTS,
     DEVICE_BUTTONS,
     DOMAIN,
+    MODEL_SUPPORT_DEVICE_CONTROLS,
+    MODEL_SUPPORT_MAP,
+    MODEL_SUPPORT_PROXIMITY,
     PROXIMITY_EVENTS,
-    BangOlufsenModelSupport,
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
@@ -40,14 +42,22 @@ async def async_setup_entry(
     """Set up Sensor entities from config entry."""
     data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
 
+    entities: list[EventEntity] = []
+
     # Add physical "buttons"
-    entities: list[EventEntity] = [
-        BangOlufsenButtonEvent(config_entry, data.client, button_type)
-        for button_type in DEVICE_BUTTONS
-    ]
+    if (
+        config_entry.data[CONF_MODEL]
+        in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_CONTROLS]
+    ):
+        entities.extend(
+            [
+                BangOlufsenButtonEvent(config_entry, data.client, button_type)
+                for button_type in DEVICE_BUTTONS
+            ]
+        )
 
     # Check if device supports proximity detection.
-    if config_entry.data[CONF_MODEL] in BangOlufsenModelSupport.PROXIMITY_SENSOR.value:
+    if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_PROXIMITY]:
         entities.append(BangOlufsenEventProximity(config_entry, data.client))
 
     # Check for connected Beoremote One

@@ -105,7 +105,7 @@ This integration adds an array of different useful entities that are generated a
 
 ### Event entity
 
-- Device button entities (Disabled by default)
+- Device button entities (If available) (Disabled by default)
 - Beoremote One key entities (If available) (Disabled by default)
 - Proximity (If available) (Disabled by default)
 
@@ -151,9 +151,30 @@ To find Tidal playlists, album URIs and track IDs, the Tidal website has to be a
 
 ### Physical buttons and sensors
 
-The "shortPress (Release)", "longPress (Timeout)", "longPress (Release)", "veryLongPress (Timeout)", "veryLongPress (Release)", of all the buttons are available Event entities.
+Event entities are created for each of the physical "buttons" on your device. These buttons usually have their own behaviors, so using them for automations is not ideal.
 
-If the device has a proximity sensor, then a proximity event Entity will be available in Home Assistant.
+Available buttons:
+
+- Bluetooth
+- Microphone
+- Next
+- Play / Pause
+- Favourite 1
+- Favourite 2
+- Favourite 3
+- Favourite 4
+- Previous
+- Volume
+
+All of these buttons support the following events:
+
+- Release of short press
+- Long press
+- Release of long press
+- Very long press
+- Release of very long press
+
+All devices except the [Beoconnect Core](https://www.bang-olufsen.com/en/dk/accessories/beoconnect-core) support device controls.
 
 ### Beoremote One
 
