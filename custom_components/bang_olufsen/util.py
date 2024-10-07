@@ -39,6 +39,11 @@ async def get_remote(client: MozartClient) -> PairedRemote | None:
 
     if bool(len(cast(list[PairedRemote], bluetooth_remote_list.items))):
         # Support only the first remote for now.
-        remote = cast(list[PairedRemote], bluetooth_remote_list.items)[0]
+        temp_remote = cast(list[PairedRemote], bluetooth_remote_list.items)[0]
+
+        # Remotes that been unpaired on the remote may still be available on the device,
+        # But should not be treated as available.
+        if temp_remote.serial_number is not None:
+            remote = temp_remote
 
     return remote
