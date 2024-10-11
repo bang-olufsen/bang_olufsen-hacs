@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
-from enum import Enum, StrEnum
+from enum import StrEnum
 from typing import Final
 
 from mozart_api.models import Source, SourceArray, SourceTypeEnum
 
-from homeassistant.components.media_player import MediaPlayerState, MediaType
+from homeassistant.components.media_player import (
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
+)
 
 
 class BangOlufsenSource:
@@ -25,14 +29,6 @@ class BangOlufsenSource:
     UNKNOWN: Final[Source] = Source(name="Unknown Source", id="unknown")
 
 
-class BangOlufsenRepeat(StrEnum):
-    """Enum used for translating device repeat settings to Home Assistant settings."""
-
-    all = "all"
-    one = "track"
-    off = "none"
-
-
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
     # Dict used for translating device states to Home Assistant states.
     "started": MediaPlayerState.PLAYING,
@@ -46,6 +42,19 @@ BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
     "unknown": MediaPlayerState.IDLE,
 }
 
+# Dict used for translating Home Assistant settings to device repeat settings.
+BANG_OLUFSEN_REPEAT_FROM_HA: dict[RepeatMode, str] = {
+    RepeatMode.ALL: "all",
+    RepeatMode.ONE: "track",
+    RepeatMode.OFF: "none",
+}
+# Dict used for translating device repeat settings to Home Assistant settings.
+BANG_OLUFSEN_REPEAT_TO_HA: dict[str, RepeatMode] = {
+    "all": RepeatMode.ALL,
+    "track": RepeatMode.ONE,
+    "none": RepeatMode.OFF,
+}
+
 
 # Media types for play_media
 class BangOlufsenMediaType(StrEnum):
@@ -57,14 +66,6 @@ class BangOlufsenMediaType(StrEnum):
     RADIO = "radio"
     TIDAL = "tidal"
     TTS = "provider"
-
-
-# Proximity detection for binary_sensor
-class BangOlufsenProximity(Enum):
-    """Proximity detection mapping.."""
-
-    proximityPresenceDetected = True  # noqa: N815
-    proximityPresenceNotDetected = False  # noqa: N815
 
 
 class BangOlufsenModel(StrEnum):

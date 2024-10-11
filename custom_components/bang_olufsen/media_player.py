@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
+from datetime import timedelta
 import json
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
+from aiohttp import ClientConnectorError
 from mozart_api import __version__ as MOZART_API_VERSION
 from mozart_api.exceptions import ApiException, NotFoundException
 from mozart_api.models import (
@@ -78,6 +81,8 @@ from homeassistant.util.dt import utcnow
 from .const import (
     ACCEPTED_COMMANDS,
     ACCEPTED_COMMANDS_LISTS,
+    BANG_OLUFSEN_REPEAT_FROM_HA,
+    BANG_OLUFSEN_REPEAT_TO_HA,
     BANG_OLUFSEN_STATES,
     BEOLINK_LEADER_COMMAND,
     BEOLINK_LISTENER_COMMAND,
@@ -90,12 +95,13 @@ from .const import (
     HIDDEN_SOURCE_IDS,
     VALID_MEDIA_TYPES,
     BangOlufsenMediaType,
-    BangOlufsenRepeat,
     BangOlufsenSource,
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
 from .util import BangOlufsenData, get_serial_number_from_jid, set_platform_initialized
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -227,8 +233,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     def __init__(self, entry: ConfigEntry, data: BangOlufsenData) -> None:
         """Initialize the media player."""
-        MediaPlayerEntity.__init__(self)
-        BangOlufsenEntity.__init__(self, entry, data.client)
+        super().__init__(entry, data.client)
         self._attr_should_poll = True
 
         self._beolink_jid: str = self.entry.data[CONF_BEOLINK_JID]
@@ -246,7 +251,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # Misc. variables.
         self._audio_sources: dict[str, str] = {}
         self._media_image = Art()
-        self._queue_settings = PlayQueueSettings()
         self._software_status = SoftwareUpdateStatus(
             software_version="",
             state=SoftwareUpdateState(seconds_remaining=0, value="idle"),
@@ -350,7 +354,16 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def async_update(self) -> None:
         """Update queue settings."""
-        self._queue_settings = await self._client.get_settings_queue()
+        # The WebSocket event listener is the main handler for connection state.
+        # The polling updates do therefore not set the device as available or unavailable
+        with contextlib.suppress(ApiException, ClientConnectorError, TimeoutError):
+            queue_settings = await self._client.get_settings_queue(_request_timeout=5)
+
+            if queue_settings.repeat is not None:
+                self._attr_repeat = BANG_OLUFSEN_REPEAT_TO_HA[queue_settings.repeat]
+
+            if queue_settings.shuffle is not None:
+                self._attr_shuffle = queue_settings.shuffle
 
     async def _async_update_name_and_beolink(self) -> None:
         """Update the device friendly name."""
@@ -775,18 +788,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         return self._source_change.name
 
     @property
-    def shuffle(self) -> bool | None:
-        """Return if queues should be shuffled."""
-        return self._queue_settings.shuffle
-
-    @property
-    def repeat(self) -> RepeatMode | None:
-        """Return current repeat setting for queues."""
-        if self._queue_settings.repeat:
-            return cast(RepeatMode, BangOlufsenRepeat(self._queue_settings.repeat).name)
-        return None
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return information that is not returned anywhere else."""
         attributes: dict[str, Any] = {}
@@ -877,20 +878,14 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         await self._client.set_settings_queue(
             play_queue_settings=PlayQueueSettings(shuffle=shuffle),
         )
-        # Assume that this is the correct state until the coordinator updates
-        self._queue_settings.shuffle = shuffle
-        self.async_write_ha_state()
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set playback queues to repeat."""
         await self._client.set_settings_queue(
             play_queue_settings=PlayQueueSettings(
-                repeat=BangOlufsenRepeat[repeat].value
-            ),
+                repeat=BANG_OLUFSEN_REPEAT_FROM_HA[repeat]
+            )
         )
-        # Assume that this is the correct state until the coordinator updates
-        self._queue_settings.repeat = BangOlufsenRepeat[repeat].value
-        self.async_write_ha_state()
 
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""

@@ -116,8 +116,8 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
         # Try to update coordinator_data.
         try:
             favourites = await self._client.get_presets(_request_timeout=5)
-        except (TimeoutError, ClientConnectorError, ApiException) as error:
-            raise UpdateFailed from error
+        except (ApiException, ClientConnectorError, TimeoutError) as error:
+            raise UpdateFailed(type(error).__name__) from error
         else:
             return favourites
 
