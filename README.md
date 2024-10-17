@@ -44,7 +44,7 @@ This integration adds an array of different useful entities that are generated a
 - Display artwork from currently playing music
 - Displaying currently playing artist and track
 - Displaying playback progress
-- Media seeking (Currently only when using Deezer)
+- Media seeking (For supported sources)
 - Sound mode selection
 - Media browsing:
   - Playback of local media
