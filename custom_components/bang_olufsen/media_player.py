@@ -853,7 +853,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def async_media_seek(self, position: float) -> None:
         """Seek to position in ms."""
-        if self._source_change.id == BangOlufsenSource.DEEZER.id:
+        if self._source_change.is_seekable:
             await self._client.seek_to_position(position_ms=int(position * 1000))
             # Try to prevent the playback progress from bouncing in the UI.
             self._attr_media_position_updated_at = utcnow()
@@ -862,7 +862,11 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             self.async_write_ha_state()
         else:
             raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="non_deezer_seeking"
+                translation_domain=DOMAIN,
+                translation_key="non_seekable_source",
+                translation_placeholders={
+                    "invalid_source": cast(str, self._source_change.name),
+                },
             )
 
     async def async_media_previous_track(self) -> None:
