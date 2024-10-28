@@ -8,6 +8,7 @@ from typing import cast
 from mozart_api.models import PairedRemote
 from mozart_api.mozart_client import MozartClient
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 
@@ -18,6 +19,9 @@ class BangOlufsenData:
     coordinator: DataUpdateCoordinator
     client: MozartClient
     platforms_initialized: int = 0
+
+
+type BangOlufsenConfigEntry = ConfigEntry[BangOlufsenData]
 
 
 def set_platform_initialized(data: BangOlufsenData) -> None:

@@ -99,7 +99,11 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenData, get_serial_number_from_jid, set_platform_initialized
+from .util import (
+    BangOlufsenConfigEntry,
+    get_serial_number_from_jid,
+    set_platform_initialized,
+)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -129,18 +133,17 @@ BANG_OLUFSEN_FEATURES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BangOlufsenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Media Player entity from config entry."""
-    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[BangOlufsenEntity] = []
 
-    entities.append(BangOlufsenMediaPlayer(config_entry, data))
-
-    set_platform_initialized(data)
+    entities.append(BangOlufsenMediaPlayer(config_entry))
 
     async_add_entities(new_entities=entities, update_before_add=True)
+
+    set_platform_initialized(config_entry.runtime_data)
 
     # Register services.
     platform = async_get_current_platform()
@@ -229,15 +232,14 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_icon = "mdi:speaker-wireless"
     _attr_name: None | str = None
-    _attr_supported_features = BANG_OLUFSEN_FEATURES
 
-    def __init__(self, entry: ConfigEntry, data: BangOlufsenData) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the media player."""
-        super().__init__(entry, data.client)
+        super().__init__(config_entry)
         self._attr_should_poll = True
 
-        self._beolink_jid: str = self.entry.data[CONF_BEOLINK_JID]
-        self._model: str = self.entry.data[CONF_MODEL]
+        self._beolink_jid: str = self._entry.data[CONF_BEOLINK_JID]
+        self._model: str = self._entry.data[CONF_MODEL]
 
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{self._host}/#/",
@@ -681,6 +683,17 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self.async_write_ha_state()
 
     @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        features = BANG_OLUFSEN_FEATURES
+
+        # Add seeking if supported by the current source
+        if self._source_change.is_seekable is True:
+            features |= MediaPlayerEntityFeature.SEEK
+
+        return features
+
+    @property
     def state(self) -> MediaPlayerState:
         """Return the current state of the media player."""
         return BANG_OLUFSEN_STATES[self._state]
@@ -853,21 +866,12 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def async_media_seek(self, position: float) -> None:
         """Seek to position in ms."""
-        if self._source_change.is_seekable:
-            await self._client.seek_to_position(position_ms=int(position * 1000))
-            # Try to prevent the playback progress from bouncing in the UI.
-            self._attr_media_position_updated_at = utcnow()
-            self._playback_progress = PlaybackProgress(progress=int(position))
+        await self._client.seek_to_position(position_ms=int(position * 1000))
+        # Try to prevent the playback progress from bouncing in the UI.
+        self._attr_media_position_updated_at = utcnow()
+        self._playback_progress = PlaybackProgress(progress=int(position))
 
-            self.async_write_ha_state()
-        else:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="non_seekable_source",
-                translation_placeholders={
-                    "invalid_source": cast(str, self._source_change.name),
-                },
-            )
+        self.async_write_ha_state()
 
     async def async_media_previous_track(self) -> None:
         """Send the previous track command."""

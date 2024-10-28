@@ -7,39 +7,37 @@ from typing import cast
 from mozart_api.models import Preset
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONNECTION_STATUS, DOMAIN, BangOlufsenSource
+from .const import CONNECTION_STATUS, BangOlufsenSource
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenData, set_platform_initialized
+from .util import BangOlufsenConfigEntry, set_platform_initialized
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BangOlufsenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Button entities from config entry."""
-    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[BangOlufsenEntity] = []
 
     # Get available favourites from coordinator.
-    favourites = data.coordinator.data
+    favourites = config_entry.runtime_data.coordinator.data
 
     entities.extend(
         [
-            BangOlufsenButtonFavourite(config_entry, data, favourites[favourite])
+            BangOlufsenButtonFavourite(config_entry, favourites[favourite])
             for favourite in favourites
         ]
     )
 
     async_add_entities(new_entities=entities)
 
-    set_platform_initialized(data)
+    set_platform_initialized(config_entry.runtime_data)
 
 
 class BangOlufsenButton(ButtonEntity, BangOlufsenEntity):
@@ -53,13 +51,12 @@ class BangOlufsenButtonFavourite(CoordinatorEntity, BangOlufsenButton):
 
     def __init__(
         self,
-        entry: ConfigEntry,
-        data: BangOlufsenData,
+        config_entry: BangOlufsenConfigEntry,
         favourite: Preset,
     ) -> None:
         """Init a favourite Button."""
-        CoordinatorEntity.__init__(self, data.coordinator)
-        BangOlufsenButton.__init__(self, entry, data.client)
+        CoordinatorEntity.__init__(self, config_entry.runtime_data.coordinator)
+        BangOlufsenButton.__init__(self, config_entry)
 
         self._favourite_id: int = int(cast(str, favourite.name)[6:])
         self._favourite: Preset = favourite

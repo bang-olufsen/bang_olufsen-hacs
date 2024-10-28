@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from mozart_api.models import PairedRemote
-from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
@@ -31,16 +30,15 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenData, get_remote, set_platform_initialized
+from .util import BangOlufsenConfigEntry, get_remote, set_platform_initialized
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BangOlufsenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensor entities from config entry."""
-    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list[EventEntity] = []
 
@@ -48,23 +46,22 @@ async def async_setup_entry(
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_BUTTONS]:
         entities.extend(
             [
-                BangOlufsenButtonEvent(config_entry, data.client, button_type)
+                BangOlufsenButtonEvent(config_entry, button_type)
                 for button_type in DEVICE_BUTTONS
             ]
         )
 
     # Check if device supports proximity detection.
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_PROXIMITY]:
-        entities.append(BangOlufsenEventProximity(config_entry, data.client))
+        entities.append(BangOlufsenEventProximity(config_entry))
 
     # Check for connected Beoremote One
-    if remote := await get_remote(data.client):
+    if remote := await get_remote(config_entry.runtime_data.client):
         # Add Light keys
         entities.extend(
             [
                 BangOlufsenRemoteKeyEvent(
                     config_entry,
-                    data.client,
                     remote,
                     f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}",
                 )
@@ -77,7 +74,6 @@ async def async_setup_entry(
             [
                 BangOlufsenRemoteKeyEvent(
                     config_entry,
-                    data.client,
                     remote,
                     f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}",
                 )
@@ -87,7 +83,7 @@ async def async_setup_entry(
 
     async_add_entities(new_entities=entities)
 
-    set_platform_initialized(data)
+    set_platform_initialized(config_entry.runtime_data)
 
 
 class BangOlufsenEvent(BangOlufsenEntity, EventEntity):
@@ -109,11 +105,9 @@ class BangOlufsenButtonEvent(BangOlufsenEvent):
     _attr_event_types = DEVICE_BUTTON_EVENTS
     _attr_icon = "mdi:gesture-tap-button"
 
-    def __init__(
-        self, entry: ConfigEntry, client: MozartClient, button_type: str
-    ) -> None:
+    def __init__(self, config_entry: ConfigEntry, button_type: str) -> None:
         """Initialize Button."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_unique_id = f"{self._unique_id}_{button_type}"
 
@@ -149,13 +143,13 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEvent):
 
     def __init__(
         self,
-        entry: ConfigEntry,
-        client: MozartClient,
+        config_entry: ConfigEntry,
         remote: PairedRemote,
         key_type: str,
     ) -> None:
         """Initialize Beoremote One key."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
+
         assert remote.serial_number
 
         self._attr_unique_id = f"{remote.serial_number}_{key_type}"
@@ -193,9 +187,9 @@ class BangOlufsenEventProximity(BangOlufsenEvent):
     _attr_icon = "mdi:account-question"
     _attr_translation_key = "proximity"
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Init the proximity event."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_unique_id = f"{self._unique_id}_proximity"
 

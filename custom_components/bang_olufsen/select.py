@@ -5,54 +5,49 @@ from __future__ import annotations
 import logging
 
 from mozart_api.models import SpeakerGroupOverview
-from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
+from .const import CONNECTION_STATUS, WebsocketNotification
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenData, set_platform_initialized
+from .util import BangOlufsenConfigEntry, set_platform_initialized
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BangOlufsenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Select entities from config entry."""
-    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[BangOlufsenEntity] = []
 
     # Create the listening position entity if supported
-    scenes = await data.client.get_all_scenes()
+    scenes = await config_entry.runtime_data.client.get_all_scenes()
 
     for scene_key in scenes:
         scene = scenes[scene_key]
 
         if scene.tags is not None and "listeningposition" in scene.tags:
-            entities.append(
-                BangOlufsenSelectListeningPosition(config_entry, data.client)
-            )
+            entities.append(BangOlufsenSelectListeningPosition(config_entry))
             break
 
     async_add_entities(new_entities=entities)
 
-    set_platform_initialized(data)
+    set_platform_initialized(config_entry.runtime_data)
 
 
 class BangOlufsenSelect(BangOlufsenEntity, SelectEntity):
     """Select for Mozart settings."""
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the Select."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_current_option = None
@@ -65,9 +60,9 @@ class BangOlufsenSelectListeningPosition(BangOlufsenSelect):
     _attr_icon = "mdi:sine-wave"
     _attr_translation_key = "listening_position"
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the listening position select."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_unique_id = f"{self._unique_id}-listening-position"
 

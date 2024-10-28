@@ -902,9 +902,6 @@
         "m3u_invalid_format": {
             "message": "Media sources with the .m3u extension are not supported."
         },
-        "non_seekable_source": {
-            "message": "{invalid_source} does not support seeking."
-        },
         "play_media_error": {
             "message": "An error occurred while attempting to play {media_type}: {error_message}."
         }

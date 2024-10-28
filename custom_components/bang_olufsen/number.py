@@ -3,35 +3,32 @@
 from __future__ import annotations
 
 from mozart_api.models import Bass, SoundSettings, Treble
-from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.number import NumberEntity, NumberMode
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BASS_TREBLE_RANGE, CONNECTION_STATUS, DOMAIN, WebsocketNotification
+from .const import BASS_TREBLE_RANGE, CONNECTION_STATUS, WebsocketNotification
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenData, set_platform_initialized
+from .util import BangOlufsenConfigEntry, set_platform_initialized
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BangOlufsenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Number entities from config entry."""
-    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[BangOlufsenEntity] = [
-        BangOlufsenNumberBass(config_entry, data.client),
-        BangOlufsenNumberTreble(config_entry, data.client),
+        BangOlufsenNumberBass(config_entry),
+        BangOlufsenNumberTreble(config_entry),
     ]
 
     async_add_entities(new_entities=entities)
 
-    set_platform_initialized(data)
+    set_platform_initialized(config_entry.runtime_data)
 
 
 class BangOlufsenNumber(BangOlufsenEntity, NumberEntity):
@@ -39,9 +36,9 @@ class BangOlufsenNumber(BangOlufsenEntity, NumberEntity):
 
     _attr_mode = NumberMode.AUTO
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the Number."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_native_value = 0.0
@@ -55,9 +52,9 @@ class BangOlufsenNumberTreble(BangOlufsenNumber):
     _attr_native_min_value = float(BASS_TREBLE_RANGE.start)
     _attr_translation_key = "treble"
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the treble Number."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_mode = NumberMode.SLIDER
         self._attr_unique_id = f"{self._unique_id}-treble"
@@ -100,9 +97,9 @@ class BangOlufsenNumberBass(BangOlufsenNumber):
     _attr_native_min_value = float(BASS_TREBLE_RANGE.start)
     _attr_translation_key = "bass"
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the bass Number."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_mode = NumberMode.SLIDER
         self._attr_unique_id = f"{self._unique_id}-bass"

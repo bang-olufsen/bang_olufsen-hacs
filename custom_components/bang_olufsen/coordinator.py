@@ -26,7 +26,6 @@ from mozart_api.models import (
 )
 from mozart_api.mozart_client import MozartClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -41,6 +40,7 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import BangOlufsenBase
+from .util import BangOlufsenConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,10 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
     """The entity coordinator and WebSocket listener(s)."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, client: MozartClient
+        self,
+        hass: HomeAssistant,
+        config_entry: BangOlufsenConfigEntry,
+        client: MozartClient,
     ) -> None:
         """Initialize the entity coordinator."""
         DataUpdateCoordinator.__init__(
@@ -60,7 +63,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
             update_interval=timedelta(seconds=15),
             always_update=False,
         )
-        BangOlufsenBase.__init__(self, entry, client)
+        BangOlufsenBase.__init__(self, config_entry, client)
 
         self._device = self.get_device()
 
@@ -131,12 +134,12 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
 
     def on_connection(self) -> None:
         """Handle WebSocket connection made."""
-        _LOGGER.debug("Connected to the %s notification channel", self.entry.title)
+        _LOGGER.debug("Connected to the %s notification channel", self._entry.title)
         self._update_connection_status()
 
     def on_connection_lost(self) -> None:
         """Handle WebSocket connection lost."""
-        _LOGGER.error("Lost connection to the %s", self.entry.title)
+        _LOGGER.error("Lost connection to the %s", self._entry.title)
         self._update_connection_status()
 
     def on_active_listening_mode(self, notification: ListeningModeProps) -> None:
@@ -220,7 +223,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
             self.hass.loop.call_later(
                 5,
                 self.hass.config_entries.async_schedule_reload,
-                self.entry.entry_id,
+                self._entry.entry_id,
             )
 
         elif notification_type in (

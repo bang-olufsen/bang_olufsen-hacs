@@ -3,50 +3,45 @@
 from __future__ import annotations
 
 from mozart_api.models import BatteryState
-from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
+from .const import CONNECTION_STATUS, WebsocketNotification
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenData, set_platform_initialized
+from .util import BangOlufsenConfigEntry, set_platform_initialized
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BangOlufsenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Binary Sensor entities from config entry."""
-    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[BangOlufsenEntity] = []
 
     # Check if device has a battery
-    battery_state = await data.client.get_battery_state()
+    battery_state = await config_entry.runtime_data.client.get_battery_state()
 
     if battery_state.battery_level and battery_state.battery_level > 0:
-        entities.append(
-            BangOlufsenBinarySensorBatteryCharging(config_entry, data.client)
-        )
+        entities.append(BangOlufsenBinarySensorBatteryCharging(config_entry))
 
     async_add_entities(new_entities=entities)
 
-    set_platform_initialized(data)
+    set_platform_initialized(config_entry.runtime_data)
 
 
 class BangOlufsenBinarySensor(BangOlufsenEntity, BinarySensorEntity):
     """Base Binary Sensor class."""
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the Binary Sensor."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_is_on = False
 
@@ -57,9 +52,9 @@ class BangOlufsenBinarySensorBatteryCharging(BangOlufsenBinarySensor):
     _attr_icon = "mdi:battery-charging"
     _attr_translation_key = "battery_charging"
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the battery charging Binary Sensor."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
         self._attr_unique_id = f"{self._unique_id}-battery-charging"

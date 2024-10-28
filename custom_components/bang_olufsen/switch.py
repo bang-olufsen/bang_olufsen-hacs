@@ -5,42 +5,37 @@ from __future__ import annotations
 from typing import Any
 
 from mozart_api.models import Loudness, SoundSettings
-from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
+from .const import CONNECTION_STATUS, WebsocketNotification
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenData, set_platform_initialized
+from .util import BangOlufsenConfigEntry, set_platform_initialized
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BangOlufsenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Switches from config_entry."""
-    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[BangOlufsenEntity] = [
-        BangOlufsenSwitchLoudness(config_entry, data.client)
-    ]
+    entities: list[BangOlufsenEntity] = [BangOlufsenSwitchLoudness(config_entry)]
 
     async_add_entities(new_entities=entities)
 
-    set_platform_initialized(data)
+    set_platform_initialized(config_entry.runtime_data)
 
 
 class BangOlufsenSwitch(BangOlufsenEntity, SwitchEntity):
     """Base Switch class."""
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the Switch."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_device_class = SwitchDeviceClass.SWITCH
         self._attr_entity_category = EntityCategory.CONFIG
@@ -52,9 +47,9 @@ class BangOlufsenSwitchLoudness(BangOlufsenSwitch):
     _attr_icon = "mdi:music-note-plus"
     _attr_translation_key = "loudness"
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the loudness Switch."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_unique_id = f"{self._unique_id}-loudness"
 

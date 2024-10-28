@@ -7,14 +7,12 @@ from typing import cast
 
 from inflection import titleize, underscore
 from mozart_api.models import BatteryState, PairedRemote, PlaybackContentMetadata
-from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -22,52 +20,49 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenData, get_remote, set_platform_initialized
+from .util import BangOlufsenConfigEntry, get_remote, set_platform_initialized
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BangOlufsenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensor entities from config entry."""
-    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[BangOlufsenEntity] = [
-        BangOlufsenSensorInputSignal(config_entry, data.client),
-        BangOlufsenSensorMediaId(config_entry, data.client),
+        BangOlufsenSensorInputSignal(config_entry),
+        BangOlufsenSensorMediaId(config_entry),
     ]
 
     # Check if device has a battery
-    battery_state = await data.client.get_battery_state()
+    battery_state = await config_entry.runtime_data.client.get_battery_state()
 
     if battery_state.battery_level and battery_state.battery_level > 0:
         entities.extend(
             [
-                BangOlufsenSensorBatteryChargingTime(config_entry, data.client),
-                BangOlufsenSensorBatteryLevel(config_entry, data.client),
-                BangOlufsenSensorBatteryPlayingTime(config_entry, data.client),
+                BangOlufsenSensorBatteryChargingTime(config_entry),
+                BangOlufsenSensorBatteryLevel(config_entry),
+                BangOlufsenSensorBatteryPlayingTime(config_entry),
             ]
         )
 
     # Check for connected Beoremote One
-    if remote := await get_remote(data.client):
-        entities.append(
-            BangOlufsenSensorRemoteBatteryLevel(config_entry, data.client, remote)
-        )
+    if remote := await get_remote(config_entry.runtime_data.client):
+        entities.append(BangOlufsenSensorRemoteBatteryLevel(config_entry, remote))
 
     async_add_entities(new_entities=entities)
 
-    set_platform_initialized(data)
+    set_platform_initialized(config_entry.runtime_data)
 
 
 class BangOlufsenSensor(BangOlufsenEntity, SensorEntity):
     """Base Sensor class."""
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the Sensor."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -79,9 +74,9 @@ class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
     _attr_native_unit_of_measurement = "%"
     _attr_translation_key = "battery_level"
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the battery level Sensor."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_device_class = SensorDeviceClass.BATTERY
         self._attr_unique_id = f"{self._unique_id}-battery-level"
@@ -118,10 +113,10 @@ class BangOlufsenSensorRemoteBatteryLevel(BangOlufsenSensor):
     _attr_should_poll = True
 
     def __init__(
-        self, entry: ConfigEntry, client: MozartClient, remote: PairedRemote
+        self, config_entry: BangOlufsenConfigEntry, remote: PairedRemote
     ) -> None:
         """Init the battery level Sensor."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
         assert remote.serial_number
 
         self._attr_device_class = SensorDeviceClass.BATTERY
@@ -150,9 +145,9 @@ class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
     _attr_native_unit_of_measurement = "min"
     _attr_translation_key = "battery_charging_time"
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the battery charging time Sensor."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_device_class = SensorDeviceClass.DURATION
         self._attr_unique_id = f"{self._unique_id}-battery-charging-time"
@@ -199,9 +194,9 @@ class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
     _attr_native_unit_of_measurement = "min"
     _attr_translation_key = "battery_playing_time"
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the battery playing time Sensor."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_unique_id = f"{self._unique_id}-battery-playing-time"
 
@@ -245,9 +240,9 @@ class BangOlufsenSensorMediaId(BangOlufsenSensor):
     _attr_translation_key = "media_id"
     _attr_icon = "mdi:information"
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the media id Sensor."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_device_class = None
         self._attr_state_class = None
@@ -266,7 +261,7 @@ class BangOlufsenSensorMediaId(BangOlufsenSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self.entry.unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
+                f"{self._entry.unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
                 self._update_playback_metadata,
             )
         )
@@ -284,9 +279,9 @@ class BangOlufsenSensorInputSignal(BangOlufsenSensor):
     _attr_icon = "mdi:audio-input-stereo-minijack"
     _attr_translation_key = "input_signal"
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the input signal Sensor."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_device_class = None
         self._attr_state_class = None

@@ -25,30 +25,37 @@ from mozart_api.models import (
 )
 from mozart_api.mozart_client import MozartClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+from .util import BangOlufsenConfigEntry
 
 
 class BangOlufsenBase:
     """Base class for BangOlufsen Home Assistant objects."""
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(
+        self, config_entry: BangOlufsenConfigEntry, client: MozartClient | None = None
+    ) -> None:
         """Initialize the object."""
 
-        # Set the MozartClient
-        self._client = client
+        # Set the MozartClient.
+        # Allowing the client to be set directly allows the coordinator to be initialized before being added to runtime_data.
+        if client:
+            self._client = client
+        else:
+            self._client = config_entry.runtime_data.client
 
         # Get the input from the config entry.
-        self.entry = entry
+        # Use _entry instead of config_entry to avoid conflicts with Home Assistant classes such as DataUpdateCoordinator.
+        self._entry = config_entry
 
         # Set the configuration variables.
-        self._host: str = self.entry.data[CONF_HOST]
-        self._unique_id: str = cast(str, self.entry.unique_id)
+        self._host: str = self._entry.data[CONF_HOST]
+        self._unique_id: str = cast(str, self._entry.unique_id)
 
         # Objects that get directly updated by notifications.
         self._active_listening_mode = ListeningModeProps()
@@ -79,9 +86,9 @@ class BangOlufsenEntity(Entity, BangOlufsenBase):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Initialize the object."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
 

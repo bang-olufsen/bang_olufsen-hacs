@@ -8,7 +8,6 @@ from aiohttp import ClientConnectorError, ClientOSError, ServerTimeoutError
 from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -17,7 +16,7 @@ from homeassistant.util.ssl import get_default_context
 
 from .const import DOMAIN
 from .coordinator import BangOlufsenCoordinator
-from .util import BangOlufsenData, get_remote
+from .util import BangOlufsenConfigEntry, BangOlufsenData, get_remote
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -45,23 +44,27 @@ async def _start_websocket_listener(data: BangOlufsenData) -> None:
     await data.client.connect_notifications(remote_control=True, reconnect=True)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: BangOlufsenConfigEntry
+) -> bool:
     """Set up from a config entry."""
 
     # Remove casts to str
-    assert entry.unique_id
+    assert config_entry.unique_id
 
     # Create device now as BangOlufsenWebsocket needs a device for debug logging, firing events etc.
     # And in order to ensure entity platforms (button, binary_sensor) have device name before the primary (media_player) is initialized
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id)},
-        name=entry.title,
-        model=entry.data[CONF_MODEL],
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, config_entry.unique_id)},
+        name=config_entry.title,
+        model=config_entry.data[CONF_MODEL],
     )
 
-    client = MozartClient(host=entry.data[CONF_HOST], ssl_context=get_default_context())
+    client = MozartClient(
+        host=config_entry.data[CONF_HOST], ssl_context=get_default_context()
+    )
 
     # Check API and WebSocket connection
     try:
@@ -74,34 +77,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         TimeoutError,
     ) as error:
         await client.close_api_client()
-        raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
+        raise ConfigEntryNotReady(
+            f"Unable to connect to {config_entry.title}"
+        ) from error
 
     # Initialize coordinator
-    coordinator = BangOlufsenCoordinator(hass, entry, client)
+    coordinator = BangOlufsenCoordinator(hass, config_entry, client)
     await coordinator.async_config_entry_first_refresh()
 
     # Add the coordinator and API client
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BangOlufsenData(
-        coordinator,
-        client,
-    )
+    config_entry.runtime_data = BangOlufsenData(coordinator, client)
 
     # Check for connected Beoremote One
     if remote := await get_remote(client):
         assert remote.serial_number
 
         # Create Beoremote One device
-        assert entry.unique_id
+        assert config_entry.unique_id
         device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
+            config_entry_id=config_entry.entry_id,
             identifiers={(DOMAIN, remote.serial_number)},
             name=f"Beoremote One {remote.serial_number}",
             model="Beoremote One",
             serial_number=remote.serial_number,
             sw_version=remote.app_version,
             manufacturer="Bang & Olufsen",
-            via_device=(DOMAIN, entry.unique_id),
+            via_device=(DOMAIN, config_entry.unique_id),
         )
     else:
         # If the remote is no longer available, then delete the device.
@@ -110,34 +112,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         device_registry = dr.async_get(hass)
         devices = device_registry.devices.get_devices_for_config_entry_id(
-            entry.entry_id
+            config_entry.entry_id
         )
         for device in devices:
             assert device.model is not None
             if device.model == "Beoremote One":
                 device_registry.async_remove_device(device.id)
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     # Start WebSocket connection when all entities have been initialized
-    entry.async_create_background_task(
+    config_entry.async_create_background_task(
         hass,
-        _start_websocket_listener(hass.data[DOMAIN][entry.entry_id]),
-        f"{DOMAIN}-{entry.unique_id}-websocket_starter",
+        _start_websocket_listener(config_entry.runtime_data),
+        f"{DOMAIN}-{config_entry.unique_id}-websocket_starter",
     )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: BangOlufsenConfigEntry
+) -> bool:
     """Unload a config entry."""
     # Close the API client and WebSocket notification listener
-    hass.data[DOMAIN][entry.entry_id].client.disconnect_notifications()
-    await hass.data[DOMAIN][entry.entry_id].client.close_api_client()
+    config_entry.runtime_data.client.disconnect_notifications()
+    await config_entry.runtime_data.client.close_api_client()
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

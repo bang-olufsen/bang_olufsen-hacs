@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from mozart_api.models import HomeControlUri, ProductFriendlyName
-from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.text import TextEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -14,41 +12,37 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONNECTION_STATUS,
-    DOMAIN,
     MODEL_SUPPORT_HOME_CONTROL,
     MODEL_SUPPORT_MAP,
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenData, set_platform_initialized
+from .util import BangOlufsenConfigEntry, set_platform_initialized
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BangOlufsenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Text entities from config entry."""
-    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[BangOlufsenEntity] = [
-        BangOlufsenTextFriendlyName(config_entry, data.client)
-    ]
+    entities: list[BangOlufsenEntity] = [BangOlufsenTextFriendlyName(config_entry)]
 
     # Add the Home Control URI entity if the device supports it
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_HOME_CONTROL]:
-        entities.append(BangOlufsenTextHomeControlUri(config_entry, data.client))
+        entities.append(BangOlufsenTextHomeControlUri(config_entry))
 
     async_add_entities(new_entities=entities)
 
-    set_platform_initialized(data)
+    set_platform_initialized(config_entry.runtime_data)
 
 
 class BangOlufsenText(TextEntity, BangOlufsenEntity):
     """Base Text class."""
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the Text."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_entity_category = EntityCategory.CONFIG
 
@@ -59,9 +53,9 @@ class BangOlufsenTextFriendlyName(BangOlufsenText):
     _attr_icon = "mdi:id-card"
     _attr_translation_key = "friendly_name"
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the friendly name Text."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_unique_id = f"{self._unique_id}-friendly-name"
 
@@ -77,7 +71,7 @@ class BangOlufsenTextFriendlyName(BangOlufsenText):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self.entry.unique_id}_{WebsocketNotification.CONFIGURATION}",
+                f"{self._entry.unique_id}_{WebsocketNotification.CONFIGURATION}",
                 self._update_friendly_name,
             )
         )
@@ -108,9 +102,9 @@ class BangOlufsenTextHomeControlUri(BangOlufsenText):
     _attr_icon = "mdi:link-variant"
     _attr_translation_key = "home_control_uri"
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the Home Control URI Text."""
-        super().__init__(entry, client)
+        super().__init__(config_entry)
 
         self._attr_unique_id = f"{self._unique_id}-home-control-uri"
 
