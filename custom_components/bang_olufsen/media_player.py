@@ -53,7 +53,6 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import (
     HomeAssistant,
@@ -233,7 +232,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     _attr_icon = "mdi:speaker-wireless"
     _attr_name: None | str = None
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Initialize the media player."""
         super().__init__(config_entry)
         self._attr_should_poll = True

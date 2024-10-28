@@ -5,7 +5,6 @@ from __future__ import annotations
 from mozart_api.models import PairedRemote
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -105,7 +104,7 @@ class BangOlufsenButtonEvent(BangOlufsenEvent):
     _attr_event_types = DEVICE_BUTTON_EVENTS
     _attr_icon = "mdi:gesture-tap-button"
 
-    def __init__(self, config_entry: ConfigEntry, button_type: str) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry, button_type: str) -> None:
         """Initialize Button."""
         super().__init__(config_entry)
 
@@ -143,7 +142,7 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEvent):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: BangOlufsenConfigEntry,
         remote: PairedRemote,
         key_type: str,
     ) -> None:
@@ -187,7 +186,7 @@ class BangOlufsenEventProximity(BangOlufsenEvent):
     _attr_icon = "mdi:account-question"
     _attr_translation_key = "proximity"
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the proximity event."""
         super().__init__(config_entry)
 
