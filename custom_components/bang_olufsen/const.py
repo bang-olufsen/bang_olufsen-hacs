@@ -21,51 +21,71 @@ class BangOlufsenSource:
         name="Audio Streamer",
         id="uriStreamer",
         is_seekable=False,
+        is_enabled=True,
+        is_playable=True,
     )
     BLUETOOTH: Final[Source] = Source(
         name="Bluetooth",
         id="bluetooth",
         is_seekable=False,
+        is_enabled=True,
+        is_playable=True,
     )
     CHROMECAST: Final[Source] = Source(
         name="Chromecast built-in",
         id="chromeCast",
         is_seekable=False,
+        is_enabled=True,
+        is_playable=True,
     )
     LINE_IN: Final[Source] = Source(
         name="Line-In",
         id="lineIn",
         is_seekable=False,
+        is_enabled=True,
+        is_playable=True,
     )
     SPDIF: Final[Source] = Source(
         name="Optical",
         id="spdif",
         is_seekable=False,
+        is_enabled=True,
+        is_playable=True,
     )
     NET_RADIO: Final[Source] = Source(
         name="B&O Radio",
         id="netRadio",
         is_seekable=False,
+        is_enabled=True,
+        is_playable=True,
     )
     DEEZER: Final[Source] = Source(
         name="Deezer",
         id="deezer",
         is_seekable=True,
+        is_enabled=True,
+        is_playable=True,
     )
     TIDAL: Final[Source] = Source(
         name="Tidal",
         id="tidal",
         is_seekable=True,
+        is_enabled=True,
+        is_playable=True,
     )
     USB_IN: Final[Source] = Source(
         name="USB",
         id="usbIn",
         is_seekable=False,
+        is_enabled=True,
+        is_playable=True,
     )
     UNKNOWN: Final[Source] = Source(
         name="Unknown Source",
         id="unknown",
         is_seekable=False,
+        is_enabled=False,
+        is_playable=False,
     )
 
 
@@ -203,29 +223,13 @@ VALID_MEDIA_TYPES: Final[tuple] = (
 PLAYING: Final[tuple] = ("started", "buffering", BANG_OLUFSEN_ON)
 NOT_PLAYING: Final[tuple] = ("idle", "paused", "stopped", "ended", "unknown", "error")
 
-# Sources on the device that should not be selectable by the user
-HIDDEN_SOURCE_IDS: Final[tuple] = (
-    "airPlay",
-    "bluetooth",
-    "chromeCast",
-    "generator",
-    "local",
-    "dlna",
-    "qplay",
-    "wpl",
-    "pl",
-    "beolink",
-    "classicsAdapter",
-    "usbIn",
-)
-
 # Fallback sources to use in case of API failure.
 FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
     items=[
         Source(
             id="uriStreamer",
             is_enabled=True,
-            is_playable=False,
+            is_playable=True,
             name="Audio Streamer",
             type=SourceTypeEnum(value="uriStreamer"),
             is_seekable=False,
@@ -233,7 +237,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         Source(
             id="bluetooth",
             is_enabled=True,
-            is_playable=False,
+            is_playable=True,
             name="Bluetooth",
             type=SourceTypeEnum(value="bluetooth"),
             is_seekable=False,
@@ -241,7 +245,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         Source(
             id="spotify",
             is_enabled=True,
-            is_playable=False,
+            is_playable=True,
             name="Spotify Connect",
             type=SourceTypeEnum(value="spotify"),
             is_seekable=True,

@@ -1,12 +1,14 @@
 {
   "common": {
-    "short_press_release": "Release of short press",
-    "long_press_timeout": "Long press",
-    "long_press_release": "Release of long press",
-    "very_long_press_timeout": "Very long press",
-    "very_long_press_release": "Release of very long press",
+    "jid_options_description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+    "jid_options_name": "JID options",
     "key_press": "Press",
-    "key_release": "Release"
+    "key_release": "Release",
+    "long_press_release": "Release of long press",
+    "long_press_timeout": "Long press",
+    "short_press_release": "Release of short press",
+    "very_long_press_release": "Release of very long press",
+    "very_long_press_timeout": "Very long press"
   },
   "config": {
     "error": {
@@ -43,6 +45,12 @@
           "name": "Beolink JID",
           "description": "Manually specify Beolink JID to join."
         }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
       }
     },
     "beolink_expand": {
@@ -57,6 +65,12 @@
           "name": "Beolink JIDs",
           "description": "Specify which Beolink JIDs will join current Beolink experience."
         }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
       }
     },
     "beolink_unexpand": {
@@ -67,6 +81,12 @@
           "name": "Beolink JIDs",
           "description": "Specify which Beolink JIDs will leave from current Beolink experience."
         }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
       }
     },
     "beolink_leave": {
@@ -74,7 +94,7 @@
       "description": "Leave a Beolink experience."
     },
     "beolink_allstandby": {
-      "name": "Beolink allstandby",
+      "name": "Beolink all standby",
       "description": "Set all Connected Beolink devices to standby."
     },
     "beolink_set_volume": {

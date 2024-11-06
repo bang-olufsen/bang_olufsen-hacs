@@ -91,7 +91,6 @@ from .const import (
     CONNECTION_STATUS,
     DOMAIN,
     FALLBACK_SOURCES,
-    HIDDEN_SOURCE_IDS,
     VALID_MEDIA_TYPES,
     BangOlufsenMediaType,
     BangOlufsenSource,
@@ -288,6 +287,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 WebsocketNotification.PLAYBACK_ERROR: self._async_update_playback_error,
                 WebsocketNotification.PLAYBACK_METADATA: self._async_update_playback_metadata_and_beolink,
                 WebsocketNotification.PLAYBACK_PROGRESS: self._async_update_playback_progress,
+                WebsocketNotification.PLAYBACK_SOURCE: self._async_update_sources,
                 WebsocketNotification.PLAYBACK_STATE: self._async_update_playback_state,
                 WebsocketNotification.REMOTE_MENU_CHANGED: self._async_update_sources,
                 WebsocketNotification.SOURCE_CHANGE: self._async_update_source_change,
@@ -381,7 +381,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
         self.async_write_ha_state()
 
-    async def _async_update_sources(self) -> None:
+    async def _async_update_sources(self, _: Source | None = None) -> None:
         """Get sources for the specific product."""
 
         # Audio sources
@@ -408,10 +408,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self._audio_sources = {
             source.id: source.name
             for source in cast(list[Source], sources.items)
-            if source.is_enabled
-            and source.id
-            and source.name
-            and source.id not in HIDDEN_SOURCE_IDS
+            if source.is_enabled and source.id and source.name and source.is_playable
         }
 
         # Some sources are not Beolink expandable, meaning that they can't be joined by or expand to other Bang & Olufsen devices for a multi-room experience.

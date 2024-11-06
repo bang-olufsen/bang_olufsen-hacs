@@ -1,5 +1,7 @@
 {
     "common": {
+        "jid_options_description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+        "jid_options_name": "JID options",
         "key_press": "Press",
         "key_release": "Release",
         "long_press_release": "Release of long press",
@@ -909,7 +911,7 @@
     "services": {
         "beolink_allstandby": {
             "description": "Set all Connected Beolink devices to standby.",
-            "name": "Beolink allstandby"
+            "name": "Beolink all standby"
         },
         "beolink_expand": {
             "description": "Expand current Beolink experience.",
@@ -923,7 +925,13 @@
                     "name": "Beolink JIDs"
                 }
             },
-            "name": "Beolink expand"
+            "name": "Beolink expand",
+            "sections": {
+                "jid_options": {
+                    "description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+                    "name": "JID options"
+                }
+            }
         },
         "beolink_join": {
             "description": "Join a Beolink experience.",
@@ -933,7 +941,13 @@
                     "name": "Beolink JID"
                 }
             },
-            "name": "Beolink join"
+            "name": "Beolink join",
+            "sections": {
+                "jid_options": {
+                    "description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+                    "name": "JID options"
+                }
+            }
         },
         "beolink_leader_command": {
             "description": "Send a media_player command to Beolink leader.",
@@ -981,7 +995,13 @@
                     "name": "Beolink JIDs"
                 }
             },
-            "name": "Beolink unexpand"
+            "name": "Beolink unexpand",
+            "sections": {
+                "jid_options": {
+                    "description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+                    "name": "JID options"
+                }
+            }
         },
         "reboot": {
             "description": "Reboot the device.",

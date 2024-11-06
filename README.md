@@ -30,6 +30,24 @@ This integration can be added to a Home Assistant installation using [HACS](http
 
 Afterwards, devices can be added to your Home Assistant installation manually by using the UI or by auto-discovery.
 
+## Example setup and blueprints
+
+Christian Klit has made a setup video for Home Assistant which includes this integration.
+[![Setup video](https://img.youtube.com/vi/ju_gQDIme0w/0.jpg)](https://www.youtube.com/watch?v=ju_gQDIme0w)
+
+As can be seen in the video, Christian also provides several [automation blueprints](https://cklit.dk/index.php/category/blueprints/mozart/) for this integration on his website.
+
+These include:
+
+- Control lights using Beoremote One
+- Control shades using Beoremote One
+- Announce where music has been joined from (Beolink)
+- Control scenes using Light and Control menu items on BR1 BT
+- Trigger a scene, when alarm starts
+- Show active Listening position and Sound mode on LG screen
+
+Go to his website [cklit.dk](https://cklit.dk/) to see more information on the useful blueprints for the Mozart and ASE based Bang & Olufsen products.
+
 ## Entities
 
 This integration adds an array of different useful entities that are generated and added automatically upon setup, customized for the supported features of the device. Some of these features, such as `proximity sensor` and `home-control` are manually defined based on model name in the code, as they currently can't be determined in any other way.
@@ -181,43 +199,6 @@ All devices except the [Beoconnect Core](https://www.bang-olufsen.com/en/dk/acce
 Event entities are available for each of the compatible keys on the [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one). To trigger these triggers, enter the "Control" or "Light" submenu, and press any of the compatible buttons. Each button press will send a "press" and a "release" event. The functions in these submenus are also supported.
 
 The favourite buttons correspond to the physical favourite buttons on the device.
-
-### Automation examples
-
-#### Using the Beoremote One to control lights (OUTDATED)
-
-```yaml
-description: Use the Beoremote One to control living room lights.
-mode: single
-trigger:
-  - platform: device
-    device_id: 234567890abcdef1234567890abcdef1
-    domain: bang_olufsen
-    type: Light/Digit1_KeyPress
-condition: []
-action:
-  - service: light.toggle
-    target:
-      entity_id: light.living_room
-```
-
-#### Setting all devices to standby when leaving home (OUTDATED)
-
-```yaml
-description: Set all Bang & Olufsen devices to standby when leaving home.
-mode: single
-trigger:
-  - platform: zone
-    entity_id: person.example
-    zone: zone.home
-    event: leave
-condition: []
-action:
-  - service: bang_olufsen.beolink_allstandby
-    data: {}
-    target:
-      entity_id: media_player.beosound_balance_32836899
-```
 
 ## Services
 
@@ -461,59 +442,3 @@ Send a media_player command to Beolink leader.
 ### Service `bang_olufsen.reboot`
 
 Reboot the device.
-
-## Blueprints
-
-### Announce where music has been joined from (Beolink)
-
-A Blueprint for this scenario: https://youtu.be/AiZbrYQ6u48
-
-Select the speaker you want to announce which other product it joins, when performing a long-press on the Play/Pause button.
-
-Default phrase is “Joined {friendly name}”, but this can easily be modified to a different language, e.g: “Lytter med fra {friendly name}”.
-
-Additionally it is possible to enable announcements when using a remote or the Bang & Olufsen app to expand.
-
-Create an automation for each Mozart product that should announce when joining a different room.
-
-[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgist.github.com%2Fcklit%2Fe7126c9fda1195bd88bcaefb45fe493e)
-
-### Control lights using Beoremote One BT (OUTDATED)
-
-A Blueprint to easily set up light control with Beoremote One BT and a Mozart-based product.
-
-Select your Mozart product and the light-bulbs or groups you want to control.
-
-This Blueprint allows for 3 light "zones". See the setup for detailed information on how to control the 3 zones.
-
-To use Light-commands, press “List” on your Beoremote One, navigate down to “Light” and press the center-button. From here, use the described buttons on the remote below to modify brightness.
-
-[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgist.github.com%2Fcklit%2F816e6fd144ff91559548e1bf0eb3bf84)
-
-### Control shades using Beoremote One BT (OUTDATED)
-
-A Blueprint to easily set up shade control with Beoremote One BT and a Mozart-based product.
-
-Select your Mozart product and the shades you want to control.
-
-This Blueprint allows for 3 "zones". See the setup for detailed information on how to control the 3 zones.
-
-To use Control-commands, press “List” on your Beoremote One, navigate down to “Control” and press the center-button. From here, use the described buttons on the remote below to modify the position.
-
-[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgist.github.com%2Fcklit%2Fd81d36c525936ab8f9309a226287ff91)
-
-### Control scenes using Light and Control menu items on Beoremote One BT (OUTDATED)
-
-A Blueprint to set up scene control with Beoremote One BT and a Mozart-based product.
-
-Select your Mozart product in the dropdown menu.
-
-Enter the function (e.g. Light/Func1) you want to trigger the scene with. All functions are described in the Blueprint.
-
-Select the action that should be triggered by the defined function. This can be any service call, e.g. scene.turn_on.
-
-In case you have renamed the scenes on your remote, they will not match the documentation. To find the function name of a renamed button, enable the debug mode toggle. Every time a Light or Control item is activated, a notification with the name of the selected function will show up in the Home Assistant dashboard notification panel. We recommend to disable debug mode as soon as the automation is working as expected.
-
-To activate a scene, press “List” on your Beoremote One BT, navigate down to “Light” or "Control" and press the right-arrow key. Navigate to the function you want to activate and confirm with the center-button.
-
-[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgist.github.com%2Fcklit%2Fd3ee25fa0576da38ca8dede75cf49c04)

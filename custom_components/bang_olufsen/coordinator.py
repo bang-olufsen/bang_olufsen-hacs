@@ -91,6 +91,9 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
         self._client.get_playback_progress_notifications(
             self.on_playback_progress_notification
         )
+        self._client.get_playback_source_notifications(
+            self.on_playback_source_notification
+        )
         self._client.get_playback_state_notifications(
             self.on_playback_state_notification
         )
@@ -259,6 +262,14 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
         async_dispatcher_send(
             self.hass,
             f"{self._unique_id}_{WebsocketNotification.PLAYBACK_PROGRESS}",
+            notification,
+        )
+
+    def on_playback_source_notification(self, notification: Source) -> None:
+        """Send playback_source dispatch."""
+        async_dispatcher_send(
+            self.hass,
+            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_SOURCE}",
             notification,
         )
 
