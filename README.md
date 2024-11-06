@@ -46,7 +46,7 @@ These include:
 - Trigger a scene, when alarm starts
 - Show active Listening position and Sound mode on LG screen
 
-Go to his website [cklit.dk](https://cklit.dk/) to see more information on the useful blueprints for the Mozart and ASE based Bang & Olufsen products.
+Go to his website [cklit.dk](https://cklit.dk/) to see more information on the useful blueprints for Mozart and ASE based Bang & Olufsen products.
 
 ## Entities
 
