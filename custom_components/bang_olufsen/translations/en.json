@@ -743,7 +743,7 @@
                 }
             },
             "preset1": {
-                "name": "Preset 1",
+                "name": "Favourite 1",
                 "state_attributes": {
                     "event_type": {
                         "state": {
@@ -757,7 +757,7 @@
                 }
             },
             "preset2": {
-                "name": "Preset 2",
+                "name": "Favourite 2",
                 "state_attributes": {
                     "event_type": {
                         "state": {
@@ -771,7 +771,7 @@
                 }
             },
             "preset3": {
-                "name": "Preset 3",
+                "name": "Favourite 3",
                 "state_attributes": {
                     "event_type": {
                         "state": {
@@ -785,7 +785,7 @@
                 }
             },
             "preset4": {
-                "name": "Preset 4",
+                "name": "Favourite 4",
                 "state_attributes": {
                     "event_type": {
                         "state": {
