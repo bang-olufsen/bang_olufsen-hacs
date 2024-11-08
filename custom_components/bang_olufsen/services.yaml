@@ -1,19 +1,10 @@
-beolink_join:
+beolink_allstandby:
   target:
     entity:
       integration: bang_olufsen
       domain: media_player
     device:
       integration: bang_olufsen
-  fields:
-    jid_options:
-      collapsed: false
-      fields:
-        beolink_jid:
-          required: false
-          example: 1111.2222222.33333333@products.bang-olufsen.com
-          selector:
-            text:
 
 beolink_expand:
   target:
@@ -41,7 +32,7 @@ beolink_expand:
           selector:
             object:
 
-beolink_unexpand:
+beolink_join:
   target:
     entity:
       integration: bang_olufsen
@@ -52,59 +43,11 @@ beolink_unexpand:
     jid_options:
       collapsed: false
       fields:
-        beolink_jids:
-          required: true
-          example: >-
-            [
-              1111.2222222.33333333@products.bang-olufsen.com,
-              4444.5555555.66666666@products.bang-olufsen.com
-            ]
+        beolink_jid:
+          required: false
+          example: 1111.2222222.33333333@products.bang-olufsen.com
           selector:
-            object:
-
-beolink_leave:
-  target:
-    entity:
-      integration: bang_olufsen
-      domain: media_player
-    device:
-      integration: bang_olufsen
-
-beolink_allstandby:
-  target:
-    entity:
-      integration: bang_olufsen
-      domain: media_player
-    device:
-      integration: bang_olufsen
-
-beolink_set_volume:
-  target:
-    entity:
-      integration: bang_olufsen
-      domain: media_player
-    device:
-      integration: bang_olufsen
-  fields:
-    volume_level:
-      required: true
-      example: 0.4
-      selector:
-        text:
-
-beolink_set_relative_volume:
-  target:
-    entity:
-      integration: bang_olufsen
-      domain: media_player
-    device:
-      integration: bang_olufsen
-  fields:
-    volume_level:
-      required: true
-      example: 0.2
-      selector:
-        text:
+            text:
 
 beolink_leader_command:
   target:
@@ -139,6 +82,63 @@ beolink_leader_command:
       example: 0.4
       selector:
         text:
+
+beolink_leave:
+  target:
+    entity:
+      integration: bang_olufsen
+      domain: media_player
+    device:
+      integration: bang_olufsen
+
+beolink_set_relative_volume:
+  target:
+    entity:
+      integration: bang_olufsen
+      domain: media_player
+    device:
+      integration: bang_olufsen
+  fields:
+    volume_level:
+      required: true
+      example: 0.2
+      selector:
+        text:
+
+beolink_set_volume:
+  target:
+    entity:
+      integration: bang_olufsen
+      domain: media_player
+    device:
+      integration: bang_olufsen
+  fields:
+    volume_level:
+      required: true
+      example: 0.4
+      selector:
+        text:
+
+beolink_unexpand:
+  target:
+    entity:
+      integration: bang_olufsen
+      domain: media_player
+    device:
+      integration: bang_olufsen
+  fields:
+    jid_options:
+      collapsed: false
+      fields:
+        beolink_jids:
+          required: true
+          example: >-
+            [
+              1111.2222222.33333333@products.bang-olufsen.com,
+              4444.5555555.66666666@products.bang-olufsen.com
+            ]
+          selector:
+            object:
 
 reboot:
   target:

@@ -14,8 +14,8 @@
     "error": {
       "api_exception": "[%key:common::config_flow::error::cannot_connect%]",
       "client_connector_error": "[%key:common::config_flow::error::cannot_connect%]",
-      "timeout_error": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_ip": "Invalid IPv4 address"
+      "invalid_ip": "Invalid IPv4 address",
+      "timeout_error": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
@@ -37,21 +37,9 @@
     }
   },
   "services": {
-    "beolink_join": {
-      "name": "Beolink join",
-      "description": "Join a Beolink experience.",
-      "fields": {
-        "beolink_jid": {
-          "name": "Beolink JID",
-          "description": "Manually specify Beolink JID to join."
-        }
-      },
-      "sections": {
-        "jid_options": {
-          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
-          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
-        }
-      }
+    "beolink_allstandby": {
+      "name": "Beolink all standby",
+      "description": "Set all Connected Beolink devices to standby."
     },
     "beolink_expand": {
       "name": "Beolink expand",
@@ -73,47 +61,19 @@
         }
       }
     },
-    "beolink_unexpand": {
-      "name": "Beolink unexpand",
-      "description": "Unexpand from current Beolink experience.",
+    "beolink_join": {
+      "name": "Beolink join",
+      "description": "Join a Beolink experience.",
       "fields": {
-        "beolink_jids": {
-          "name": "Beolink JIDs",
-          "description": "Specify which Beolink JIDs will leave from current Beolink experience."
+        "beolink_jid": {
+          "name": "Beolink JID",
+          "description": "Manually specify Beolink JID to join."
         }
       },
       "sections": {
         "jid_options": {
           "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
           "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
-        }
-      }
-    },
-    "beolink_leave": {
-      "name": "Beolink leave",
-      "description": "Leave a Beolink experience."
-    },
-    "beolink_allstandby": {
-      "name": "Beolink all standby",
-      "description": "Set all Connected Beolink devices to standby."
-    },
-    "beolink_set_volume": {
-      "name": "Beolink set volume",
-      "description": "Set a volume level for all connected Beolink devices.",
-      "fields": {
-        "volume_level": {
-          "name": "Volume level",
-          "description": "Specify the volume level."
-        }
-      }
-    },
-    "beolink_set_relative_volume": {
-      "name": "Beolink set relative volume",
-      "description": "Set a volume level relative to the current level of all connected Beolink devices.",
-      "fields": {
-        "volume_level": {
-          "name": "Volume level",
-          "description": "Specify the volume level."
         }
       }
     },
@@ -131,6 +91,48 @@
         }
       }
     },
+    "beolink_leave": {
+      "name": "Beolink leave",
+      "description": "Leave a Beolink experience."
+    },
+    "beolink_set_relative_volume": {
+      "name": "Beolink set relative volume",
+      "description": "Set a volume level relative to the current level of all connected Beolink devices.",
+      "fields": {
+        "volume_level": {
+          "name": "Volume level",
+          "description": "Specify the volume level."
+        }
+      }
+    },
+    "beolink_set_volume": {
+      "name": "Beolink set volume",
+      "description": "Set a volume level for all connected Beolink devices.",
+      "fields": {
+        "volume_level": {
+          "name": "Volume level",
+          "description": "Specify the volume level."
+        }
+      }
+    },
+
+    "beolink_unexpand": {
+      "name": "Beolink unexpand",
+      "description": "Unexpand from current Beolink experience.",
+      "fields": {
+        "beolink_jids": {
+          "name": "Beolink JIDs",
+          "description": "Specify which Beolink JIDs will leave from current Beolink experience."
+        }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
+      }
+    },
+
     "reboot": {
       "name": "Reboot",
       "description": "Reboot the device."

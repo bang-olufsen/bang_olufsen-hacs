@@ -17,76 +17,11 @@ from homeassistant.components.media_player import (
 class BangOlufsenSource:
     """Class used for associating device source ids with friendly names. May not include all sources."""
 
-    URI_STREAMER: Final[Source] = Source(
-        name="Audio Streamer",
-        id="uriStreamer",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    BLUETOOTH: Final[Source] = Source(
-        name="Bluetooth",
-        id="bluetooth",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    CHROMECAST: Final[Source] = Source(
-        name="Chromecast built-in",
-        id="chromeCast",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    LINE_IN: Final[Source] = Source(
-        name="Line-In",
-        id="lineIn",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    SPDIF: Final[Source] = Source(
-        name="Optical",
-        id="spdif",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    NET_RADIO: Final[Source] = Source(
-        name="B&O Radio",
-        id="netRadio",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    DEEZER: Final[Source] = Source(
-        name="Deezer",
-        id="deezer",
-        is_seekable=True,
-        is_enabled=True,
-        is_playable=True,
-    )
-    TIDAL: Final[Source] = Source(
-        name="Tidal",
-        id="tidal",
-        is_seekable=True,
-        is_enabled=True,
-        is_playable=True,
-    )
-    USB_IN: Final[Source] = Source(
-        name="USB",
-        id="usbIn",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    UNKNOWN: Final[Source] = Source(
-        name="Unknown Source",
-        id="unknown",
-        is_seekable=False,
-        is_enabled=False,
-        is_playable=False,
-    )
+    LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
+    SPDIF: Final[Source] = Source(name="Optical", id="spdif")
+    UNKNOWN: Final[Source] = Source(name="Unknown Source", id="unknown")
+    URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
+    USB_IN: Final[Source] = Source(name="USB", id="usbIn")
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
