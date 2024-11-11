@@ -16,7 +16,6 @@ from .const import (
     BEO_REMOTE_CONTROL_KEYS,
     BEO_REMOTE_KEY_EVENTS,
     BEO_REMOTE_KEYS,
-    BEO_REMOTE_LIGHT_KEYS,
     BEO_REMOTE_SUBMENU_CONTROL,
     BEO_REMOTE_SUBMENU_LIGHT,
     CONNECTION_STATUS,
@@ -65,7 +64,7 @@ async def async_setup_entry(
                     remote,
                     f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}",
                 )
-                for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_LIGHT_KEYS)
+                for key_type in BEO_REMOTE_KEYS
             ]
         )
 

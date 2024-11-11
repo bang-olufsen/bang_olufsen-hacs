@@ -14,7 +14,6 @@ from mozart_api.models import (
     PlaybackProgress,
     RenderingState,
     SoftwareUpdateState,
-    SoundSettings,
     Source,
     SpeakerGroupOverview,
     VolumeState,
@@ -87,9 +86,6 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         )
         self._client.get_software_update_state_notifications(
             self.on_software_update_state
-        )
-        self._client.get_sound_settings_notifications(
-            self.on_sound_settings_notification
         )
         self._client.get_source_change_notifications(self.on_source_change_notification)
         self._client.get_volume_notifications(self.on_volume_notification)
@@ -201,6 +197,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         elif notification_type is WebsocketNotification.REMOTE_CONTROL_DEVICES:
             # Reinitialize the config entry to update Beoremote One entities and device
             # Wait 5 seconds for the remote to be properly available to the device
+            _LOGGER.warning("Remote control has been modified. Reloading integration")
             self.hass.loop.call_later(
                 5,
                 self.hass.config_entries.async_schedule_reload,
@@ -256,14 +253,6 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         async_dispatcher_send(
             self.hass,
             f"{self._unique_id}_{WebsocketNotification.PLAYBACK_STATE}",
-            notification,
-        )
-
-    def on_sound_settings_notification(self, notification: SoundSettings) -> None:
-        """Send sound_settings dispatch."""
-        async_dispatcher_send(
-            self.hass,
-            f"{self._unique_id}_{WebsocketNotification.SOUND_SETTINGS}",
             notification,
         )
 

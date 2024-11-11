@@ -330,18 +330,16 @@ BEO_REMOTE_KEYS: Final[tuple[str, ...]] = (
     "Up",
     "Wind",
     "Yellow",
-)
-
-# "keys" that are unique to the Control and Light submenus
-BEO_REMOTE_CONTROL_KEYS: Final[tuple[str, ...]] = (
     "Func1",
-    "Func11",
-    "Func16",
+    "Func2",
+    "Func3",
+    "Func4",
+    "Func5",
     "Func6",
-)
-
-BEO_REMOTE_LIGHT_KEYS: Final[tuple[str, ...]] = (
-    "Func1",
+    "Func7",
+    "Func8",
+    "Func9",
+    "Func10",
     "Func11",
     "Func12",
     "Func13",
@@ -350,6 +348,21 @@ BEO_REMOTE_LIGHT_KEYS: Final[tuple[str, ...]] = (
     "Func16",
     "Func17",
 )
+
+# "keys" that are unique to the Control and Light submenus
+BEO_REMOTE_CONTROL_KEYS: Final[tuple[str, ...]] = (
+    "Func18",
+    "Func19",
+    "Func20",
+    "Func21",
+    "Func22",
+    "Func23",
+    "Func24",
+    "Func25",
+    "Func26",
+    "Func27",
+)
+
 
 BEO_REMOTE_KEY_EVENTS: Final[list[str]] = ["key_press", "key_release"]
 
