@@ -74,6 +74,10 @@ This integration adds an array of different useful entities that are generated a
     - Beolink leader (if available)
     - Beolink listeners (if available)
     - Beolink peers (if available)
+  - Favourites:
+    - Source name (if available)
+    - Title (if available)
+    - Content ID (if available)
 - Using the play_media service:
   - Activate a favourite
   - Play from a URI
@@ -123,11 +127,6 @@ This integration adds an array of different useful entities that are generated a
 - Beoremote One key entities (If available) (Disabled by default)
 - Proximity (If available) (Disabled by default)
 
-### Number entity
-
-- Treble
-- Bass
-
 ### Sensor entity
 
 - Battery Level (If available)
@@ -139,10 +138,6 @@ This integration adds an array of different useful entities that are generated a
 ### Select entity
 
 - Listening Position (If available)
-
-### Switch entity
-
-- Loudness
 
 ### Text entity
 
