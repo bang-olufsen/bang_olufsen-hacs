@@ -21,7 +21,6 @@ class BangOlufsenSource:
     SPDIF: Final[Source] = Source(name="Optical", id="spdif")
     UNKNOWN: Final[Source] = Source(name="Unknown Source", id="unknown")
     URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
-    USB_IN: Final[Source] = Source(name="USB", id="usbIn")
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
@@ -300,6 +299,8 @@ DEVICE_BUTTON_EVENTS: Final[list[str]] = [
     "very_long_press_release",
 ]
 
+
+BEO_REMOTE_MODEL: Final[str] = "Beoremote One"
 
 BEO_REMOTE_SUBMENU_CONTROL: Final[str] = "Control"
 BEO_REMOTE_SUBMENU_LIGHT: Final[str] = "Light"

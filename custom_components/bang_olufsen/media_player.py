@@ -27,6 +27,7 @@ from mozart_api.models import (
     PlayQueueItem,
     PlayQueueItemType,
     PlayQueueSettings,
+    Preset,
     RenderingState,
     SceneProperties,
     SoftwareUpdateState,
@@ -77,6 +78,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.util.dt import utcnow
 
+from . import BangOlufsenConfigEntry, set_platform_initialized
 from .const import (
     ACCEPTED_COMMANDS,
     ACCEPTED_COMMANDS_LISTS,
@@ -97,11 +99,7 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
-from .util import (
-    BangOlufsenConfigEntry,
-    get_serial_number_from_jid,
-    set_platform_initialized,
-)
+from .util import get_serial_number_from_jid
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -259,12 +257,15 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self._state: str = MediaPlayerState.IDLE
         self._video_sources: dict[str, str] = {}
         self._sound_modes: dict[str, int] = {}
+        self._unsorted_sources: dict[str, str] = {}
 
         # Beolink
         self._beolink_sources: dict[str, bool] = {}
         self._remote_leader: BeolinkLeader | None = None
         self._beolink_attribute: dict[str, dict] = {}
         self._beolink_listeners: list[BeolinkListener] = []
+
+        self._favourite_attribute: dict[str, dict] = {}
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -358,13 +359,80 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # The WebSocket event listener is the main handler for connection state.
         # The polling updates do therefore not set the device as available or unavailable
         with contextlib.suppress(ApiException, ClientConnectorError, TimeoutError):
-            queue_settings = await self._client.get_settings_queue(_request_timeout=5)
+            favourites = await self._client.get_presets(_request_timeout=5)
+            await self._generate_favourite_attributes(favourites)
 
+            queue_settings = await self._client.get_settings_queue(_request_timeout=5)
             if queue_settings.repeat is not None:
                 self._attr_repeat = BANG_OLUFSEN_REPEAT_TO_HA[queue_settings.repeat]
 
             if queue_settings.shuffle is not None:
                 self._attr_shuffle = queue_settings.shuffle
+
+    async def _generate_favourite_attributes(
+        self, favourites: dict[str, Preset]
+    ) -> None:
+        """Generate extra state attributes for favourites."""
+        # As this is run before sources are defined, unsorted sources are found once here
+        if not self._unsorted_sources:
+            sources = await self._client.get_available_sources(target_remote=False)
+
+            # Store the ids and Friendly names of all sources to use in favourites attributes
+            self._unsorted_sources = {
+                source.id: source.name
+                for source in cast(list[Source], sources.items)
+                if source.id and source.name
+            }
+
+        self._favourite_attribute = {"favourites": {}}
+
+        # Handle each favourite
+        for favourite_id, favourite in favourites.items():
+            favourite_attribute = {"title": favourite.title}
+
+            # Handle each action
+            for action in cast(list[Action], favourite.action_list):
+                # Add source
+                source = ""
+
+                if action.source and action.source.value:
+                    source = action.source.value
+
+                elif action.queue_item:
+                    source = action.queue_item.provider.value
+
+                # Add friendly name if it has been defined
+                if source:
+                    favourite_attribute["source"] = self._unsorted_sources[source]
+
+                # Add content id if available
+                content_id = ""
+                if action.content_id:
+                    # Determine if a netradio id should be split
+                    if "netRadio" in action.content_id:
+                        content_id = action.content_id.split("netRadio://")[1]
+                elif action.queue_item:
+                    # Determine if a netradio id should be split
+                    if "tidal" in action.queue_item.uri:
+                        content_id = action.queue_item.uri.split("tidal://")[1]
+                    else:
+                        content_id = action.queue_item.uri
+                elif action.deezer_user_id:
+                    content_id = action.deezer_user_id
+
+                # Add content id if it has been defined
+                if content_id:
+                    favourite_attribute["content_id"] = content_id
+
+            # Check content for source if it hasn't been defined in actionlist
+            if "source" not in favourite_attribute:
+                if favourite.content and favourite.content.source.value:
+                    favourite_attribute["source"] = self._unsorted_sources[
+                        favourite.content.source.value
+                    ]
+
+            # Add current favourite to attribute
+            self._favourite_attribute["favourites"][favourite_id] = favourite_attribute
 
     async def _async_update_name_and_beolink(self) -> None:
         """Update the device friendly name."""
@@ -774,6 +842,10 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # Add Beolink attributes
         if self._beolink_attribute:
             attributes.update(self._beolink_attribute)
+
+        # Add favourite attributes
+        if self._favourite_attribute:
+            attributes.update(self._favourite_attribute)
 
         return attributes
 

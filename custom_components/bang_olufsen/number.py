@@ -10,9 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import BangOlufsenConfigEntry, set_platform_initialized
 from .const import BASS_TREBLE_RANGE, CONNECTION_STATUS, WebsocketNotification
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenConfigEntry, set_platform_initialized
 
 
 async def async_setup_entry(

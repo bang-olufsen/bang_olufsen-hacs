@@ -2,31 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import cast
 
 from mozart_api.models import PairedRemote
 from mozart_api.mozart_client import MozartClient
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-
-@dataclass
-class BangOlufsenData:
-    """Dataclass for API client, coordinator containing WebSocket client and WebSocket initialization variables."""
-
-    coordinator: DataUpdateCoordinator
-    client: MozartClient
-    platforms_initialized: int = 0
-
-
-type BangOlufsenConfigEntry = ConfigEntry[BangOlufsenData]
-
-
-def set_platform_initialized(data: BangOlufsenData) -> None:
-    """Increment platforms_initialized to indicate that a platform has been initialized."""
-    data.platforms_initialized += 1
 
 
 def get_serial_number_from_jid(jid: str) -> str:

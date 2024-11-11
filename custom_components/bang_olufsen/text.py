@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from mozart_api.models import HomeControlUri, ProductFriendlyName
+from mozart_api.models import HomeControlUri
 
 from homeassistant.components.text import TextEntity
 from homeassistant.const import CONF_MODEL, EntityCategory
@@ -10,14 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONNECTION_STATUS,
-    MODEL_SUPPORT_HOME_CONTROL,
-    MODEL_SUPPORT_MAP,
-    WebsocketNotification,
-)
+from . import BangOlufsenConfigEntry, set_platform_initialized
+from .const import CONNECTION_STATUS, MODEL_SUPPORT_HOME_CONTROL, MODEL_SUPPORT_MAP
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenConfigEntry, set_platform_initialized
 
 
 async def async_setup_entry(
@@ -26,7 +21,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Text entities from config entry."""
-    entities: list[BangOlufsenEntity] = [BangOlufsenTextFriendlyName(config_entry)]
+    entities: list[BangOlufsenEntity] = []
 
     # Add the Home Control URI entity if the device supports it
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_HOME_CONTROL]:
@@ -45,54 +40,6 @@ class BangOlufsenText(TextEntity, BangOlufsenEntity):
         super().__init__(config_entry)
 
         self._attr_entity_category = EntityCategory.CONFIG
-
-
-class BangOlufsenTextFriendlyName(BangOlufsenText):
-    """Friendly name Text."""
-
-    _attr_icon = "mdi:id-card"
-    _attr_translation_key = "friendly_name"
-
-    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
-        """Init the friendly name Text."""
-        super().__init__(config_entry)
-
-        self._attr_unique_id = f"{self._unique_id}-friendly-name"
-
-    async def async_added_to_hass(self) -> None:
-        """Turn on the dispatchers."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._async_update_connection_state,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._entry.unique_id}_{WebsocketNotification.CONFIGURATION}",
-                self._update_friendly_name,
-            )
-        )
-
-        beolink_self = await self._client.get_beolink_self()
-        self._attr_native_value = beolink_self.friendly_name
-
-    async def async_set_value(self, value: str) -> None:
-        """Set the friendly name."""
-        self._attr_native_value = value
-        await self._client.set_product_friendly_name(
-            product_friendly_name=ProductFriendlyName(friendly_name=value)
-        )
-
-    async def _update_friendly_name(self, _: str | None) -> None:
-        """Update text value."""
-        beolink_self = await self._client.get_beolink_self()
-
-        self._attr_native_value = beolink_self.friendly_name
-
-        self.async_write_ha_state()
 
 
 class BangOlufsenTextHomeControlUri(BangOlufsenText):

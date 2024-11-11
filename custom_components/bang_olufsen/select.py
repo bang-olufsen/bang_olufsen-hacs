@@ -12,9 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import BangOlufsenConfigEntry, set_platform_initialized
 from .const import CONNECTION_STATUS, WebsocketNotification
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenConfigEntry, set_platform_initialized
 
 _LOGGER = logging.getLogger(__name__)
 

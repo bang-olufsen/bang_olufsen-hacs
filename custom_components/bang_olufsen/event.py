@@ -11,6 +11,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import BangOlufsenConfigEntry, set_platform_initialized
 from .const import (
     BEO_REMOTE_CONTROL_KEYS,
     BEO_REMOTE_KEY_EVENTS,
@@ -29,7 +30,7 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenConfigEntry, get_remote, set_platform_initialized
+from .util import get_remote
 
 
 async def async_setup_entry(

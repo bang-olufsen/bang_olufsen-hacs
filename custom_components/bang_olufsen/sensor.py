@@ -18,9 +18,10 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import BangOlufsenConfigEntry, set_platform_initialized
 from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import BangOlufsenEntity
-from .util import BangOlufsenConfigEntry, get_remote, set_platform_initialized
+from .util import get_remote
 
 SCAN_INTERVAL = timedelta(minutes=15)
 

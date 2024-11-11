@@ -1,13 +1,9 @@
-"""Update coordinator and WebSocket listener(s) for the Bang & Olufsen integration."""
+"""WebSocket listener(s) for the Bang & Olufsen integration."""
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
-from typing import Any
 
-from aiohttp.client_exceptions import ClientConnectorError
-from mozart_api.exceptions import ApiException
 from mozart_api.models import (
     BatteryState,
     BeoRemoteButton,
@@ -26,10 +22,10 @@ from mozart_api.models import (
 )
 from mozart_api.mozart_client import MozartClient
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
@@ -40,31 +36,23 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import BangOlufsenBase
-from .util import BangOlufsenConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
-    """The entity coordinator and WebSocket listener(s)."""
+class BangOlufsenWebsocket(BangOlufsenBase):
+    """The WebSocket listener(s)."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: BangOlufsenConfigEntry,
+        config_entry: ConfigEntry,
         client: MozartClient,
     ) -> None:
         """Initialize the entity coordinator."""
-        DataUpdateCoordinator.__init__(
-            self,
-            hass,
-            _LOGGER,
-            name="coordinator",
-            update_interval=timedelta(seconds=15),
-            always_update=False,
-        )
-        BangOlufsenBase.__init__(self, config_entry, client)
+        super().__init__(config_entry, client)
 
+        self.hass = hass
         self._device = self.get_device()
 
         # WebSocket callbacks
@@ -116,16 +104,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenBase):
         assert device
 
         return device
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Get all information needed by the polling entities."""
-        # Try to update coordinator_data.
-        try:
-            favourites = await self._client.get_presets(_request_timeout=5)
-        except (ApiException, ClientConnectorError, TimeoutError) as error:
-            raise UpdateFailed(type(error).__name__) from error
-        else:
-            return favourites
 
     def _update_connection_status(self) -> None:
         """Update all entities of the connection status."""

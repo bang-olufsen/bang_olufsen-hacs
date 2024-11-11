@@ -42,11 +42,6 @@
                 "name": "Battery charging"
             }
         },
-        "button": {
-            "favourite": {
-                "name": "Favourite {id}"
-            }
-        },
         "event": {
             "bluetooth": {
                 "name": "Bluetooth",
@@ -877,9 +872,6 @@
             }
         },
         "text": {
-            "friendly_name": {
-                "name": "Device friendly name"
-            },
             "home_control_uri": {
                 "name": "Home Control URI"
             }

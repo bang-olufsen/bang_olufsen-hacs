@@ -25,20 +25,20 @@ from mozart_api.models import (
 )
 from mozart_api.mozart_client import MozartClient
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-from .util import BangOlufsenConfigEntry
 
 
 class BangOlufsenBase:
     """Base class for BangOlufsen Home Assistant objects."""
 
     def __init__(
-        self, config_entry: BangOlufsenConfigEntry, client: MozartClient | None = None
+        self, config_entry: ConfigEntry, client: MozartClient | None = None
     ) -> None:
         """Initialize the object."""
 
@@ -86,7 +86,7 @@ class BangOlufsenEntity(Entity, BangOlufsenBase):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the object."""
         super().__init__(config_entry)
 

@@ -3,24 +3,25 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 
 from aiohttp import ClientConnectorError, ClientOSError, ServerTimeoutError
 from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util.ssl import get_default_context
 
-from .const import DOMAIN
-from .coordinator import BangOlufsenCoordinator
-from .util import BangOlufsenConfigEntry, BangOlufsenData, get_remote
+from .const import BEO_REMOTE_MODEL, DOMAIN
+from .util import get_remote
+from .websocket import BangOlufsenWebsocket
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.BUTTON,
     Platform.EVENT,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
@@ -29,6 +30,23 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.TEXT,
 ]
+
+
+@dataclass
+class BangOlufsenData:
+    """Dataclass for API client, WebSocket listener and WebSocket initialization variables."""
+
+    websocket: BangOlufsenWebsocket
+    client: MozartClient
+    platforms_initialized: int = 0
+
+
+type BangOlufsenConfigEntry = ConfigEntry[BangOlufsenData]
+
+
+def set_platform_initialized(data: BangOlufsenData) -> None:
+    """Increment platforms_initialized to indicate that a platform has been initialized."""
+    data.platforms_initialized += 1
 
 
 async def _start_websocket_listener(data: BangOlufsenData) -> None:
@@ -82,11 +100,10 @@ async def async_setup_entry(
         ) from error
 
     # Initialize coordinator
-    coordinator = BangOlufsenCoordinator(hass, config_entry, client)
-    await coordinator.async_config_entry_first_refresh()
+    websocket = BangOlufsenWebsocket(hass, config_entry, client)
 
     # Add the coordinator and API client
-    config_entry.runtime_data = BangOlufsenData(coordinator, client)
+    config_entry.runtime_data = BangOlufsenData(websocket, client)
 
     # Check for connected Beoremote One
     if remote := await get_remote(client):
@@ -98,8 +115,8 @@ async def async_setup_entry(
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers={(DOMAIN, remote.serial_number)},
-            name=f"Beoremote One {remote.serial_number}",
-            model="Beoremote One",
+            name=f"{BEO_REMOTE_MODEL} {remote.serial_number}",
+            model=BEO_REMOTE_MODEL,
             serial_number=remote.serial_number,
             sw_version=remote.app_version,
             manufacturer="Bang & Olufsen",
@@ -116,7 +133,7 @@ async def async_setup_entry(
         )
         for device in devices:
             assert device.model is not None
-            if device.model == "Beoremote One":
+            if device.model == BEO_REMOTE_MODEL:
                 device_registry.async_remove_device(device.id)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
