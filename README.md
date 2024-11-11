@@ -117,10 +117,6 @@ This integration adds an array of different useful entities that are generated a
 
 - Battery Charging (If available)
 
-### Button entity
-
-- Favourite entities
-
 ### Event entity
 
 - Device button entities (If available) (Disabled by default)
@@ -150,7 +146,6 @@ This integration adds an array of different useful entities that are generated a
 
 ### Text entity
 
-- Friendly Name
 - Home Control URI (If available)
 
 ## Getting Deezer URIs
