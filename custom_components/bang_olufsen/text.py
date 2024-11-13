@@ -46,7 +46,6 @@ class BangOlufsenTextHomeControlUri(BangOlufsenText):
     """Home Control URI Text."""
 
     _attr_entity_registry_enabled_default = False
-    _attr_icon = "mdi:link-variant"
     _attr_translation_key = "home_control_uri"
 
     def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:

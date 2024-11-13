@@ -57,7 +57,6 @@ class BangOlufsenSelect(BangOlufsenEntity, SelectEntity):
 class BangOlufsenSelectListeningPosition(BangOlufsenSelect):
     """Listening position Select."""
 
-    _attr_icon = "mdi:sine-wave"
     _attr_translation_key = "listening_position"
 
     def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:

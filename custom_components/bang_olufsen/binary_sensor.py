@@ -49,7 +49,6 @@ class BangOlufsenBinarySensor(BangOlufsenEntity, BinarySensorEntity):
 class BangOlufsenBinarySensorBatteryCharging(BangOlufsenBinarySensor):
     """Battery charging Binary Sensor."""
 
-    _attr_icon = "mdi:battery-charging"
     _attr_translation_key = "battery_charging"
 
     def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:

@@ -226,7 +226,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     """Representation of a media player."""
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
-    _attr_icon = "mdi:speaker-wireless"
     _attr_name: None | str = None
 
     def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:

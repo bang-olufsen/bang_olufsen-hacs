@@ -21,6 +21,7 @@ class BangOlufsenSource:
     SPDIF: Final[Source] = Source(name="Optical", id="spdif")
     UNKNOWN: Final[Source] = Source(name="Unknown Source", id="unknown")
     URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
+    USB_IN: Final[Source] = Source(name="USB", id="usbIn")
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {

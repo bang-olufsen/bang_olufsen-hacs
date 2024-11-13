@@ -102,7 +102,6 @@ class BangOlufsenButtonEvent(BangOlufsenEvent):
 
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_event_types = DEVICE_BUTTON_EVENTS
-    _attr_icon = "mdi:gesture-tap-button"
 
     def __init__(self, config_entry: BangOlufsenConfigEntry, button_type: str) -> None:
         """Initialize Button."""
@@ -138,7 +137,6 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEvent):
 
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_event_types = BEO_REMOTE_KEY_EVENTS
-    _attr_icon = "mdi:remote"
 
     def __init__(
         self,
@@ -183,7 +181,6 @@ class BangOlufsenEventProximity(BangOlufsenEvent):
 
     _attr_device_class = EventDeviceClass.MOTION
     _attr_event_types = PROXIMITY_EVENTS
-    _attr_icon = "mdi:account-question"
     _attr_translation_key = "proximity"
 
     def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:

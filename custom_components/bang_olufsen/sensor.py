@@ -71,7 +71,6 @@ class BangOlufsenSensor(BangOlufsenEntity, SensorEntity):
 class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
     """Battery level Sensor."""
 
-    _attr_icon = "mdi:battery"
     _attr_native_unit_of_measurement = "%"
     _attr_translation_key = "battery_level"
 
@@ -108,7 +107,6 @@ class BangOlufsenSensorBatteryLevel(BangOlufsenSensor):
 class BangOlufsenSensorRemoteBatteryLevel(BangOlufsenSensor):
     """Battery level Sensor for the Beoremote One."""
 
-    _attr_icon = "mdi:battery"
     _attr_native_unit_of_measurement = "%"
     _attr_translation_key = "remote_battery_level"
     _attr_should_poll = True
@@ -142,7 +140,6 @@ class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):
     """Battery charging time Sensor."""
 
     _attr_entity_registry_enabled_default = False
-    _attr_icon = "mdi:battery-arrow-up"
     _attr_native_unit_of_measurement = "min"
     _attr_translation_key = "battery_charging_time"
 
@@ -191,7 +188,6 @@ class BangOlufsenSensorBatteryPlayingTime(BangOlufsenSensor):
     """Battery playing time Sensor."""
 
     _attr_entity_registry_enabled_default = False
-    _attr_icon = "mdi:battery-arrow-down"
     _attr_native_unit_of_measurement = "min"
     _attr_translation_key = "battery_playing_time"
 
@@ -239,7 +235,6 @@ class BangOlufsenSensorMediaId(BangOlufsenSensor):
 
     _attr_entity_registry_enabled_default = False
     _attr_translation_key = "media_id"
-    _attr_icon = "mdi:information"
 
     def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Init the media id Sensor."""
@@ -277,7 +272,6 @@ class BangOlufsenSensorInputSignal(BangOlufsenSensor):
     """Input signal Sensor."""
 
     _attr_entity_registry_enabled_default = False
-    _attr_icon = "mdi:audio-input-stereo-minijack"
     _attr_translation_key = "input_signal"
 
     def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
