@@ -130,6 +130,7 @@ This integration adds an array of different useful entities that are generated a
 ### Sensor entity
 
 - Battery Level (If available)
+- Remote Battery Level (If available)
 - Battery Charging Time (If available)
 - Battery Playing Time (If available)
 - Media ID (Disabled by default)
@@ -186,7 +187,7 @@ All devices except the [Beoconnect Core](https://www.bang-olufsen.com/en/dk/acce
 
 ### Beoremote One
 
-Event entities are available for each of the compatible keys on the [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one). To trigger these triggers, enter the "Control" or "Light" submenu, and press any of the compatible buttons. Each button press will send a "press" and a "release" event. The functions in these submenus are also supported.
+Event entities are available for each of the compatible keys on the [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one) through a device in Home Assistant. To trigger these Event entities, enter the "Control" or "Light" submenu, and press any of the compatible buttons. Each button press will send a "press" and a "release" event. The functions in these submenus are also supported.
 
 The favourite buttons correspond to the physical favourite buttons on the device.
 
@@ -384,9 +385,10 @@ The Bang & Olufsen integration additionally supports different custom services
 
 Join a Beolink experience.
 
-| Service data attribute | Optional | Description                           |
-| ---------------------- | -------- | ------------------------------------- |
-| `beolink_jid`          | yes      | Manually specify Beolink JID to join. |
+| Service data attribute | Optional | Description                                                                                                                                                                                                                                                                                            |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `beolink_jid`          | yes      | Manually specify Beolink JID to join.                                                                                                                                                                                                                                                                  |
+| `source_id`            | yes      | Specify which source to join, behavior varies between platforms. Compatible Mozart source IDs: 'deezer', 'spotify', 'tidal'. Compatible ASE source IDs: 'beoradio', 'deezer', 'spotify', using Beolink Converter NL/ML: 'RADIO', 'TP1', 'TP2', 'CD', 'AUX_A', 'PH'. A defined Beolink JID is required. |
 
 ### Service `bang_olufsen.beolink_expand`
 
