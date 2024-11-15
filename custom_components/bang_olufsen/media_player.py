@@ -150,7 +150,10 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         name="beolink_join",
-        schema={vol.Optional("beolink_jid"): jid_regex},
+        schema={
+            vol.Optional("beolink_jid"): jid_regex,
+            vol.Optional("source_id"): str,
+        },
         func="async_beolink_join",
         supports_response=SupportsResponse.OPTIONAL,
     )
@@ -1148,13 +1151,20 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     # Custom services:
     async def async_beolink_join(
-        self, beolink_jid: str | None = None
+        self, beolink_jid: str | None = None, source_id: str | None = None
     ) -> ServiceResponse:
         """Join a Beolink multi-room experience."""
+        # Touch to join
         if beolink_jid is None:
             response = await self._client.join_latest_beolink_experience()
-        else:
+        # Join a peer
+        elif beolink_jid and source_id is None:
             response = await self._client.join_beolink_peer(jid=beolink_jid)
+        # Join a peer and select specific source
+        elif beolink_jid and source_id:
+            response = await self._client.join_beolink_peer(
+                jid=beolink_jid, source=source_id
+            )
 
         return response.dict()
 

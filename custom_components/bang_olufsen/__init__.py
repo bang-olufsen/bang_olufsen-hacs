@@ -113,7 +113,7 @@ async def async_setup_entry(
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers={(DOMAIN, remote.serial_number)},
-            name=f"{BEO_REMOTE_MODEL} {remote.serial_number}",
+            name=f"{BEO_REMOTE_MODEL}-{remote.serial_number}",
             model=BEO_REMOTE_MODEL,
             serial_number=remote.serial_number,
             sw_version=remote.app_version,
@@ -122,7 +122,7 @@ async def async_setup_entry(
         )
     else:
         # If the remote is no longer available, then delete the device.
-        # The remote may appear as being available to the device after is has been unpaired on the remote
+        # The remote may appear as being available to the device after has been unpaired on the remote
         # As it has to be removed from the device on the app.
 
         device_registry = dr.async_get(hass)

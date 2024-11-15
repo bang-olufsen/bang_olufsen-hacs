@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import contextlib
 from datetime import timedelta
 from typing import cast
 
+from aiohttp import ClientConnectorError
 from inflection import titleize, underscore
+from mozart_api.exceptions import ApiException
 from mozart_api.models import BatteryState, PairedRemote, PlaybackContentMetadata
 
 from homeassistant.components.sensor import (
@@ -127,13 +130,14 @@ class BangOlufsenSensorRemoteBatteryLevel(BangOlufsenSensor):
 
     async def async_update(self) -> None:
         """Poll battery status."""
-        bluetooth_remote_list = await self._client.get_bluetooth_remotes()
+        with contextlib.suppress(ApiException, ClientConnectorError, TimeoutError):
+            bluetooth_remote_list = await self._client.get_bluetooth_remotes()
 
-        if bool(len(cast(list[PairedRemote], bluetooth_remote_list.items))):
-            remote: PairedRemote = cast(
-                list[PairedRemote], bluetooth_remote_list.items
-            )[0]
-            self._attr_native_value = remote.battery_level
+            if bool(len(cast(list[PairedRemote], bluetooth_remote_list.items))):
+                remote: PairedRemote = cast(
+                    list[PairedRemote], bluetooth_remote_list.items
+                )[0]
+                self._attr_native_value = remote.battery_level
 
 
 class BangOlufsenSensorBatteryChargingTime(BangOlufsenSensor):

@@ -1270,6 +1270,10 @@
                 "beolink_jid": {
                     "description": "Manually specify Beolink JID to join.",
                     "name": "Beolink JID"
+                },
+                "source_id": {
+                    "description": "Specify which source to join, behavior varies between platforms. Compatible Mozart source IDs: 'deezer', 'spotify', 'tidal'. Compatible ASE source IDs: 'beoradio', 'deezer', 'spotify', using Beolink Converter NL/ML: 'RADIO', 'TP1', 'TP2', 'CD', 'AUX_A', 'PH'. A defined Beolink JID is required.",
+                    "name": "Source ID"
                 }
             },
             "name": "Beolink join",
