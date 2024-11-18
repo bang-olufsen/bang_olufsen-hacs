@@ -191,11 +191,11 @@ Event entities are available for each of the compatible keys on the [Beoremote O
 
 The favourite buttons correspond to the physical favourite buttons on the device.
 
-## Services
+## Actions
 
-### play_media services
+### play_media actions
 
-The Bang & Olufsen integration supports different playback types in the `media_player.play_media` service: playback from URL, activating a favourite, playback from a local file, playing a radio station, activating a Deezer flow and Deezer/Tidal playlists, albums and tracks. Additionally `announce` can be set to `True` to play TTS or files as an overlay.
+The Bang & Olufsen integration supports different playback types in the `media_player.play_media` action: playback from URL, activating a favourite, playback from a local file, playing a radio station, activating a Deezer flow and Deezer/Tidal playlists, albums and tracks. Additionally `announce` can be set to `True` to play TTS or files as an overlay.
 
 #### play_media examples
 
@@ -374,63 +374,63 @@ data:
     overlay_tts_language: da-dk
 ```
 
-_NOTE_: To easily obtain the media_content_id for a Deezer/Tidal track or B&O Radio station, you can enable the 'Media id' sensor on Mozart device in Home Assistant (disabled by default).
-Once enabled, start playing the content you wish to activate in a service call - the Media id sensor will then provide the value to be used in the media_content_id field.
+_NOTE_: To easily obtain the media_content_id for a Deezer/Tidal track or B&O Radio station, you can enable the 'Media id' sensor in Home Assistant (disabled by default).
+Once enabled, start playing the content you wish to activate in an action call - the Media id sensor will then provide the value to be used in the media_content_id field.
 
-### Custom services
+### Custom actions
 
-The Bang & Olufsen integration additionally supports different custom services
+The Bang & Olufsen integration additionally supports different custom actions
 
-### Service `bang_olufsen.beolink_join`
+### Action `bang_olufsen.beolink_join`
 
 Join a Beolink experience.
 
-| Service data attribute | Optional | Description                                                                                                                                                                                                                                                                                            |
-| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `beolink_jid`          | yes      | Manually specify Beolink JID to join.                                                                                                                                                                                                                                                                  |
-| `source_id`            | yes      | Specify which source to join, behavior varies between platforms. Compatible Mozart source IDs: 'deezer', 'spotify', 'tidal'. Compatible ASE source IDs: 'beoradio', 'deezer', 'spotify', using Beolink Converter NL/ML: 'RADIO', 'TP1', 'TP2', 'CD', 'AUX_A', 'PH'. A defined Beolink JID is required. |
+| Action data attribute | Optional | Description                                                                                                                                                                                                                                                                                            |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `beolink_jid`         | yes      | Manually specify Beolink JID to join.                                                                                                                                                                                                                                                                  |
+| `source_id`           | yes      | Specify which source to join, behavior varies between platforms. Compatible Mozart source IDs: 'deezer', 'spotify', 'tidal'. Compatible ASE source IDs: 'beoradio', 'deezer', 'spotify', using Beolink Converter NL/ML: 'RADIO', 'TP1', 'TP2', 'CD', 'AUX_A', 'PH'. A defined Beolink JID is required. |
 
-### Service `bang_olufsen.beolink_expand`
+### Action `bang_olufsen.beolink_expand`
 
 Expand current Beolink experience.
 
-| Service data attribute | Optional | Description                                                      |
-| ---------------------- | -------- | ---------------------------------------------------------------- |
-| `beolink_jids`         | no       | Specify which Beolink JIDs will join current Beolink experience. |
+| Action data attribute | Optional | Description                                                      |
+| --------------------- | -------- | ---------------------------------------------------------------- |
+| `beolink_jids`        | no       | Specify which Beolink JIDs will join current Beolink experience. |
 
-### Service `bang_olufsen.beolink_unexpand`
+### Action `bang_olufsen.beolink_unexpand`
 
 Unexpand from current Beolink experience.
 
-| Service data attribute | Optional | Description                                                            |
-| ---------------------- | -------- | ---------------------------------------------------------------------- |
-| `beolink_jids`         | no       | Specify which Beolink JIDs will leave from current Beolink experience. |
+| Action data attribute | Optional | Description                                                            |
+| --------------------- | -------- | ---------------------------------------------------------------------- |
+| `beolink_jids`        | no       | Specify which Beolink JIDs will leave from current Beolink experience. |
 
-### Service `bang_olufsen.beolink_leave`
+### Action `bang_olufsen.beolink_leave`
 
 Leave a Beolink experience.
 
-### Service `bang_olufsen.beolink_allstandby`
+### Action `bang_olufsen.beolink_allstandby`
 
 Set all Connected Beolink devices to standby.
 
-### Service `bang_olufsen.beolink_set_volume`
+### Action `bang_olufsen.beolink_set_volume`
 
 Set a volume level for all connected Beolink devices.
 
-| Service data attribute | Optional | Description               |
-| ---------------------- | -------- | ------------------------- |
-| `volume_level`         | no       | Specify the volume level. |
+| Action data attribute | Optional | Description               |
+| --------------------- | -------- | ------------------------- |
+| `volume_level`        | no       | Specify the volume level. |
 
-### Service `bang_olufsen.beolink_leader_command`
+### Action `bang_olufsen.beolink_leader_command`
 
 Send a media_player command to Beolink leader.
 
-| Service data attribute | Optional | Description                                   |
-| ---------------------- | -------- | --------------------------------------------- |
-| `command`              | no       | Specify the media_player command.             |
-| `parameter`            | yes      | Specify the media_player command's parameter. |
+| Action data attribute | Optional | Description                                   |
+| --------------------- | -------- | --------------------------------------------- |
+| `command`             | no       | Specify the media_player command.             |
+| `parameter`           | yes      | Specify the media_player command's parameter. |
 
-### Service `bang_olufsen.reboot`
+### Action `bang_olufsen.reboot`
 
 Reboot the device.
