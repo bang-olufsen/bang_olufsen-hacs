@@ -28,6 +28,8 @@ from .util import get_remote
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

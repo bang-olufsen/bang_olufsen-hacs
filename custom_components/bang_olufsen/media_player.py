@@ -101,6 +101,8 @@ from .const import (
 from .entity import BangOlufsenEntity
 from .util import get_serial_number_from_jid
 
+PARALLEL_UPDATES = 0
+
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
@@ -247,6 +249,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             serial_number=self._unique_id,
         )
         self._attr_unique_id = self._unique_id
+        self._attr_should_poll = True
 
         # Misc. variables.
         self._audio_sources: dict[str, str] = {}
