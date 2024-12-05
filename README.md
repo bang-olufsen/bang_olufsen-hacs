@@ -385,10 +385,10 @@ The Bang & Olufsen integration additionally supports different custom actions
 
 Join a Beolink experience.
 
-| Action data attribute | Optional | Description                                                                                                                                                                                                                                                                                            |
-| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `beolink_jid`         | yes      | Manually specify Beolink JID to join.                                                                                                                                                                                                                                                                  |
-| `source_id`           | yes      | Specify which source to join, behavior varies between platforms. Compatible Mozart source IDs: 'deezer', 'spotify', 'tidal'. Compatible ASE source IDs: 'beoradio', 'deezer', 'spotify', using Beolink Converter NL/ML: 'RADIO', 'TP1', 'TP2', 'CD', 'AUX_A', 'PH'. A defined Beolink JID is required. |
+| Action data attribute | Optional | Description                                                                                                                                                                                    |
+| --------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `beolink_jid`         | yes      | Manually specify Beolink JID to join.                                                                                                                                                          |
+| `source_id`           | yes      | Specify which source to join, behavior varies between platforms. Source names prefaced by a platform name can only be used when connecting to that platform. A defined Beolink JID is required |
 
 ### Action `bang_olufsen.beolink_expand`
 
