@@ -420,3 +420,6 @@ ACCEPTED_COMMANDS_LISTS: tuple[
     STR_PARAMETERS,
     NONE_PARAMETERS,
 )
+
+# Prefix for Beolink Converter NL/ML in async_beolink_join custom service
+BL_CONVERTER_PREFIX = "bc_nlml_"

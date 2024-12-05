@@ -89,6 +89,7 @@ from .const import (
     BEOLINK_LISTENER_COMMAND,
     BEOLINK_RELATIVE_VOLUME,
     BEOLINK_VOLUME,
+    BL_CONVERTER_PREFIX,
     CONF_BEOLINK_JID,
     CONNECTION_STATUS,
     DOMAIN,
@@ -1165,6 +1166,11 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             response = await self._client.join_beolink_peer(jid=beolink_jid)
         # Join a peer and select specific source
         elif beolink_jid and source_id:
+            # Home Assistant does not support the "raw" Beolink Converter NL/ML source ids in strings.json
+            # So they have the be transformed to be compatible and now have to be capatilized in order to work
+            if BL_CONVERTER_PREFIX in source_id:
+                source_id = source_id.removeprefix(BL_CONVERTER_PREFIX).upper()
+
             response = await self._client.join_beolink_peer(
                 jid=beolink_jid, source=source_id
             )
