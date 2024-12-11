@@ -142,7 +142,7 @@ ATTR_FRIENDLY_NAME: Final[str] = "fn"
 # Power states.
 BANG_OLUFSEN_ON: Final[str] = "on"
 
-VALID_MEDIA_TYPES: Final[tuple] = (
+VALID_MEDIA_TYPES: Final[tuple[str, ...]] = (
     BangOlufsenMediaType.DEEZER,
     BangOlufsenMediaType.FAVOURITE,
     BangOlufsenMediaType.OVERLAY_TTS,
@@ -155,8 +155,15 @@ VALID_MEDIA_TYPES: Final[tuple] = (
 )
 
 # Playback states for playing and not playing
-PLAYING: Final[tuple] = ("started", "buffering", BANG_OLUFSEN_ON)
-NOT_PLAYING: Final[tuple] = ("idle", "paused", "stopped", "ended", "unknown", "error")
+PLAYING: Final[tuple[str, ...]] = ("started", "buffering", BANG_OLUFSEN_ON)
+NOT_PLAYING: Final[tuple[str, ...]] = (
+    "idle",
+    "paused",
+    "stopped",
+    "ended",
+    "unknown",
+    "error",
+)
 
 # Fallback sources to use in case of API failure.
 FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
@@ -421,5 +428,19 @@ ACCEPTED_COMMANDS_LISTS: tuple[
     NONE_PARAMETERS,
 )
 
-# Prefix for Beolink Converter NL/ML in async_beolink_join custom service
-BL_CONVERTER_PREFIX = "bc_nlml_"
+# Beolink Converter NL/ML sources need to be transformed to upper case
+BEOLINK_JOIN_SOURCES_TO_UPPER = (
+    "aux_a",
+    "cd",
+    "ph",
+    "radio",
+    "tp1",
+    "tp2",
+)
+BEOLINK_JOIN_SOURCES = (
+    *BEOLINK_JOIN_SOURCES_TO_UPPER,
+    "beoradio",
+    "deezer",
+    "spotify",
+    "tidal",
+)

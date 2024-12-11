@@ -17,7 +17,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    data: dict = {
+    data: dict[str, dict[str, Any] | bool] = {
         "config_entry": config_entry.as_dict(),
         "websocket_connected": config_entry.runtime_data.client.websocket_connected,
     }

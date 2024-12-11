@@ -6,7 +6,12 @@ import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from aiohttp import ClientConnectorError, ClientOSError, ServerTimeoutError
+from aiohttp import (
+    ClientConnectorError,
+    ClientOSError,
+    ServerTimeoutError,
+    WSMessageTypeError,
+)
 from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 
@@ -92,6 +97,7 @@ async def async_setup_entry(
         ServerTimeoutError,
         ApiException,
         TimeoutError,
+        WSMessageTypeError,
     ) as error:
         await client.close_api_client()
         raise ConfigEntryNotReady(

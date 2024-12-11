@@ -85,11 +85,12 @@ from .const import (
     BANG_OLUFSEN_REPEAT_FROM_HA,
     BANG_OLUFSEN_REPEAT_TO_HA,
     BANG_OLUFSEN_STATES,
+    BEOLINK_JOIN_SOURCES,
+    BEOLINK_JOIN_SOURCES_TO_UPPER,
     BEOLINK_LEADER_COMMAND,
     BEOLINK_LISTENER_COMMAND,
     BEOLINK_RELATIVE_VOLUME,
     BEOLINK_VOLUME,
-    BL_CONVERTER_PREFIX,
     CONF_BEOLINK_JID,
     CONNECTION_STATUS,
     DOMAIN,
@@ -155,7 +156,7 @@ async def async_setup_entry(
         name="beolink_join",
         schema={
             vol.Optional("beolink_jid"): jid_regex,
-            vol.Optional("source_id"): str,
+            vol.Optional("source_id"): vol.In(BEOLINK_JOIN_SOURCES),
         },
         func="async_beolink_join",
         supports_response=SupportsResponse.OPTIONAL,
@@ -267,10 +268,10 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         # Beolink
         self._beolink_sources: dict[str, bool] = {}
         self._remote_leader: BeolinkLeader | None = None
-        self._beolink_attribute: dict[str, dict] = {}
+        self._beolink_attribute: dict[str, dict[str, Any]] = {}
         self._beolink_listeners: list[BeolinkListener] = []
 
-        self._favourite_attribute: dict[str, dict] = {}
+        self._favourite_attribute: dict[str, dict[str, Any]] = {}
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -1165,10 +1166,9 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             response = await self._client.join_beolink_peer(jid=beolink_jid)
         # Join a peer and select specific source
         elif beolink_jid and source_id:
-            # Home Assistant does not support the "raw" Beolink Converter NL/ML source ids in strings.json
-            # So they have the be transformed to be compatible and now have to be capatilized in order to work
-            if BL_CONVERTER_PREFIX in source_id:
-                source_id = source_id.removeprefix(BL_CONVERTER_PREFIX).upper()
+            # Beolink Converter NL/ML sources need to be in upper case
+            if source_id in BEOLINK_JOIN_SOURCES_TO_UPPER:
+                source_id = source_id.upper()
 
             response = await self._client.join_beolink_peer(
                 jid=beolink_jid, source=source_id

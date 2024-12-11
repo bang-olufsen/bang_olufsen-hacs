@@ -1242,16 +1242,16 @@
     "selector": {
         "source_ids": {
             "options": {
-                "bc_nlml_aux_a": "Beolink Converter NL/ML AUX_A",
-                "bc_nlml_cd": "Beolink Converter NL/ML CD",
-                "bc_nlml_ph": "Beolink Converter NL/ML PH",
-                "bc_nlml_radio": "Beolink Converter NL/ML RADIO",
-                "bc_nlml_tp1": "Beolink Converter NL/ML TP1",
-                "bc_nlml_tp2": "Beolink Converter NL/ML TP2",
+                "aux_a": "Beolink Converter NL/ML AUX_A",
                 "beoradio": "ASE Beoradio",
-                "deezer": "Deezer",
-                "spotify": "Spotify",
-                "tidal": "Mozart Tidal"
+                "cd": "Beolink Converter NL/ML CD",
+                "deezer": "ASE / Mozart Deezer",
+                "ph": "Beolink Converter NL/ML PH",
+                "radio": "Beolink Converter NL/ML RADIO",
+                "spotify": "ASE / Mozart Spotify",
+                "tidal": "Mozart Tidal",
+                "tp1": "Beolink Converter NL/ML TP1",
+                "tp2": "Beolink Converter NL/ML TP2"
             }
         }
     },
@@ -1288,7 +1288,7 @@
                     "name": "Beolink JID"
                 },
                 "source_id": {
-                    "description": "Specify which source to join, behavior varies between platforms. Source names prefaced by a platform name can only be used when connecting to that platform. A defined Beolink JID is required",
+                    "description": "Specify which source to join, behavior varies between hardware platforms. Source names prefaced by a platform name can only be used when connecting to that platform. For example \"ASE Beoradio\" can only be used when joining an ASE device, while \u201dASE / Mozart Deezer\u201d can be used with ASE or Mozart devices. A defined Beolink JID is required.",
                     "name": "Source"
                 }
             },
