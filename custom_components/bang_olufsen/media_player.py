@@ -237,7 +237,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
         """Initialize the media player."""
         super().__init__(config_entry)
-        self._attr_should_poll = True
 
         self._beolink_jid: str = self._entry.data[CONF_BEOLINK_JID]
         self._model: str = self._entry.data[CONF_MODEL]

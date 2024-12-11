@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientConnectorError, ClientOSError, ServerTimeoutError
 from mozart_api.exceptions import ApiException
@@ -105,10 +106,10 @@ async def async_setup_entry(
 
     # Check for connected Beoremote One
     if remote := await get_remote(client):
-        assert remote.serial_number
+        if TYPE_CHECKING:
+            assert remote.serial_number
 
         # Create Beoremote One device
-        assert config_entry.unique_id
         device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,

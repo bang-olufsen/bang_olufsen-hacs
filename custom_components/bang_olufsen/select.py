@@ -30,9 +30,7 @@ async def async_setup_entry(
     # Create the listening position entity if supported
     scenes = await config_entry.runtime_data.client.get_all_scenes()
 
-    for scene_key in scenes:
-        scene = scenes[scene_key]
-
+    for scene in scenes.values():
         if scene.tags is not None and "listeningposition" in scene.tags:
             entities.append(BangOlufsenSelectListeningPosition(config_entry))
             break

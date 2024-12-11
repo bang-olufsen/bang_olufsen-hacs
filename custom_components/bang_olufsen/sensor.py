@@ -130,10 +130,22 @@ class BangOlufsenSensorRemoteBatteryLevel(BangOlufsenSensor):
         )
         self._attr_native_value = remote.battery_level
 
+    async def async_added_to_hass(self) -> None:
+        """Turn on the dispatchers."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._async_update_connection_state,
+            )
+        )
+
     async def async_update(self) -> None:
         """Poll battery status."""
         with contextlib.suppress(ApiException, ClientConnectorError, TimeoutError):
-            bluetooth_remote_list = await self._client.get_bluetooth_remotes()
+            bluetooth_remote_list = await self._client.get_bluetooth_remotes(
+                _request_timeout=5
+            )
 
             if bool(len(cast(list[PairedRemote], bluetooth_remote_list.items))):
                 remote: PairedRemote = cast(
