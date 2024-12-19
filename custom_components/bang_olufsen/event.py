@@ -29,7 +29,7 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
-from .util import get_remote
+from .util import get_remotes
 
 
 async def async_setup_entry(
@@ -55,30 +55,31 @@ async def async_setup_entry(
         entities.append(BangOlufsenEventProximity(config_entry))
 
     # Check for connected Beoremote One
-    if remote := await get_remote(config_entry.runtime_data.client):
-        # Add Light keys
-        entities.extend(
-            [
-                BangOlufsenRemoteKeyEvent(
-                    config_entry,
-                    remote,
-                    f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}",
-                )
-                for key_type in BEO_REMOTE_KEYS
-            ]
-        )
+    if remotes := await get_remotes(config_entry.runtime_data.client):
+        for remote in remotes:
+            # Add Light keys
+            entities.extend(
+                [
+                    BangOlufsenRemoteKeyEvent(
+                        config_entry,
+                        remote,
+                        f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}",
+                    )
+                    for key_type in BEO_REMOTE_KEYS
+                ]
+            )
 
-        # Add Control keys
-        entities.extend(
-            [
-                BangOlufsenRemoteKeyEvent(
-                    config_entry,
-                    remote,
-                    f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}",
-                )
-                for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
-            ]
-        )
+            # Add Control keys
+            entities.extend(
+                [
+                    BangOlufsenRemoteKeyEvent(
+                        config_entry,
+                        remote,
+                        f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}",
+                    )
+                    for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
+                ]
+            )
 
     async_add_entities(new_entities=entities)
 

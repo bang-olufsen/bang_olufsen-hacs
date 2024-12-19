@@ -1,9 +1,6 @@
 {
   "entity": {
     "event": {
-      "bluetooth": {
-        "default": "mdi:gesture-tap-button"
-      },
       "control_blue": {
         "default": "mdi:remote"
       },
@@ -273,33 +270,6 @@
       },
       "light_yellow": {
         "default": "mdi:remote"
-      },
-      "microphone": {
-        "default": "mdi:gesture-tap-button"
-      },
-      "next": {
-        "default": "mdi:gesture-tap-button"
-      },
-      "playpause": {
-        "default": "mdi:gesture-tap-button"
-      },
-      "preset1": {
-        "default": "mdi:gesture-tap-button"
-      },
-      "preset2": {
-        "default": "mdi:gesture-tap-button"
-      },
-      "preset3": {
-        "default": "mdi:gesture-tap-button"
-      },
-      "preset4": {
-        "default": "mdi:gesture-tap-button"
-      },
-      "previous": {
-        "default": "mdi:gesture-tap-button"
-      },
-      "volume": {
-        "default": "mdi:gesture-tap-button"
       }
     },
     "select": {

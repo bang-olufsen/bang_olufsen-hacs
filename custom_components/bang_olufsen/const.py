@@ -74,6 +74,7 @@ class BangOlufsenModel(StrEnum):
     BEOSOUND_EMERGE = "Beosound Emerge"
     BEOSOUND_LEVEL = "Beosound Level"
     BEOSOUND_THEATRE = "Beosound Theatre"
+    BEOREMOTE_ONE = "Beoremote One"
 
 
 # Dispatcher events
@@ -126,12 +127,16 @@ DOMAIN: Final[str] = "bang_olufsen"
 # Default values for configuration.
 DEFAULT_MODEL: Final[str] = BangOlufsenModel.BEOSOUND_BALANCE
 
+MANUFACTURER: Final[str] = "Bang & Olufsen"
+
 # Configuration.
 CONF_BEOLINK_JID: Final = "jid"
 CONF_SERIAL_NUMBER: Final = "serial_number"
 
 # Models to choose from in manual configuration.
-COMPATIBLE_MODELS: list[str] = [x.value for x in BangOlufsenModel]
+SELECTABLE_MODELS: list[str] = [
+    model for model in BangOlufsenModel if model != BangOlufsenModel.BEOREMOTE_ONE
+]
 
 # Attribute names for zeroconf discovery.
 ATTR_TYPE_NUMBER: Final[str] = "tn"
@@ -307,8 +312,6 @@ DEVICE_BUTTON_EVENTS: Final[list[str]] = [
     "very_long_press_release",
 ]
 
-
-BEO_REMOTE_MODEL: Final[str] = "Beoremote One"
 
 BEO_REMOTE_SUBMENU_CONTROL: Final[str] = "Control"
 BEO_REMOTE_SUBMENU_LIGHT: Final[str] = "Light"

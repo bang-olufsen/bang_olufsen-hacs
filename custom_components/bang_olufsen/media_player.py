@@ -78,7 +78,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.util.dt import utcnow
 
-from . import BangOlufsenConfigEntry, set_platform_initialized
+from . import MANUFACTURER, BangOlufsenConfigEntry, set_platform_initialized
 from .const import (
     ACCEPTED_COMMANDS,
     ACCEPTED_COMMANDS_LISTS,
@@ -245,7 +245,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{self._host}/#/",
             identifiers={(DOMAIN, self._unique_id)},
-            manufacturer="Bang & Olufsen",
+            manufacturer=MANUFACTURER,
             model=self._model,
             serial_number=self._unique_id,
         )

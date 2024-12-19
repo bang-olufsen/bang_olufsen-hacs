@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import BangOlufsenConfigEntry, set_platform_initialized
 from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import BangOlufsenEntity
-from .util import get_remote
+from .util import get_remotes
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
@@ -55,8 +55,13 @@ async def async_setup_entry(
         )
 
     # Check for connected Beoremote One
-    if remote := await get_remote(config_entry.runtime_data.client):
-        entities.append(BangOlufsenSensorRemoteBatteryLevel(config_entry, remote))
+    if remotes := await get_remotes(config_entry.runtime_data.client):
+        entities.extend(
+            [
+                BangOlufsenSensorRemoteBatteryLevel(config_entry, remote)
+                for remote in remotes
+            ]
+        )
 
     async_add_entities(new_entities=entities)
 
