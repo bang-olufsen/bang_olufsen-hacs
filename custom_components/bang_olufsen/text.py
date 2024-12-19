@@ -21,7 +21,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Text entities from config entry."""
-    entities: list[BangOlufsenEntity] = []
+    entities: list[BangOlufsenText] = []
 
     # Add the Home Control URI entity if the device supports it
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_HOME_CONTROL]:

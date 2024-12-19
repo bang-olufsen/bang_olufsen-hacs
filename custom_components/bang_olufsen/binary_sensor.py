@@ -23,7 +23,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Binary Sensor entities from config entry."""
-    entities: list[BangOlufsenEntity] = []
+    entities: list[BangOlufsenBinarySensor] = []
 
     # Check if device has a battery
     battery_state = await config_entry.runtime_data.client.get_battery_state()

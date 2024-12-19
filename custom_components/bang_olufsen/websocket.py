@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from mozart_api.models import (
     BatteryState,
@@ -30,11 +31,12 @@ from homeassistant.util.enum import try_parse_enum
 from .const import (
     BANG_OLUFSEN_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
-    DOMAIN,
     EVENT_TRANSLATION_MAP,
+    BangOlufsenModel,
     WebsocketNotification,
 )
 from .entity import BangOlufsenBase
+from .util import get_device, get_remotes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +54,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         super().__init__(config_entry, client)
 
         self.hass = hass
-        self._device = self.get_device()
+        self._device = get_device(hass, self._unique_id)
 
         # WebSocket callbacks
         self._client.get_active_listening_mode_notifications(
@@ -93,14 +95,6 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         # Used for firing events and debugging
         self._client.get_all_notifications_raw(self.on_all_notifications_raw)
 
-    def get_device(self) -> dr.DeviceEntry:
-        """Get the device."""
-        device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_device({(DOMAIN, self._unique_id)})
-        assert device
-
-        return device
-
     def _update_connection_status(self) -> None:
         """Update all entities of the connection status."""
         async_dispatcher_send(
@@ -111,12 +105,12 @@ class BangOlufsenWebsocket(BangOlufsenBase):
 
     def on_connection(self) -> None:
         """Handle WebSocket connection made."""
-        _LOGGER.debug("Connected to the %s notification channel", self._entry.title)
+        _LOGGER.debug("Connected to the %s notification channel", self.entry.title)
         self._update_connection_status()
 
     def on_connection_lost(self) -> None:
         """Handle WebSocket connection lost."""
-        _LOGGER.error("Lost connection to the %s", self._entry.title)
+        _LOGGER.error("Lost connection to the %s", self.entry.title)
         self._update_connection_status()
 
     def on_active_listening_mode(self, notification: ListeningModeProps) -> None:
@@ -145,7 +139,9 @@ class BangOlufsenWebsocket(BangOlufsenBase):
 
     def on_beo_remote_button_notification(self, notification: BeoRemoteButton) -> None:
         """Send beo_remote_button dispatch."""
-        assert notification.type
+        if TYPE_CHECKING:
+            assert notification.type
+
         # Send to event entity
         async_dispatcher_send(
             self.hass,
@@ -163,7 +159,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
             EVENT_TRANSLATION_MAP[notification.state],
         )
 
-    def on_notification_notification(
+    async def on_notification_notification(
         self, notification: WebsocketNotificationTag
     ) -> None:
         """Send notification dispatch."""
@@ -173,6 +169,20 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         notification_type = try_parse_enum(WebsocketNotification, notification.value)
 
         if notification_type in (
+            WebsocketNotification.BEOLINK_PEERS,
+            WebsocketNotification.BEOLINK_LISTENERS,
+            WebsocketNotification.BEOLINK_AVAILABLE_LISTENERS,
+        ):
+            async_dispatcher_send(
+                self.hass,
+                f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
+            )
+        elif notification_type is WebsocketNotification.CONFIGURATION:
+            async_dispatcher_send(
+                self.hass,
+                f"{self._unique_id}_{WebsocketNotification.CONFIGURATION}",
+            )
+        elif notification_type in (
             WebsocketNotification.PROXIMITY_PRESENCE_DETECTED,
             WebsocketNotification.PROXIMITY_PRESENCE_NOT_DETECTED,
         ):
@@ -181,37 +191,41 @@ class BangOlufsenWebsocket(BangOlufsenBase):
                 f"{self._unique_id}_{WebsocketNotification.PROXIMITY}",
                 EVENT_TRANSLATION_MAP[notification.value],
             )
+        # This notification is triggered by a remote pairing, unpairing and connecting to a device
+        # So the current remote devices have to be compared to available remotes to determine action
+        elif notification_type is WebsocketNotification.REMOTE_CONTROL_DEVICES:
+            device_registry = dr.async_get(self.hass)
+            device_serial_numbers = [
+                device.serial_number
+                for device in device_registry.devices.get_devices_for_config_entry_id(
+                    self.entry.entry_id
+                )
+                if device.serial_number is not None
+                and device.model == BangOlufsenModel.BEOREMOTE_ONE
+            ]
+            remote_serial_numbers = [
+                remote.serial_number
+                for remote in await get_remotes(self._client)
+                if remote.serial_number is not None
+            ]
+            # Check if number of remote devices correspond to number of paired remotes
+            if len(remote_serial_numbers) != len(device_serial_numbers):
+                # Reinitialize the config entry to update Beoremote One entities and device
+                # Wait 5 seconds for the remote to be properly available to the device
+                _LOGGER.info(
+                    "A Beoremote One has been paired or unpaired to %s. Reloading config entry to add device",
+                    self._device.name,
+                )
+                self.hass.loop.call_later(
+                    5,
+                    self.hass.config_entries.async_schedule_reload,
+                    self.entry.entry_id,
+                )
 
         elif notification_type is WebsocketNotification.REMOTE_MENU_CHANGED:
             async_dispatcher_send(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
-            )
-
-        elif notification_type is WebsocketNotification.CONFIGURATION:
-            async_dispatcher_send(
-                self.hass,
-                f"{self._unique_id}_{WebsocketNotification.CONFIGURATION}",
-            )
-
-        elif notification_type is WebsocketNotification.REMOTE_CONTROL_DEVICES:
-            # Reinitialize the config entry to update Beoremote One entities and device
-            # Wait 5 seconds for the remote to be properly available to the device
-            _LOGGER.warning("Remote control has been modified. Reloading integration")
-            self.hass.loop.call_later(
-                5,
-                self.hass.config_entries.async_schedule_reload,
-                self._entry.entry_id,
-            )
-
-        elif notification_type in (
-            WebsocketNotification.BEOLINK_PEERS,
-            WebsocketNotification.BEOLINK_LISTENERS,
-            WebsocketNotification.BEOLINK_AVAILABLE_LISTENERS,
-        ):
-            async_dispatcher_send(
-                self.hass,
-                f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
             )
 
     def on_playback_error_notification(self, notification: PlaybackError) -> None:

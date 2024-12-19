@@ -25,7 +25,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Select entities from config entry."""
-    entities: list[BangOlufsenEntity] = []
+    entities: list[BangOlufsenSelect] = []
 
     # Create the listening position entity if supported
     scenes = await config_entry.runtime_data.client.get_all_scenes()

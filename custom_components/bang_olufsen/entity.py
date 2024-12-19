@@ -50,12 +50,11 @@ class BangOlufsenBase:
             self._client = config_entry.runtime_data.client
 
         # Get the input from the config entry.
-        # Use _entry instead of config_entry to avoid conflicts with Home Assistant classes such as DataUpdateCoordinator.
-        self._entry = config_entry
+        self.entry = config_entry
 
         # Set the configuration variables.
-        self._host: str = self._entry.data[CONF_HOST]
-        self._unique_id: str = cast(str, self._entry.unique_id)
+        self._host: str = self.entry.data[CONF_HOST]
+        self._unique_id: str = cast(str, self.entry.unique_id)
 
         # Objects that get directly updated by notifications.
         self._active_listening_mode = ListeningModeProps()

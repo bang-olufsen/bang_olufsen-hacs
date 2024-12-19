@@ -119,15 +119,10 @@ class WebsocketNotification(StrEnum):
     ALL = "all"
 
 
-# Range for bass and treble entities
-BASS_TREBLE_RANGE = range(-6, 6, 1)
-
 DOMAIN: Final[str] = "bang_olufsen"
 
 # Default values for configuration.
 DEFAULT_MODEL: Final[str] = BangOlufsenModel.BEOSOUND_BALANCE
-
-MANUFACTURER: Final[str] = "Bang & Olufsen"
 
 # Configuration.
 CONF_BEOLINK_JID: Final = "jid"
@@ -137,6 +132,8 @@ CONF_SERIAL_NUMBER: Final = "serial_number"
 SELECTABLE_MODELS: list[str] = [
     model for model in BangOlufsenModel if model != BangOlufsenModel.BEOREMOTE_ONE
 ]
+
+MANUFACTURER: Final[str] = "Bang & Olufsen"
 
 # Attribute names for zeroconf discovery.
 ATTR_TYPE_NUMBER: Final[str] = "tn"
@@ -157,17 +154,6 @@ VALID_MEDIA_TYPES: Final[tuple[str, ...]] = (
     MediaType.MUSIC,
     MediaType.URL,
     MediaType.CHANNEL,
-)
-
-# Playback states for playing and not playing
-PLAYING: Final[tuple[str, ...]] = ("started", "buffering", BANG_OLUFSEN_ON)
-NOT_PLAYING: Final[tuple[str, ...]] = (
-    "idle",
-    "paused",
-    "stopped",
-    "ended",
-    "unknown",
-    "error",
 )
 
 # Fallback sources to use in case of API failure.
@@ -274,21 +260,23 @@ MODEL_SUPPORT_MAP = {
 # Device events
 BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
-
-CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
-
 # Dict used to translate native Bang & Olufsen event names to string.json compatible ones
 EVENT_TRANSLATION_MAP: dict[str, str] = {
+    # Beoremote One
     "KeyPress": "key_press",
     "KeyRelease": "key_release",
+    # Physical "buttons"
     "shortPress (Release)": "short_press_release",
     "longPress (Timeout)": "long_press_timeout",
     "longPress (Release)": "long_press_release",
     "veryLongPress (Timeout)": "very_long_press_timeout",
     "veryLongPress (Release)": "very_long_press_release",
+    # Proximity sensor
     "proximityPresenceDetected": "proximity_presence_detected",
     "proximityPresenceNotDetected": "proximity_presence_not_detected",
 }
+
+CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
 
 DEVICE_BUTTONS: Final[list[str]] = [
     "Bluetooth",
@@ -360,7 +348,7 @@ BEO_REMOTE_KEYS: Final[tuple[str, ...]] = (
     "Func17",
 )
 
-# "keys" that are unique to the Control and Light submenus
+# "keys" that are unique to the Control submenu
 BEO_REMOTE_CONTROL_KEYS: Final[tuple[str, ...]] = (
     "Func18",
     "Func19",
@@ -381,6 +369,23 @@ PROXIMITY_EVENTS: Final[list[str]] = [
     "proximity_presence_detected",
     "proximity_presence_not_detected",
 ]
+
+# Beolink Converter NL/ML sources need to be transformed to upper case
+BEOLINK_JOIN_SOURCES_TO_UPPER = (
+    "aux_a",
+    "cd",
+    "ph",
+    "radio",
+    "tp1",
+    "tp2",
+)
+BEOLINK_JOIN_SOURCES = (
+    *BEOLINK_JOIN_SOURCES_TO_UPPER,
+    "beoradio",
+    "deezer",
+    "spotify",
+    "tidal",
+)
 
 
 BEOLINK_LEADER_COMMAND: Final[str] = "BEOLINK_LEADER_COMMAND"
@@ -429,21 +434,4 @@ ACCEPTED_COMMANDS_LISTS: tuple[
     BOOL_PARAMETERS,
     STR_PARAMETERS,
     NONE_PARAMETERS,
-)
-
-# Beolink Converter NL/ML sources need to be transformed to upper case
-BEOLINK_JOIN_SOURCES_TO_UPPER = (
-    "aux_a",
-    "cd",
-    "ph",
-    "radio",
-    "tp1",
-    "tp2",
-)
-BEOLINK_JOIN_SOURCES = (
-    *BEOLINK_JOIN_SOURCES_TO_UPPER,
-    "beoradio",
-    "deezer",
-    "spotify",
-    "tidal",
 )

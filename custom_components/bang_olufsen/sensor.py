@@ -37,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensor entities from config entry."""
-    entities: list[BangOlufsenEntity] = [
+    entities: list[BangOlufsenSensor] = [
         BangOlufsenSensorInputSignal(config_entry),
         BangOlufsenSensorMediaId(config_entry),
     ]
@@ -280,7 +280,7 @@ class BangOlufsenSensorMediaId(BangOlufsenSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._entry.unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
+                f"{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
                 self._update_playback_metadata,
             )
         )
