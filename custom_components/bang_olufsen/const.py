@@ -13,6 +13,8 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 
+from .halo import Icons, SystemEventState
+
 
 class BangOlufsenSource:
     """Class used for associating device source ids with friendly names. May not include all sources."""
@@ -74,6 +76,7 @@ class BangOlufsenModel(StrEnum):
     BEOSOUND_EMERGE = "Beosound Emerge"
     BEOSOUND_LEVEL = "Beosound Level"
     BEOSOUND_THEATRE = "Beosound Theatre"
+    BEOREMOTE_HALO = "Beoremote Halo"
     BEOREMOTE_ONE = "Beoremote One"
 
 
@@ -116,7 +119,12 @@ class WebsocketNotification(StrEnum):
     REMOTE_CONTROL_DEVICES = "remoteControlDevices"
     REMOTE_MENU_CHANGED = "remoteMenuChanged"
 
-    ALL = "all"
+    # Halo notifications
+    HALO_WHEEL = "halo_wheel"
+    HALO_SYSTEM = "halo_system"
+    HALO_STATUS = "halo_status"
+    HALO_POWER = "halo_power"
+    HALO_BUTTON = "halo_button"
 
 
 DOMAIN: Final[str] = "bang_olufsen"
@@ -128,16 +136,39 @@ DEFAULT_MODEL: Final[str] = BangOlufsenModel.BEOSOUND_BALANCE
 CONF_BEOLINK_JID: Final = "jid"
 CONF_SERIAL_NUMBER: Final = "serial_number"
 
-# Models to choose from in manual configuration.
-SELECTABLE_MODELS: list[str] = [
-    model for model in BangOlufsenModel if model != BangOlufsenModel.BEOREMOTE_ONE
+# Halo configuration
+CONF_PAGE_NAME: Final = "page_name"
+CONF_PAGE: Final = "page"
+CONF_PAGES: Final = "pages"
+CONF_TEXT: Final = "text"
+CONF_HALO: Final = "halo"
+CONF_ENTITY_MAP: Final = "entity_map"
+CONF_TITLE: Final = "title"
+CONF_SUBTITLE: Final = "subtitle"
+HALO_TITLE_LENGTH: Final = 15
+HALO_PAGE_LENGTH: Final = 35
+HALO_TEXT_LENGTH: Final = 6
+
+# The names of compatible button icons for the Beoremote Halo
+HALO_BUTTON_ICONS: list[str] = [icon.name for icon in Icons]
+
+# Mozart models
+MOZART_MODELS: Final[list[BangOlufsenModel]] = [
+    model
+    for model in BangOlufsenModel
+    if model.value
+    not in (BangOlufsenModel.BEOREMOTE_HALO, BangOlufsenModel.BEOREMOTE_ONE)
 ]
 
 MANUFACTURER: Final[str] = "Bang & Olufsen"
 
+ZEROCONF_MOZART: Final[str] = "_bangolufsen._tcp.local."
+ZEROCONF_HALO: Final[str] = "_zenith._tcp.local."
+
 # Attribute names for zeroconf discovery.
 ATTR_TYPE_NUMBER: Final[str] = "tn"
-ATTR_SERIAL_NUMBER: Final[str] = "sn"
+ATTR_MOZART_SERIAL_NUMBER: Final[str] = "sn"
+ATTR_HALO_SERIAL_NUMBER: Final[str] = "serial"
 ATTR_ITEM_NUMBER: Final[str] = "in"
 ATTR_FRIENDLY_NAME: Final[str] = "fn"
 
@@ -258,7 +289,8 @@ MODEL_SUPPORT_MAP = {
 
 
 # Device events
-BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
+MOZART_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
+HALO_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_halo_websocket_event"
 
 # Dict used to translate native Bang & Olufsen event names to string.json compatible ones
 EVENT_TRANSLATION_MAP: dict[str, str] = {
@@ -369,6 +401,7 @@ PROXIMITY_EVENTS: Final[list[str]] = [
     "proximity_presence_detected",
     "proximity_presence_not_detected",
 ]
+HALO_SYSTEM_EVENTS: Final[list[str]] = list(SystemEventState)
 
 # Beolink Converter NL/ML sources need to be transformed to upper case
 BEOLINK_JOIN_SOURCES_TO_UPPER = (

@@ -23,6 +23,49 @@ Devices that have been tested and _should_ work without any trouble are:
 - [Beosound Emerge](https://www.bang-olufsen.com/en/dk/speakers/beosound-emerge)
 - [Beosound Level](https://www.bang-olufsen.com/en/dk/speakers/beosound-level)
 - [Beosound Theatre](https://www.bang-olufsen.com/en/dk/soundbars/beosound-theatre)
+- [Beoremote Halo](https://www.bang-olufsen.com/en/dk/accessories/beoremote-halo)
+- [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one)
+
+### Beoremote One
+
+Beoremote One remotes are added to Home Assistant through Mozart devices as they are paired.
+
+Event entities are available for each of the compatible keys on the remote. To trigger these Event entities, enter the "Control" or "Light" submenu, and press any of the compatible buttons. Each button press will send a "press" and a "release" event. The functions in these submenus are also supported.
+
+The favourite buttons correspond to the physical favourite buttons on the device.
+
+### Beoremote Halo
+
+Beoremote Halo support is still in active development, so several features are missing, and current features may change without any warning.
+
+Feel free to open an [issue](https://github.com/bang-olufsen/bang_olufsen-hacs/issues) to request a feature or comment on an existing one.
+
+The Halo can currently only be added through Zeroconf discovery. Afterwards, add a configuration to the Halo by entering the options by pressing the `CONFIGURE` button.
+
+#### Current features
+
+- Add pages containing Home Assistant Entities as buttons
+  - Support for Binary Sensor entities
+  - Support for Button / Input Button entities
+  - Support for Number / Input Number entities
+  - Support for Sensor entities
+  - Support for Switch / Input Boolean entities
+- Delete pages
+- Battery charging Binary Sensor Entity
+- Battery Level Sensor Entity
+- System statues Event entity (Can be used as a proximity sensor)
+
+#### Missing features
+
+These features have to evaluated further and are in no particular order.
+
+- Modify pages
+  - Modify buttons
+- Default Halo button
+- Support for more Entity types
+- Entity filtering for config_flow
+- Manual setup
+- Create Event entity for button instead of selecting an existing entity
 
 ## Configuration
 
@@ -119,17 +162,20 @@ This integration adds an array of different useful entities that are generated a
 
 ### Binary Sensor entity
 
-- Battery Charging (If available)
+- Battery Charging for Mozart devices (If available)
+- Battery Charging for Halo (If available)
 
 ### Event entity
 
 - Device button entities (If available) (Disabled by default)
 - Beoremote One key entities (If available) (Disabled by default)
 - Proximity (If available) (Disabled by default)
+- Halo system status (If available) (Disabled by default)
 
 ### Sensor entity
 
-- Battery Level (If available)
+- Battery Level for Mozart devices (If available)
+- Battery Level for Halo (If available)
 - Remote Battery Level (If available)
 - Battery Charging Time (If available)
 - Battery Playing Time (If available)
@@ -156,7 +202,7 @@ To find Tidal playlists, album URIs and track IDs, the Tidal website has to be a
 
 ## Automations
 
-"raw" WebSocket notifications received from the device are fired as events in Home Assistant. These can be received by listening to `bang_olufsen_websocket_event` event types where `device_id` is used to differentiate devices.
+"raw" WebSocket notifications received from the device are fired as events in Home Assistant. These can be received by listening to `bang_olufsen_websocket_event` and `bang_olufsen_halo_websocket_event` event types where `device_id` is used to differentiate devices.
 
 ### Physical buttons and sensors
 
@@ -184,12 +230,6 @@ All of these buttons support the following events:
 - Release of very long press
 
 All devices except the [Beoconnect Core](https://www.bang-olufsen.com/en/dk/accessories/beoconnect-core) support device controls.
-
-### Beoremote One
-
-Event entities are available for each of the compatible keys on the [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one) through a device in Home Assistant. To trigger these Event entities, enter the "Control" or "Light" submenu, and press any of the compatible buttons. Each button press will send a "press" and a "release" event. The functions in these submenus are also supported.
-
-The favourite buttons correspond to the physical favourite buttons on the device.
 
 ## Actions
 

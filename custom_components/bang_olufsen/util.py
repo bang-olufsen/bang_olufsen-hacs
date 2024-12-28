@@ -7,25 +7,31 @@ from typing import cast
 from mozart_api.models import PairedRemote
 from mozart_api.mozart_client import MozartClient
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODEL
 
-from .const import DOMAIN
-
-
-def get_device(hass: HomeAssistant, unique_id: str) -> DeviceEntry:
-    """Get the device."""
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, unique_id)})
-    assert device
-
-    return device
+from .const import MOZART_MODELS, BangOlufsenModel
 
 
 def get_serial_number_from_jid(jid: str) -> str:
     """Get serial number from Beolink JID."""
     return jid.split(".")[2].split("@")[0]
+
+
+def is_halo(config_entry: ConfigEntry) -> bool:
+    """Return if device is a Halo."""
+
+    if config_entry.data[CONF_MODEL] == BangOlufsenModel.BEOREMOTE_HALO:
+        return True
+    return False
+
+
+def is_mozart(config_entry: ConfigEntry) -> bool:
+    """Return if device is Mozart based."""
+
+    if config_entry.data[CONF_MODEL] in MOZART_MODELS:
+        return True
+    return False
 
 
 async def get_remotes(client: MozartClient) -> list[PairedRemote]:

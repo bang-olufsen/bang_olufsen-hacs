@@ -8,50 +8,72 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BangOlufsenConfigEntry, set_platform_initialized
+from . import HaloConfigEntry, MozartConfigEntry, set_platform_initialized
 from .const import CONNECTION_STATUS, WebsocketNotification
-from .entity import BangOlufsenEntity
+from .entity import HaloEntity, MozartEntity
+from .halo import PowerEvent, PowerEventState
+from .util import is_halo
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: BangOlufsenConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Binary Sensor entities from config entry."""
     entities: list[BangOlufsenBinarySensor] = []
 
-    # Check if device has a battery
-    battery_state = await config_entry.runtime_data.client.get_battery_state()
-
-    if battery_state.battery_level and battery_state.battery_level > 0:
-        entities.append(BangOlufsenBinarySensorBatteryCharging(config_entry))
+    if is_halo(config_entry):
+        entities.extend(await _get_halo_entities(config_entry))
+    else:
+        entities.extend(await _get_mozart_entities(config_entry))
 
     async_add_entities(new_entities=entities)
 
     set_platform_initialized(config_entry.runtime_data)
 
 
-class BangOlufsenBinarySensor(BangOlufsenEntity, BinarySensorEntity):
+class BangOlufsenBinarySensor(BinarySensorEntity):
     """Base Binary Sensor class."""
 
-    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
+    _attr_is_on = False
+
+
+# Mozart entities
+class MozartBinarySensor(MozartEntity, BangOlufsenBinarySensor):
+    """Base Mozart Sensor class."""
+
+    def __init__(self, config_entry: MozartConfigEntry) -> None:
         """Init the Binary Sensor."""
         super().__init__(config_entry)
 
-        self._attr_is_on = False
+
+async def _get_mozart_entities(
+    config_entry: MozartConfigEntry,
+) -> list[MozartBinarySensor]:
+    """Get Mozart Sensor entities from config entry."""
+    entities: list[MozartBinarySensor] = []
+
+    # Check if device has a battery
+    battery_state = await config_entry.runtime_data.client.get_battery_state()
+
+    if battery_state.battery_level and battery_state.battery_level > 0:
+        entities.append(MozartBinarySensorBatteryCharging(config_entry))
+
+    return entities
 
 
-class BangOlufsenBinarySensorBatteryCharging(BangOlufsenBinarySensor):
+class MozartBinarySensorBatteryCharging(MozartBinarySensor):
     """Battery charging Binary Sensor."""
 
     _attr_translation_key = "battery_charging"
 
-    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
+    def __init__(self, config_entry: MozartConfigEntry) -> None:
         """Init the battery charging Binary Sensor."""
         super().__init__(config_entry)
 
@@ -77,5 +99,58 @@ class BangOlufsenBinarySensorBatteryCharging(BangOlufsenBinarySensor):
 
     async def _update_battery_charging(self, data: BatteryState) -> None:
         """Update battery charging."""
-        self._attr_is_on = data.is_charging
+        self._attr_is_on = bool(data.is_charging)
+        self.async_write_ha_state()
+
+
+# Halo entities
+
+
+class HaloBinarySensor(HaloEntity, BangOlufsenBinarySensor):
+    """Base Halo Binary Sensor class."""
+
+    def __init__(self, config_entry: HaloConfigEntry) -> None:
+        """Init the Sensor."""
+        super().__init__(config_entry)
+
+
+async def _get_halo_entities(
+    config_entry: HaloConfigEntry,
+) -> list[HaloBinarySensor]:
+    """Get Halo Binary Sensor entities from config entry."""
+    return [HaloBinarySensorBatteryCharging(config_entry)]
+
+
+class HaloBinarySensorBatteryCharging(HaloBinarySensor):
+    """Battery charging Binary Sensor."""
+
+    _attr_translation_key = "halo_battery_charging"
+
+    def __init__(self, config_entry: HaloConfigEntry) -> None:
+        """Init the battery charging Binary Sensor."""
+        super().__init__(config_entry)
+
+        self._attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
+        self._attr_unique_id = f"{self._unique_id}-battery-charging"
+
+    async def async_added_to_hass(self) -> None:
+        """Turn on the dispatchers."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._async_update_connection_state,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebsocketNotification.HALO_POWER}",
+                self._update_battery_charging,
+            )
+        )
+
+    async def _update_battery_charging(self, data: PowerEvent) -> None:
+        """Update battery charging."""
+        self._attr_is_on = data.state == PowerEventState.CHARGING
         self.async_write_ha_state()

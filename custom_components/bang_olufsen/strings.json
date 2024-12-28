@@ -36,6 +36,47 @@
       }
     }
   },
+  "options": {
+    "abort": {
+      "invalid_model": "The {model} does not support configuration.",
+      "no_pages": "No pages available to delete.",
+      "invalid_page_name": "Can't add page {page_name} as names must be unique."
+    },
+    "step": {
+      "init": {
+        "description": "Configure Beoremote Halo for Home Assistant",
+        "menu_options": {
+          "add_page": "Create a new page",
+          "delete_pages": "Delete existing pages"
+        }
+      },
+      "add_page": {
+        "title": "Add page",
+        "description": "Create a new page with selected entities",
+        "data": {
+          "page_name": "Page name",
+          "entities": "Entities"
+        }
+      },
+      "create_buttons": {
+        "title": "Configure button",
+        "description": "Select a configuration for the {entity} button in the {page} page",
+        "data": {
+          "icon": "Icon",
+          "text": "Text",
+          "title": "Title",
+          "subtitle": "Subtitle"
+        }
+      },
+      "delete_pages": {
+        "title": "Delete pages",
+        "description": "Delete selected pages",
+        "data": {
+          "pages": "Pages"
+        }
+      }
+    }
+  },
   "selector": {
     "source_ids": {
       "options": {
@@ -162,9 +203,24 @@
     "binary_sensor": {
       "battery_charging": {
         "name": "Battery charging"
+      },
+      "halo_battery_charging": {
+        "name": "Battery charging"
       }
     },
     "event": {
+      "halo_system": {
+        "name": "System status",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "active": "Active",
+              "standby": "Standby",
+              "sleep": "Sleeping"
+            }
+          }
+        }
+      },
       "bluetooth": {
         "name": "Bluetooth",
         "state_attributes": {
@@ -1312,6 +1368,7 @@
     },
     "sensor": {
       "battery_level": { "name": "Battery level" },
+      "halo_battery_level": { "name": "Battery level" },
       "remote_battery_level": { "name": "Battery level" },
       "battery_charging_time": { "name": "Battery charging time" },
       "battery_playing_time": { "name": "Battery playing time" },

@@ -5,15 +5,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
-from . import BangOlufsenConfigEntry
 from .const import DOMAIN
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: BangOlufsenConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 

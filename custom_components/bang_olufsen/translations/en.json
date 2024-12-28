@@ -40,6 +40,9 @@
         "binary_sensor": {
             "battery_charging": {
                 "name": "Battery charging"
+            },
+            "halo_battery_charging": {
+                "name": "Battery charging"
             }
         },
         "event": {
@@ -603,6 +606,18 @@
                         "state": {
                             "key_press": "Press",
                             "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "halo_system": {
+                "name": "System status",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "active": "Active",
+                            "sleep": "Sleeping",
+                            "standby": "Standby"
                         }
                     }
                 }
@@ -1200,6 +1215,9 @@
             "battery_playing_time": {
                 "name": "Battery playing time"
             },
+            "halo_battery_level": {
+                "name": "Battery level"
+            },
             "input_signal": {
                 "name": "Input signal"
             },
@@ -1237,6 +1255,47 @@
         },
         "play_media_error": {
             "message": "An error occurred while attempting to play {media_type}: {error_message}."
+        }
+    },
+    "options": {
+        "abort": {
+            "invalid_model": "The {model} does not support configuration.",
+            "invalid_page_name": "Can't add page {page_name} as names must be unique.",
+            "no_pages": "No pages available to delete."
+        },
+        "step": {
+            "add_page": {
+                "data": {
+                    "entities": "Entities",
+                    "page_name": "Page name"
+                },
+                "description": "Create a new page with selected entities",
+                "title": "Add page"
+            },
+            "create_buttons": {
+                "data": {
+                    "icon": "Icon",
+                    "subtitle": "Subtitle",
+                    "text": "Text",
+                    "title": "Title"
+                },
+                "description": "Select a configuration for the {entity} button in the {page} page",
+                "title": "Configure button"
+            },
+            "delete_pages": {
+                "data": {
+                    "pages": "Pages"
+                },
+                "description": "Delete selected pages",
+                "title": "Delete pages"
+            },
+            "init": {
+                "description": "Configure Beoremote Halo for Home Assistant",
+                "menu_options": {
+                    "add_page": "Create a new page",
+                    "delete_pages": "Delete existing pages"
+                }
+            }
         }
     },
     "selector": {

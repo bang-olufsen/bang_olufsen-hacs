@@ -78,7 +78,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.util.dt import utcnow
 
-from . import MANUFACTURER, BangOlufsenConfigEntry, set_platform_initialized
+from . import MANUFACTURER, MozartConfigEntry, set_platform_initialized
 from .const import (
     ACCEPTED_COMMANDS,
     ACCEPTED_COMMANDS_LISTS,
@@ -100,7 +100,7 @@ from .const import (
     BangOlufsenSource,
     WebsocketNotification,
 )
-from .entity import BangOlufsenEntity
+from .entity import MozartEntity
 from .util import get_serial_number_from_jid
 
 PARALLEL_UPDATES = 0
@@ -133,7 +133,7 @@ BANG_OLUFSEN_FEATURES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: BangOlufsenConfigEntry,
+    config_entry: MozartConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Media Player entity from config entry."""
@@ -229,13 +229,13 @@ async def async_setup_entry(
     )
 
 
-class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
+class BangOlufsenMediaPlayer(MediaPlayerEntity, MozartEntity):
     """Representation of a media player."""
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_name: None | str = None
 
-    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
+    def __init__(self, config_entry: MozartConfigEntry) -> None:
         """Initialize the media player."""
         super().__init__(config_entry)
 

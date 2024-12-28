@@ -23,10 +23,11 @@ import homeassistant.helpers.device_registry as dr
 from homeassistant.util.ssl import get_default_context
 
 from .const import DOMAIN, MANUFACTURER, BangOlufsenModel
-from .util import get_remotes
-from .websocket import BangOlufsenWebsocket
+from .halo import Halo
+from .util import get_remotes, is_halo, is_mozart
+from .websocket import HaloWebsocket, MozartWebsocket
 
-PLATFORMS = [
+MOZART_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.EVENT,
     Platform.MEDIA_PLAYER,
@@ -35,35 +36,59 @@ PLATFORMS = [
     Platform.TEXT,
 ]
 
+HALO_PLATFORMS = [Platform.EVENT, Platform.SENSOR, Platform.BINARY_SENSOR]
+
 
 @dataclass
-class BangOlufsenData:
-    """Dataclass for API client, WebSocket listener and WebSocket initialization variables."""
+class MozartData:
+    """Dataclass for Mozart API client, WebSocket listener and WebSocket initialization variables."""
 
-    websocket: BangOlufsenWebsocket
+    websocket: MozartWebsocket
     client: MozartClient
     platforms_initialized: int = 0
 
 
-type BangOlufsenConfigEntry = ConfigEntry[BangOlufsenData]
+@dataclass
+class HaloData:
+    """Dataclass for API client, WebSocket listener and WebSocket initialization variables."""
+
+    websocket: HaloWebsocket
+    client: Halo
+    platforms_initialized: int = 0
 
 
-def set_platform_initialized(data: BangOlufsenData) -> None:
+type MozartConfigEntry = ConfigEntry[MozartData]
+type HaloConfigEntry = ConfigEntry[HaloData]
+
+
+def set_platform_initialized(data: MozartData | HaloData) -> None:
     """Increment platforms_initialized to indicate that a platform has been initialized."""
     data.platforms_initialized += 1
 
 
-async def _start_websocket_listener(data: BangOlufsenData) -> None:
+async def _start_websocket_listener(
+    config_entry: HaloConfigEntry | MozartConfigEntry,
+    platforms: list[Platform],
+) -> None:
     """Start WebSocket listener when all platforms have been initialized."""
 
     while True:
         # Check if all platforms have been initialized and start WebSocket listener
-        if len(PLATFORMS) == data.platforms_initialized:
+        if len(platforms) == config_entry.runtime_data.platforms_initialized:
             break
 
         await asyncio.sleep(0)
 
-    await data.client.connect_notifications(remote_control=True, reconnect=True)
+    if is_mozart(config_entry):
+        if TYPE_CHECKING:
+            assert isinstance(config_entry.runtime_data, MozartData)
+        await config_entry.runtime_data.client.connect_notifications(
+            remote_control=True, reconnect=True
+        )
+    else:
+        if TYPE_CHECKING:
+            assert isinstance(config_entry.runtime_data, HaloData)
+        await config_entry.runtime_data.client.connect_events(reconnect=True)
 
 
 async def _handle_remote_devices(
@@ -106,9 +131,7 @@ async def _handle_remote_devices(
             device_registry.async_remove_device(device.id)
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, config_entry: BangOlufsenConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
 
     # Remove casts to str
@@ -122,8 +145,19 @@ async def async_setup_entry(
         identifiers={(DOMAIN, config_entry.unique_id)},
         name=config_entry.title,
         model=config_entry.data[CONF_MODEL],
+        serial_number=config_entry.unique_id,
+        manufacturer="Bang & Olufsen",
     )
 
+    if is_halo(config_entry):
+        return await _setup_halo(hass, config_entry)
+
+    # Mozart based products
+    return await _setup_mozart(hass, config_entry)
+
+
+async def _setup_mozart(hass: HomeAssistant, config_entry: MozartConfigEntry) -> bool:
+    """Set up a Mozart based product."""
     client = MozartClient(
         host=config_entry.data[CONF_HOST], ssl_context=get_default_context()
     )
@@ -145,32 +179,75 @@ async def async_setup_entry(
         ) from error
 
     # Initialize coordinator
-    websocket = BangOlufsenWebsocket(hass, config_entry, client)
+    websocket = MozartWebsocket(hass, config_entry, client)
 
     # Add the coordinator and API client
-    config_entry.runtime_data = BangOlufsenData(websocket, client)
+    config_entry.runtime_data = MozartData(websocket, client)
 
     # Handle paired Beoremote One devices
     await _handle_remote_devices(hass, config_entry, client)
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, MOZART_PLATFORMS)
 
     # Start WebSocket connection when all entities have been initialized
     config_entry.async_create_background_task(
         hass,
-        _start_websocket_listener(config_entry.runtime_data),
-        f"{DOMAIN}-{config_entry.unique_id}-websocket_starter",
+        _start_websocket_listener(config_entry, MOZART_PLATFORMS),
+        f"{DOMAIN}-{config_entry.unique_id}-mozart-websocket_starter",
     )
 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, config_entry: BangOlufsenConfigEntry
-) -> bool:
-    """Unload a config entry."""
-    # Close the API client and WebSocket notification listener
-    config_entry.runtime_data.client.disconnect_notifications()
-    await config_entry.runtime_data.client.close_api_client()
+async def _setup_halo(hass: HomeAssistant, config_entry: HaloConfigEntry) -> bool:
+    """Set up a Halo."""
+    client = Halo(host=config_entry.data[CONF_HOST])
 
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    # Check API and WebSocket connection
+    try:
+        await client.check_device_connection()
+    except Exception as error:
+        raise ConfigEntryNotReady(
+            f"Unable to connect to {config_entry.title}"
+        ) from error
+
+    # Initialize coordinator
+    websocket = HaloWebsocket(hass, config_entry, client)
+
+    # Add the coordinator and API client
+    config_entry.runtime_data = HaloData(websocket, client)
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, HALO_PLATFORMS)
+
+    # Start WebSocket connection when all entities have been initialized
+    config_entry.async_create_background_task(
+        hass,
+        _start_websocket_listener(config_entry, HALO_PLATFORMS),
+        f"{DOMAIN}-{config_entry.unique_id}-halo-websocket_starter",
+    )
+
+    config_entry.async_on_unload(config_entry.add_update_listener(async_update_options))
+
+    return True
+
+
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update options."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+
+    # Close the API client and WebSocket notification listener
+    if is_halo(config_entry):
+        if TYPE_CHECKING:
+            assert isinstance(config_entry.runtime_data, HaloData)
+        await config_entry.runtime_data.client.disconnect_events()
+        platforms = HALO_PLATFORMS
+    else:
+        config_entry.runtime_data.client.disconnect_notifications()
+        await config_entry.runtime_data.client.close_api_client()
+        platforms = MOZART_PLATFORMS
+
+    return await hass.config_entries.async_unload_platforms(config_entry, platforms)

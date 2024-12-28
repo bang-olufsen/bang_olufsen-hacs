@@ -5,13 +5,14 @@ from __future__ import annotations
 from mozart_api.models import PairedRemote
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BangOlufsenConfigEntry, set_platform_initialized
+from . import HaloConfigEntry, MozartConfigEntry, set_platform_initialized
 from .const import (
     BEO_REMOTE_CONTROL_KEYS,
     BEO_REMOTE_KEY_EVENTS,
@@ -22,24 +23,64 @@ from .const import (
     DEVICE_BUTTON_EVENTS,
     DEVICE_BUTTONS,
     DOMAIN,
+    HALO_SYSTEM_EVENTS,
     MODEL_SUPPORT_DEVICE_BUTTONS,
     MODEL_SUPPORT_MAP,
     MODEL_SUPPORT_PROXIMITY,
     PROXIMITY_EVENTS,
     WebsocketNotification,
 )
-from .entity import BangOlufsenEntity
-from .util import get_remotes
+from .entity import HaloEntity, MozartEntity
+from .halo import SystemEvent
+from .util import get_remotes, is_halo
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: BangOlufsenConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensor entities from config entry."""
-
     entities: list[BangOlufsenEvent] = []
+
+    if is_halo(config_entry):
+        entities.extend(await _get_halo_entities(config_entry))
+    else:
+        entities.extend(await _get_mozart_entities(config_entry))
+
+    async_add_entities(new_entities=entities)
+
+    set_platform_initialized(config_entry.runtime_data)
+
+
+class BangOlufsenEvent(EventEntity):
+    """Base Event class."""
+
+    _attr_entity_registry_enabled_default = False
+
+    @callback
+    def _async_handle_event(self, event: str) -> None:
+        """Handle event."""
+        self._trigger_event(event)
+        self.async_write_ha_state()
+
+
+# Mozart entities
+
+
+class BangOlufsenMozartEvent(MozartEntity, BangOlufsenEvent):
+    """Base Mozart Event class."""
+
+    def __init__(self, config_entry: MozartConfigEntry) -> None:
+        """Init the Event."""
+        super().__init__(config_entry)
+
+
+async def _get_mozart_entities(
+    config_entry: MozartConfigEntry,
+) -> list[BangOlufsenMozartEvent]:
+    """Get Mozart Event entities from config entry."""
+    entities: list[BangOlufsenMozartEvent] = []
 
     # Add physical "buttons"
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_BUTTONS]:
@@ -81,30 +122,16 @@ async def async_setup_entry(
                 ]
             )
 
-    async_add_entities(new_entities=entities)
-
-    set_platform_initialized(config_entry.runtime_data)
+    return entities
 
 
-class BangOlufsenEvent(BangOlufsenEntity, EventEntity):
-    """Base Event class."""
-
-    _attr_entity_registry_enabled_default = False
-
-    @callback
-    def _async_handle_event(self, event: str) -> None:
-        """Handle event."""
-        self._trigger_event(event)
-        self.async_write_ha_state()
-
-
-class BangOlufsenButtonEvent(BangOlufsenEvent):
+class BangOlufsenButtonEvent(BangOlufsenMozartEvent):
     """Event class for Button events."""
 
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_event_types = DEVICE_BUTTON_EVENTS
 
-    def __init__(self, config_entry: BangOlufsenConfigEntry, button_type: str) -> None:
+    def __init__(self, config_entry: MozartConfigEntry, button_type: str) -> None:
         """Initialize Button."""
         super().__init__(config_entry)
 
@@ -133,7 +160,7 @@ class BangOlufsenButtonEvent(BangOlufsenEvent):
         )
 
 
-class BangOlufsenRemoteKeyEvent(BangOlufsenEvent):
+class BangOlufsenRemoteKeyEvent(BangOlufsenMozartEvent):
     """Event class for Beoremote One key events."""
 
     _attr_device_class = EventDeviceClass.BUTTON
@@ -141,7 +168,7 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEvent):
 
     def __init__(
         self,
-        config_entry: BangOlufsenConfigEntry,
+        config_entry: MozartConfigEntry,
         remote: PairedRemote,
         key_type: str,
     ) -> None:
@@ -177,14 +204,14 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEvent):
         )
 
 
-class BangOlufsenEventProximity(BangOlufsenEvent):
+class BangOlufsenEventProximity(BangOlufsenMozartEvent):
     """Event class for proximity sensor events."""
 
     _attr_device_class = EventDeviceClass.MOTION
     _attr_event_types = PROXIMITY_EVENTS
     _attr_translation_key = "proximity"
 
-    def __init__(self, config_entry: BangOlufsenConfigEntry) -> None:
+    def __init__(self, config_entry: MozartConfigEntry) -> None:
         """Init the proximity event."""
         super().__init__(config_entry)
 
@@ -206,3 +233,60 @@ class BangOlufsenEventProximity(BangOlufsenEvent):
                 self._async_handle_event,
             )
         )
+
+
+# Halo entities
+
+
+class BangOlufsenHaloEvent(HaloEntity, BangOlufsenEvent):
+    """Base Halo Event class."""
+
+    def __init__(self, config_entry: HaloConfigEntry) -> None:
+        """Init the Event."""
+        super().__init__(config_entry)
+
+
+async def _get_halo_entities(
+    config_entry: HaloConfigEntry,
+) -> list[BangOlufsenHaloEvent]:
+    """Get Halo Event entities from config entry."""
+    entities: list[BangOlufsenHaloEvent] = [BangOlufsenEventHaloSystem(config_entry)]
+    return entities
+
+
+class BangOlufsenEventHaloSystem(BangOlufsenHaloEvent):
+    """Event class for Halo system events."""
+
+    # _attr_device_class = EventDeviceClass.MOTION
+    _attr_event_types = HALO_SYSTEM_EVENTS
+    _attr_translation_key = "halo_system"
+    _attr_icon = "mdi:power"
+
+    def __init__(self, config_entry: HaloConfigEntry) -> None:
+        """Init the proximity event."""
+        super().__init__(config_entry)
+
+        self._attr_unique_id = f"{self._unique_id}_system"
+
+    async def async_added_to_hass(self) -> None:
+        """Turn on the dispatchers."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{CONNECTION_STATUS}",
+                self._async_update_connection_state,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._unique_id}_{WebsocketNotification.HALO_SYSTEM}",
+                self._update_system,
+            )
+        )
+
+    @callback
+    def _update_system(self, event: SystemEvent) -> None:
+        """Handle system event."""
+        self._trigger_event(event.state)
+        self.async_write_ha_state()
