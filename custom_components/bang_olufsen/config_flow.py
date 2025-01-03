@@ -77,7 +77,7 @@ def halo_uuid() -> str:
     # UUIDs from uuid1() are not unique when generated in Home Assistant (???)
     # Use this function to generate and format UUIDs instead.
     temp_uuid = random_uuid_hex()
-    return f"{temp_uuid[:8]}-{temp_uuid[8:12]}-{temp_uuid[12:16]}-{temp_uuid[16:20]}-{temp_uuid[20:32]}-"
+    return f"{temp_uuid[:8]}-{temp_uuid[8:12]}-{temp_uuid[12:16]}-{temp_uuid[16:20]}-{temp_uuid[20:32]}"
 
 
 class BangOlufsenEntryData(TypedDict, total=False):
