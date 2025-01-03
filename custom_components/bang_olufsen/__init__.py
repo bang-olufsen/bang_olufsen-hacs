@@ -36,7 +36,11 @@ MOZART_PLATFORMS = [
     Platform.TEXT,
 ]
 
-HALO_PLATFORMS = [Platform.EVENT, Platform.SENSOR, Platform.BINARY_SENSOR]
+HALO_PLATFORMS = [
+    Platform.EVENT,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+]
 
 
 @dataclass
@@ -146,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         name=config_entry.title,
         model=config_entry.data[CONF_MODEL],
         serial_number=config_entry.unique_id,
-        manufacturer="Bang & Olufsen",
+        manufacturer=MANUFACTURER,
     )
 
     if is_halo(config_entry):
@@ -201,6 +205,7 @@ async def _setup_mozart(hass: HomeAssistant, config_entry: MozartConfigEntry) ->
 
 async def _setup_halo(hass: HomeAssistant, config_entry: HaloConfigEntry) -> bool:
     """Set up a Halo."""
+
     client = Halo(host=config_entry.data[CONF_HOST])
 
     # Check API and WebSocket connection

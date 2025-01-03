@@ -145,12 +145,16 @@ CONF_HALO: Final = "halo"
 CONF_ENTITY_MAP: Final = "entity_map"
 CONF_TITLE: Final = "title"
 CONF_SUBTITLE: Final = "subtitle"
+CONF_DEFAULT_BUTTON: Final = "default_button"
 HALO_TITLE_LENGTH: Final = 15
 HALO_PAGE_LENGTH: Final = 35
 HALO_TEXT_LENGTH: Final = 6
 
 # The names of compatible button icons for the Beoremote Halo
 HALO_BUTTON_ICONS: list[str] = [icon.name for icon in Icons]
+
+# Timeout for sending wheel events in seconds
+HALO_WHEEL_TIMEOUT: Final = 0.125
 
 # Mozart models
 MOZART_MODELS: Final[list[BangOlufsenModel]] = [
@@ -427,7 +431,7 @@ BEOLINK_VOLUME: Final[str] = "BEOLINK_VOLUME"
 BEOLINK_RELATIVE_VOLUME: Final[str] = "BEOLINK_RELATIVE_VOLUME"
 
 
-# Valid commands and their expected parameter type for beolink_command service
+# Valid commands and their expected parameter type for beolink_command action
 FLOAT_PARAMETERS: Final[tuple[str, str, str, type[float]]] = (
     "set_volume_level",
     "media_seek",

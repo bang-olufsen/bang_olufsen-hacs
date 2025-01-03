@@ -2,15 +2,23 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from mozart_api.models import PairedRemote
+import voluptuous as vol
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
+from homeassistant.components.homeassistant import ServiceResponse
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
 from . import HaloConfigEntry, MozartConfigEntry, set_platform_initialized
 from .const import (
@@ -19,6 +27,7 @@ from .const import (
     BEO_REMOTE_KEYS,
     BEO_REMOTE_SUBMENU_CONTROL,
     BEO_REMOTE_SUBMENU_LIGHT,
+    CONF_HALO,
     CONNECTION_STATUS,
     DEVICE_BUTTON_EVENTS,
     DEVICE_BUTTONS,
@@ -31,7 +40,7 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import HaloEntity, MozartEntity
-from .halo import SystemEvent
+from .halo import BaseUpdate, Notification, SystemEvent
 from .util import get_remotes, is_halo
 
 
@@ -44,6 +53,32 @@ async def async_setup_entry(
     entities: list[BangOlufsenEvent] = []
 
     if is_halo(config_entry):
+        # Register halo services
+
+        platform = async_get_current_platform()
+
+        platform.async_register_entity_service(
+            name="halo_configuration",
+            schema=None,
+            func="async_halo_configuration",
+            supports_response=SupportsResponse.ONLY,
+        )
+
+        platform.async_register_entity_service(
+            name="halo_notification",
+            schema={
+                vol.Required("title"): vol.All(
+                    vol.Length(min=1, max=62),
+                    cv.string,
+                ),
+                vol.Required("subtitle"): vol.All(
+                    vol.Length(min=1, max=256),
+                    cv.string,
+                ),
+            },
+            func="async_halo_notification",
+        )
+
         entities.extend(await _get_halo_entities(config_entry))
     else:
         entities.extend(await _get_mozart_entities(config_entry))
@@ -257,10 +292,9 @@ async def _get_halo_entities(
 class BangOlufsenEventHaloSystem(BangOlufsenHaloEvent):
     """Event class for Halo system events."""
 
-    # _attr_device_class = EventDeviceClass.MOTION
+    _attr_entity_registry_enabled_default = True
     _attr_event_types = HALO_SYSTEM_EVENTS
     _attr_translation_key = "halo_system"
-    _attr_icon = "mdi:power"
 
     def __init__(self, config_entry: HaloConfigEntry) -> None:
         """Init the proximity event."""
@@ -290,3 +324,21 @@ class BangOlufsenEventHaloSystem(BangOlufsenHaloEvent):
         """Handle system event."""
         self._trigger_event(event.state)
         self.async_write_ha_state()
+
+    # Setup custom actions
+    def async_halo_configuration(self) -> ServiceResponse:
+        """Get raw configuration for the Halo."""
+
+        return cast(ServiceResponse, self.entry.options[CONF_HALO])
+
+    async def async_halo_notification(self, title: str, subtitle: str) -> None:
+        """Send a notification to the Halo."""
+
+        await self._client.send(
+            BaseUpdate(
+                update=Notification(
+                    title=title,
+                    subtitle=subtitle,
+                )
+            )
+        )

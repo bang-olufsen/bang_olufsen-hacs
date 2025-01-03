@@ -36,6 +36,12 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "turn_off": "Turn off {entity_name}",
+            "turn_on": "Turn on {entity_name}"
+        }
+    },
     "entity": {
         "binary_sensor": {
             "battery_charging": {
@@ -1261,7 +1267,8 @@
         "abort": {
             "invalid_model": "The {model} does not support configuration.",
             "invalid_page_name": "Can't add page {page_name} as names must be unique.",
-            "no_pages": "No pages available to delete."
+            "no_default": "No current default.",
+            "no_pages": "No pages available."
         },
         "step": {
             "add_page": {
@@ -1293,8 +1300,24 @@
                 "description": "Configure Beoremote Halo for Home Assistant",
                 "menu_options": {
                     "add_page": "Create a new page",
-                    "delete_pages": "Delete existing pages"
+                    "delete_pages": "Delete existing pages",
+                    "modify_default": "Modify default button"
                 }
+            },
+            "modify_default": {
+                "description": "Select or remove a default button for the Beoremote Halo. Current default is: {current_default}",
+                "menu_options": {
+                    "remove_default": "Remove the default attribute from a button",
+                    "select_default": "Select a new default button"
+                },
+                "title": "Modify default"
+            },
+            "select_default": {
+                "data": {
+                    "default_button": "Default button"
+                },
+                "description": "Select a new default button. Current default is: {current_default} and can't be selected",
+                "title": "Select default"
             }
         }
     },
@@ -1412,6 +1435,24 @@
                     "name": "JID options"
                 }
             }
+        },
+        "halo_configuration": {
+            "description": "Get the raw Halo configuration.",
+            "name": "Halo Configuration"
+        },
+        "halo_notification": {
+            "description": "Send a notification to the Halo.",
+            "fields": {
+                "subtitle": {
+                    "description": "The subtitle of the notification",
+                    "name": "Subitle"
+                },
+                "title": {
+                    "description": "The title of the notification",
+                    "name": "Title"
+                }
+            },
+            "name": "Halo Notification"
         },
         "reboot": {
             "description": "Reboot the device.",

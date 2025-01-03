@@ -40,6 +40,7 @@ from .const import (
     ATTR_ITEM_NUMBER,
     ATTR_MOZART_SERIAL_NUMBER,
     ATTR_TYPE_NUMBER,
+    CONF_DEFAULT_BUTTON,
     CONF_ENTITY_MAP,
     CONF_HALO,
     CONF_PAGE_NAME,
@@ -73,18 +74,10 @@ from .util import get_serial_number_from_jid
 
 def halo_uuid() -> str:
     """Get a properly formatted Halo UUID."""
+    # UUIDs from uuid1() are not unique when generated in Home Assistant (???)
+    # Use this function to generate and format UUIDs instead.
     temp_uuid = random_uuid_hex()
-    return (
-        temp_uuid[:8]
-        + "-"
-        + temp_uuid[8:12]
-        + "-"
-        + temp_uuid[12:16]
-        + "-"
-        + temp_uuid[16:20]
-        + "-"
-        + temp_uuid[20:32]
-    )
+    return f"{temp_uuid[:8]}-{temp_uuid[8:12]}-{temp_uuid[12:16]}-{temp_uuid[16:20]}-{temp_uuid[20:32]}-"
 
 
 class BangOlufsenEntryData(TypedDict, total=False):
@@ -309,6 +302,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
         self._entity_ids: list[str] = []
         self._entity_map: dict[str, str] = {}
         self._page: Page
+        self._current_default: str = str(None)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -321,16 +315,23 @@ class HaloOptionsFlowHandler(OptionsFlow):
                 description_placeholders={"model": self.config_entry.data[CONF_MODEL]},
             )
 
-        # Load stored configuration and entity map
+        # Load stored configuration, entity map and current default button
         if self.config_entry.options:
             self._configuration = BaseConfiguration.from_dict(
                 self.config_entry.options[CONF_HALO]
             )
             self._entity_map = self.config_entry.options[CONF_ENTITY_MAP]
 
+        # Check for a current default button.
+        # There should only be a single default in the whole configuration
+        for page in self._configuration.configuration.pages:
+            for button in page.buttons:
+                if button.default:
+                    self._current_default = f"{page.title}-{button.title} ({button.id})"
+
         return self.async_show_menu(
             step_id="init",
-            menu_options=["add_page", "delete_pages"],
+            menu_options=["add_page", "delete_pages", "modify_default"],
         )
 
     async def async_step_add_page(
@@ -474,5 +475,109 @@ class HaloOptionsFlowHandler(OptionsFlow):
                         )
                     ),
                 }
+            ),
+        )
+
+    async def async_step_modify_default(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Enter default options."""
+
+        return self.async_show_menu(
+            step_id="modify_default",
+            menu_options=["select_default", "remove_default"],
+            description_placeholders={"current_default": self._current_default},
+        )
+
+    async def async_step_select_default(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select a default button."""
+        if user_input is not None:
+            # Update configuration with new default
+            new_default = user_input[CONF_DEFAULT_BUTTON]
+
+            # Find the pages and buttons in the configuration
+            for page_idx, page in enumerate(self._configuration.configuration.pages):
+                for button_idx, button in enumerate(page.buttons):
+                    # Add new default to configuration
+                    if button.id in new_default:
+                        self._configuration.configuration.pages[page_idx].buttons[
+                            button_idx
+                        ].default = True
+
+                    # Remove current default from configuration
+                    if button.id in self._current_default:
+                        self._configuration.configuration.pages[page_idx].buttons[
+                            button_idx
+                        ].default = False
+
+            return self.async_create_entry(
+                title="Updated configuration",
+                data=BangOlufsenEntryData(
+                    host=self.config_entry.data[CONF_HOST],
+                    model=self.config_entry.data[CONF_MODEL],
+                    name=self.config_entry.title,
+                    halo=self._configuration.to_dict(),
+                    entity_map=self._entity_map,
+                ),
+            )
+
+        # Get all buttons and check for a current default button
+        buttons = []
+        for page in self._configuration.configuration.pages:
+            buttons.extend(
+                [
+                    f"{page.title}-{button.title} ({button.id})"
+                    for button in page.buttons
+                    if button.default is False
+                ]
+            )
+
+        # Abort if no buttons are available
+        if len(buttons) == 0:
+            return self.async_abort(reason="no_pages")
+
+        return self.async_show_form(
+            step_id="select_default",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_DEFAULT_BUTTON): SelectSelector(
+                        SelectSelectorConfig(
+                            options=buttons,
+                            multiple=False,
+                            sort=True,
+                        )
+                    ),
+                }
+            ),
+            description_placeholders={"current_default": self._current_default},
+        )
+
+    async def async_step_remove_default(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Remove the default attribute from a button."""
+
+        # Abort if no buttons are available
+        if self._current_default == str(None):
+            return self.async_abort(reason="no_default")
+
+        # Remove current default from configuration
+        for page_idx, page in enumerate(self._configuration.configuration.pages):
+            for button_idx, button in enumerate(page.buttons):
+                if button.id in self._current_default:
+                    self._configuration.configuration.pages[page_idx].buttons[
+                        button_idx
+                    ].default = False
+
+        return self.async_create_entry(
+            title="Updated configuration",
+            data=BangOlufsenEntryData(
+                host=self.config_entry.data[CONF_HOST],
+                model=self.config_entry.data[CONF_MODEL],
+                name=self.config_entry.title,
+                halo=self._configuration.to_dict(),
+                entity_map=self._entity_map,
             ),
         )

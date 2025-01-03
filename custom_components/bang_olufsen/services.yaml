@@ -159,8 +159,26 @@ beolink_unexpand:
 
 reboot:
   target:
-    entity:
-      integration: bang_olufsen
-      domain: media_player
     device:
       integration: bang_olufsen
+
+halo_configuration:
+  target:
+    device:
+      integration: bang_olufsen
+
+halo_notification:
+  target:
+    device:
+      integration: bang_olufsen
+  fields:
+    title:
+      required: true
+      example: "Test notification title"
+      selector:
+        text:
+    subtitle:
+      required: true
+      example: "Test notification subtitle"
+      selector:
+        text:

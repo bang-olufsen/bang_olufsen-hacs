@@ -1,16 +1,10 @@
 """Halo client."""
 
 import asyncio
-from asyncio import (  # type: ignore[attr-defined]
-    Queue,
-    QueueEmpty,
-    QueueFull,
-    QueueShutDown,
-)
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
 import contextlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 import json
 import logging
@@ -24,6 +18,7 @@ from aiohttp.client_exceptions import (
     ServerTimeoutError,
 )
 from inflection import underscore
+from mashumaro import field_options
 from mashumaro.mixins.json import DataClassJSONMixin
 
 WEBSOCKET_TIMEOUT = 5.0
@@ -32,9 +27,6 @@ logger = logging.getLogger(__name__)
 
 MIN_VALUE: Final = 0
 MAX_VALUE: Final = 100
-
-
-# TO DO: Add serialization aliases to id
 
 
 class Icons(StrEnum):
@@ -193,7 +185,7 @@ class UpdateButton(DataClassJSONMixin):
     id: str
     state: ButtonState = ButtonState.INACTIVE
     value: int = 0
-    type: str = "button"
+    type: str = field(default="button", init=False)
 
 
 @dataclass
@@ -202,7 +194,7 @@ class ButtonEvent(DataClassJSONMixin):
 
     id: str
     state: ButtonEventState
-    type: str = "button"
+    type: str = field(default="button", init=False)
 
 
 class PowerEventState(StrEnum):
@@ -277,19 +269,19 @@ class BaseEvent(DataClassJSONMixin):
 class DisplayPage(DataClassJSONMixin):
     """DisplayPage."""
 
-    pageid: str
-    buttonid: str
-    type: str = "displaypage"
+    page_id: str = field(metadata=field_options(alias="pageid"))
+    button_id: str = field(metadata=field_options(alias="buttonid"))
+    type: str = field(default="displaypage", init=False)
 
 
 @dataclass
 class Notification(DataClassJSONMixin):
     """Notification."""
 
-    id: str
     title: str
     subtitle: str
-    type: str = "notification"
+    type: str = field(default="notification", init=False)
+    id: str = str(uuid1())
 
 
 @dataclass
@@ -321,7 +313,7 @@ class Halo:
 
         self._websocket_listener_active = False
         self._websocket_task: asyncio.Task
-        self._websocket_queue: Queue = Queue()
+        self._websocket_queue: asyncio.Queue = asyncio.Queue()
         self._on_connection_lost: Callable[[None], Awaitable[None] | None] | None = None
         self._on_connection: Callable[[None], Awaitable[None] | None] | None = None
 
@@ -423,7 +415,7 @@ class Halo:
 
                             await self._on_message(event)
 
-                        with contextlib.suppress(QueueEmpty):
+                        with contextlib.suppress(asyncio.QueueEmpty):
                             update = self._websocket_queue.get_nowait()
                             await websocket.send_str(cast(str, update))
 
@@ -457,7 +449,7 @@ class Halo:
 
         try:
             self._websocket_queue.put_nowait(data.to_json())
-        except (QueueFull, QueueShutDown):
+        except (asyncio.QueueFull, asyncio.QueueShutDown):  # type: ignore[attr-defined]
             return False
         else:
             return True

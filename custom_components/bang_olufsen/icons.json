@@ -151,6 +151,9 @@
       "control_yellow": {
         "default": "mdi:remote"
       },
+      "halo_system": {
+        "default": "mdi:power"
+      },
       "light_blue": {
         "default": "mdi:remote"
       },
@@ -304,6 +307,8 @@
     "beolink_set_relative_volume": { "service": "mdi:volume-plus" },
     "beolink_set_volume": { "service": "mdi:volume-equal" },
     "beolink_unexpand": { "service": "mdi:location-exit" },
+    "halo_configuration": { "service": "mdi:cog" },
+    "halo_notification": { "service": "mdi:bell" },
     "reboot": { "service": "mdi:restart" }
   }
 }
