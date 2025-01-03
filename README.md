@@ -42,11 +42,16 @@ Feel free to open an [issue](https://github.com/bang-olufsen/bang_olufsen-hacs/i
 
 The Halo can currently only be added through Zeroconf discovery. Afterwards, add a configuration to the Halo by entering the options by pressing the `CONFIGURE` button.
 
+All actions have to be manually defined for each entity type, which is why not all entities work at this point.
+
+Generally "wheel" events are handled by counting the number of detents in a "rotation" with a resetting timeout of currently 125ms and acting accordingly. This means that an action is called only when the wheel has been stationary for 125ms. This seems to be the most stable way to handle entities that are "slow" to change states.
+
 #### Current features
 
 - Add pages containing Home Assistant Entities as buttons
   - Support for Binary Sensor entities
   - Support for Button / Input Button entities
+  - Support for Light entities
   - Support for Number / Input Number entities
   - Support for Sensor entities
   - Support for Switch / Input Boolean entities
@@ -54,6 +59,10 @@ The Halo can currently only be added through Zeroconf discovery. Afterwards, add
 - Battery charging Binary Sensor Entity
 - Battery Level Sensor Entity
 - System statues Event entity (Can be used as a proximity sensor)
+- Custom actions:
+  - Get Halo configuration
+  - Send notification to Halo
+- Select or remove default Halo button
 
 #### Missing features
 
@@ -61,7 +70,6 @@ These features have to evaluated further and are in no particular order.
 
 - Modify pages
   - Modify buttons
-- Default Halo button
 - Support for more Entity types
 - Entity filtering for config_flow
 - Manual setup
