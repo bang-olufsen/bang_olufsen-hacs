@@ -222,6 +222,7 @@ async def async_setup_entry(
         },
         func="async_beolink_leader_command",
     )
+
     platform.async_register_entity_service(
         name="reboot",
         schema=None,
@@ -1172,7 +1173,14 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, MozartEntity):
                 jid=beolink_jid, source=source_id
             )
 
-        return response.dict()
+        retrieved_response = await self._client.async_get_beolink_join_result(
+            response.request_id
+        )
+        return (
+            retrieved_response.dict()
+            if retrieved_response is not None
+            else response.dict()
+        )
 
     async def async_beolink_expand(
         self, beolink_jids: list[str] | None = None, all_discovered: bool = False
@@ -1321,10 +1329,9 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, MozartEntity):
 
     async def async_set_relative_volume_level(self, volume: float) -> None:
         """Set a volume level relative to the current level."""
-
-        if not self.volume_level:
-            _LOGGER.warning("Error setting volume")
-            return
+        # Handle if the volume level is not set
+        if self.volume_level is None:
+            self.volume_level = 0
 
         # Ensure that volume level behaves as expected
         if self.volume_level + volume >= 1.0:
