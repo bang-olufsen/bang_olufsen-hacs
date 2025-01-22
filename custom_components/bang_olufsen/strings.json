@@ -1437,6 +1437,9 @@
     "invalid_source": {
       "message": "Invalid source: {invalid_source}. Valid sources are: {valid_sources}"
     },
+    "beolink_not_playing": {
+      "message": "Can't Beolink expand from a non-playing device."
+    },
     "invalid_media_type": {
       "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
     },

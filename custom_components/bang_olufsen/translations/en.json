@@ -1241,6 +1241,9 @@
         }
     },
     "exceptions": {
+        "beolink_not_playing": {
+            "message": "Can't Beolink expand from a non-playing device."
+        },
         "invalid_beolink_parameter": {
             "message": "Invalid parameter: {parameter} for {command} which expects a parameter of type: {parameter_type}."
         },

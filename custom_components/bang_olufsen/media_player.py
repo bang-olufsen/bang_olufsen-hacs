@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import ClientConnectorError
 from mozart_api import __version__ as MOZART_API_VERSION
-from mozart_api.exceptions import ApiException, NotFoundException
+from mozart_api.exceptions import ApiException
 from mozart_api.models import (
     Action,
     Art,
@@ -77,6 +77,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 from homeassistant.util.dt import utcnow
+from homeassistant.util.json import JsonObjectType
 
 from . import MANUFACTURER, MozartConfigEntry, set_platform_initialized
 from .const import (
@@ -159,7 +160,7 @@ async def async_setup_entry(
             vol.Optional("source_id"): vol.In(BEOLINK_JOIN_SOURCES),
         },
         func="async_beolink_join",
-        supports_response=SupportsResponse.OPTIONAL,
+        supports_response=SupportsResponse.ONLY,
     )
 
     platform.async_register_entity_service(
@@ -176,7 +177,7 @@ async def async_setup_entry(
             ),
         },
         func="async_beolink_expand",
-        supports_response=SupportsResponse.OPTIONAL,
+        supports_response=SupportsResponse.ONLY,
     )
 
     platform.async_register_entity_service(
@@ -1184,7 +1185,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, MozartEntity):
 
     async def async_beolink_expand(
         self, beolink_jids: list[str] | None = None, all_discovered: bool = False
-    ) -> None:
+    ) -> ServiceResponse:
         """Expand a Beolink multi-room experience with a device or devices."""
 
         # Ensure that the current source is expandable
@@ -1198,26 +1199,38 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, MozartEntity):
                 },
             )
 
+        # Ensure that the current device is playing
+        if self.state != MediaPlayerState.PLAYING:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="beolink_not_playing",
+            )
+
+        result: JsonObjectType = {}
+
         # Expand to all discovered devices
         if all_discovered:
             peers = await self._client.get_beolink_peers()
 
             for peer in peers:
-                try:
-                    await self._client.post_beolink_expand(jid=peer.jid)
-                except NotFoundException:
-                    _LOGGER.warning("Unable to expand to %s", peer.jid)
+                response = await self._client.async_post_beolink_expand(peer.jid)
+
+                # Add result
+                result[peer.jid] = {
+                    "result": response if response is True else type(response).__name__
+                }
 
         # Try to expand to all defined devices
         elif beolink_jids:
             for beolink_jid in beolink_jids:
-                try:
-                    await self._client.post_beolink_expand(jid=beolink_jid)
-                except NotFoundException:
-                    _LOGGER.warning(
-                        "Unable to expand to %s. Is the device available on the network?",
-                        beolink_jid,
-                    )
+                response = await self._client.async_post_beolink_expand(beolink_jid)
+
+                # Add result
+                result[beolink_jid] = {
+                    "result": response if response is True else type(response).__name__
+                }
+
+        return result
 
     async def async_beolink_unexpand(self, beolink_jids: list[str]) -> None:
         """Unexpand a Beolink multi-room experience with a device or devices."""
@@ -1329,17 +1342,19 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, MozartEntity):
 
     async def async_set_relative_volume_level(self, volume: float) -> None:
         """Set a volume level relative to the current level."""
+        current_volume_level = self.volume_level
+
         # Handle if the volume level is not set
-        if self.volume_level is None:
-            self.volume_level = 0
+        if current_volume_level is None:
+            current_volume_level = 0
 
         # Ensure that volume level behaves as expected
-        if self.volume_level + volume >= 1.0:
+        if current_volume_level + volume >= 1.0:
             new_volume = 1.0
-        elif self.volume_level + volume <= 0:
+        elif current_volume_level + volume <= 0:
             new_volume = 0.0
         else:
-            new_volume = self.volume_level + volume
+            new_volume = current_volume_level + volume
 
         await self.async_set_volume_level(volume=new_volume)
 
