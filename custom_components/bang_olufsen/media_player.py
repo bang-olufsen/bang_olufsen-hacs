@@ -160,7 +160,7 @@ async def async_setup_entry(
             vol.Optional("source_id"): vol.In(BEOLINK_JOIN_SOURCES),
         },
         func="async_beolink_join",
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     platform.async_register_entity_service(
@@ -177,7 +177,7 @@ async def async_setup_entry(
             ),
         },
         func="async_beolink_expand",
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     platform.async_register_entity_service(
