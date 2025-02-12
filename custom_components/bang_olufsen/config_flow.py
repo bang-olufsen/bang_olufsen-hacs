@@ -10,7 +10,6 @@ from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -31,6 +30,7 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.ssl import get_default_context
 from homeassistant.util.uuid import random_uuid_hex
 

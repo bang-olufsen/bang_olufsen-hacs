@@ -141,9 +141,11 @@ class MozartSensorRemoteBatteryLevel(MozartSensor):
         assert remote.serial_number
 
         self._attr_device_class = SensorDeviceClass.BATTERY
-        self._attr_unique_id = f"{remote.serial_number}_remote_battery_level"
+        self._attr_unique_id = (
+            f"{remote.serial_number}_{config_entry.unique_id}_remote_battery_level"
+        )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, remote.serial_number)}
+            identifiers={(DOMAIN, f"{remote.serial_number}_{config_entry.unique_id}")}
         )
         self._attr_native_value = remote.battery_level
 

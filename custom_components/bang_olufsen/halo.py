@@ -449,7 +449,7 @@ class Halo:
 
         try:
             self._websocket_queue.put_nowait(data.to_json())
-        except (asyncio.QueueFull, asyncio.QueueShutDown):  # type: ignore[attr-defined]
+        except (asyncio.QueueFull, asyncio.QueueShutDown):
             return False
         else:
             return True

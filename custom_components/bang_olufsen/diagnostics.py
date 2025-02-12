@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
 

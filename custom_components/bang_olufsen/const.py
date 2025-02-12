@@ -35,7 +35,7 @@ BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
     "stopped": MediaPlayerState.PAUSED,
     "ended": MediaPlayerState.PAUSED,
     "error": MediaPlayerState.IDLE,
-    # A devices initial state is "unknown" and should be treated as "idle"
+    # A device's initial state is "unknown" and should be treated as "idle"
     "unknown": MediaPlayerState.IDLE,
 }
 
