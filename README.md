@@ -120,6 +120,8 @@ This integration adds an array of different useful entities that are generated a
   - Radio Browsing
   - TTS
 - Displaying various extra state attributes
+  - Media ID (if available)
+  - Input Signal (if available)
   - Beolink:
     - Own JID
     - Beolink leader (if available)
@@ -187,8 +189,6 @@ This integration adds an array of different useful entities that are generated a
 - Remote Battery Level (If available)
 - Battery Charging Time (If available)
 - Battery Playing Time (If available)
-- Media ID (Disabled by default)
-- Input Signal (Disabled by default)
 
 ### Select entity
 
@@ -422,8 +422,7 @@ data:
     overlay_tts_language: da-dk
 ```
 
-_NOTE_: To easily obtain the media_content_id for a Deezer/Tidal track or B&O Radio station, you can enable the 'Media id' sensor in Home Assistant (disabled by default).
-Once enabled, start playing the content you wish to activate in an action call - the Media id sensor will then provide the value to be used in the media_content_id field.
+_NOTE_: To easily obtain the media_content_id for a Deezer/Tidal track or B&O Radio station, you can start playing the content you wish to activate in an action call - the `media_id` attribute available on the `media_player` entity will provide the value to be used in the media_content_id field.
 
 ### Custom actions
 
