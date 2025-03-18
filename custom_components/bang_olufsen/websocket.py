@@ -47,11 +47,12 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TOGGLE
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
+    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -233,7 +234,9 @@ class HaloWebsocket(HaloBase):
         """Clamp a value to work with Halo value."""
         return int(np.clip(value, MIN_VALUE, MAX_VALUE))
 
-    async def _handle_no_button_action(self, entity_state: State) -> None:
+    async def _handle_no_button_action(
+        self, entity_state: State, button_id: str
+    ) -> None:
         """Handle entity with no associated button action."""
         _LOGGER.debug("No button action available for %s", entity_state.entity_id)
 
