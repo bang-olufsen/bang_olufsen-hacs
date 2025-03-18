@@ -10,6 +10,7 @@ import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import ClientConnectorError
+from inflection import titleize, underscore
 from mozart_api import __version__ as MOZART_API_VERSION
 from mozart_api.exceptions import ApiException
 from mozart_api.models import (
@@ -79,7 +80,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.util.dt import utcnow
 from homeassistant.util.json import JsonObjectType
 
-from . import MANUFACTURER, MozartConfigEntry, set_platform_initialized
+from . import MANUFACTURER, MozartConfigEntry
 from .const import (
     ACCEPTED_COMMANDS,
     ACCEPTED_COMMANDS_LISTS,
@@ -138,13 +139,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Media Player entity from config entry."""
-    entities: list[BangOlufsenMediaPlayer] = []
+    entities: list[MozartMediaPlayer] = []
 
-    entities.append(BangOlufsenMediaPlayer(config_entry))
+    entities.append(MozartMediaPlayer(config_entry))
 
     async_add_entities(new_entities=entities, update_before_add=True)
-
-    set_platform_initialized(config_entry.runtime_data)
 
     # Register services.
     platform = async_get_current_platform()
@@ -231,7 +230,7 @@ async def async_setup_entry(
     )
 
 
-class BangOlufsenMediaPlayer(MediaPlayerEntity, MozartEntity):
+class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
     """Representation of a media player."""
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
@@ -270,10 +269,13 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, MozartEntity):
         # Beolink
         self._beolink_sources: dict[str, bool] = {}
         self._remote_leader: BeolinkLeader | None = None
-        self._beolink_attributes: dict[str, dict[str, Any]] = {}
         self._beolink_listeners: list[BeolinkListener] = []
 
+        # Extra state attributes
+        self._beolink_attributes: dict[str, dict[str, Any]] = {}
         self._favourite_attribute: dict[str, dict[str, Any]] = {}
+        self._input_signal_attribute: str | None = None
+        self._media_id_attribute: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -326,29 +328,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, MozartEntity):
             self._unique_id,
             self._software_status.software_version,
         )
-
-        # Get overall device state once. This is handled by WebSocket events the rest of the time.
-        product_state = await self._client.get_product_state()
-
-        # Get volume information.
-        if product_state.volume:
-            self._volume = product_state.volume
-
-        # Get all playback information.
-        # Ensure that the metadata is not None upon startup
-        if product_state.playback:
-            if product_state.playback.metadata:
-                self._playback_metadata = product_state.playback.metadata
-                self._remote_leader = product_state.playback.metadata.remote_leader
-            if product_state.playback.progress:
-                self._playback_progress = product_state.playback.progress
-            if product_state.playback.source:
-                await self._async_update_source_change(product_state.playback.source)
-            if product_state.playback.state:
-                self._playback_state = product_state.playback.state
-                # Set initial state
-                if self._playback_state.value:
-                    self._state = self._playback_state.value
 
         self._attr_media_position_updated_at = utcnow()
 
@@ -522,6 +501,26 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, MozartEntity):
         # Update current artwork and remote_leader.
         self._media_image = get_highest_resolution_artwork(self._playback_metadata)
         await self._async_update_beolink()
+
+        # Update media id attribute
+        self._media_id_attribute = data.source_internal_id
+
+        # Update input signal attribute
+        if data.encoding:
+            # Ensure that abbreviated formats are capitialized and non-abbreviated formats are made "human readable"
+            encoding = titleize(underscore(data.encoding))
+            if data.encoding.capitalize() == encoding:
+                encoding = data.encoding.upper()
+
+            input_channel_processing = None
+            if data.input_channel_processing:
+                input_channel_processing = titleize(
+                    underscore(data.input_channel_processing)
+                )
+
+            self._input_signal_attribute = f"{encoding}{f' - {input_channel_processing}' if input_channel_processing else ''}{f' - {data.input_channels}' if data.input_channels else ''}"
+        else:
+            self._input_signal_attribute = None
 
     @callback
     def _async_update_playback_error(self, data: PlaybackError) -> None:
@@ -844,6 +843,14 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, MozartEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return information that is not returned anywhere else."""
         attributes: dict[str, Any] = {}
+
+        # Add media id attribute
+        if self._media_id_attribute:
+            attributes.update({"media_id": self._media_id_attribute})
+
+        # Add input signal attribute
+        if self._input_signal_attribute:
+            attributes.update({"input_signal": self._input_signal_attribute})
 
         # Add Beolink attributes
         if self._beolink_attributes:

@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HaloConfigEntry, MozartConfigEntry, set_platform_initialized
+from . import HaloConfigEntry, MozartConfigEntry
 from .const import CONNECTION_STATUS, WebsocketNotification
 from .entity import HaloEntity, MozartEntity
 from .halo import PowerEvent, PowerEventState
@@ -34,8 +34,6 @@ async def async_setup_entry(
         entities.extend(await _get_mozart_entities(config_entry))
 
     async_add_entities(new_entities=entities)
-
-    set_platform_initialized(config_entry.runtime_data)
 
 
 class BangOlufsenBinarySensor(BinarySensorEntity):
@@ -78,7 +76,7 @@ class MozartBinarySensorBatteryCharging(MozartBinarySensor):
         super().__init__(config_entry)
 
         self._attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
-        self._attr_unique_id = f"{self._unique_id}-battery-charging"
+        self._attr_unique_id = f"{self._unique_id}_battery_charging"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -131,7 +129,7 @@ class HaloBinarySensorBatteryCharging(HaloBinarySensor):
         super().__init__(config_entry)
 
         self._attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
-        self._attr_unique_id = f"{self._unique_id}-battery-charging"
+        self._attr_unique_id = f"{self._unique_id}_battery_charging"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""

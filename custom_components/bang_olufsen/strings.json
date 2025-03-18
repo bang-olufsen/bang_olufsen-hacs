@@ -1416,12 +1416,6 @@
       },
       "battery_playing_time": {
         "name": "Battery playing time"
-      },
-      "media_id": {
-        "name": "Media id"
-      },
-      "input_signal": {
-        "name": "Input signal"
       }
     },
     "text": {

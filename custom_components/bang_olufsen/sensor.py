@@ -7,9 +7,8 @@ from datetime import timedelta
 from typing import cast
 
 from aiohttp import ClientConnectorError
-from inflection import titleize, underscore
 from mozart_api.exceptions import ApiException
-from mozart_api.models import BatteryState, PairedRemote, PlaybackContentMetadata
+from mozart_api.models import BatteryState, PairedRemote
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,7 +21,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HaloConfigEntry, MozartConfigEntry, set_platform_initialized
+from . import HaloConfigEntry, MozartConfigEntry
 from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import HaloEntity, MozartEntity
 from .halo import PowerEvent
@@ -46,9 +45,7 @@ async def async_setup_entry(
     else:
         entities.extend(await _get_mozart_entities(config_entry))
 
-    async_add_entities(new_entities=entities)
-
-    set_platform_initialized(config_entry.runtime_data)
+    async_add_entities(new_entities=entities, update_before_add=True)
 
 
 # Mozart entities
@@ -64,10 +61,7 @@ async def _get_mozart_entities(
     config_entry: MozartConfigEntry,
 ) -> list[MozartSensor]:
     """Get Mozart Sensor entities from config entry."""
-    entities: list[MozartSensor] = [
-        MozartSensorInputSignal(config_entry),
-        MozartSensorMediaId(config_entry),
-    ]
+    entities: list[MozartSensor] = []
 
     # Check if device has a battery
     battery_state = await config_entry.runtime_data.client.get_battery_state()
@@ -102,7 +96,7 @@ class MozartSensorBatteryLevel(MozartSensor):
         super().__init__(config_entry)
 
         self._attr_device_class = SensorDeviceClass.BATTERY
-        self._attr_unique_id = f"{self._unique_id}-battery-level"
+        self._attr_unique_id = f"{self._unique_id}_battery_level"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -186,7 +180,7 @@ class MozartSensorBatteryChargingTime(MozartSensor):
         super().__init__(config_entry)
 
         self._attr_device_class = SensorDeviceClass.DURATION
-        self._attr_unique_id = f"{self._unique_id}-battery-charging-time"
+        self._attr_unique_id = f"{self._unique_id}_battery_charging_time"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -234,7 +228,7 @@ class MozartSensorBatteryPlayingTime(MozartSensor):
         """Init the battery playing time Sensor."""
         super().__init__(config_entry)
 
-        self._attr_unique_id = f"{self._unique_id}-battery-playing-time"
+        self._attr_unique_id = f"{self._unique_id}_battery_playing_time"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -265,96 +259,6 @@ class MozartSensorBatteryPlayingTime(MozartSensor):
 
         else:
             self._attr_native_value = playing_time
-
-        self.async_write_ha_state()
-
-
-class MozartSensorMediaId(MozartSensor):
-    """Media id Sensor."""
-
-    _attr_entity_registry_enabled_default = False
-    _attr_translation_key = "media_id"
-
-    def __init__(self, config_entry: MozartConfigEntry) -> None:
-        """Init the media id Sensor."""
-        super().__init__(config_entry)
-
-        self._attr_device_class = None
-        # self._attr_state_class = SensorStateClass.
-        self._attr_native_value = None
-        self._attr_unique_id = f"{self._unique_id}-media-id"
-
-    async def async_added_to_hass(self) -> None:
-        """Turn on the dispatchers."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._async_update_connection_state,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
-                self._update_playback_metadata,
-            )
-        )
-
-    async def _update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
-        """Update Sensor value."""
-        self._attr_native_value = data.source_internal_id
-        self.async_write_ha_state()
-
-
-class MozartSensorInputSignal(MozartSensor):
-    """Input signal Sensor."""
-
-    _attr_entity_registry_enabled_default = False
-    _attr_translation_key = "input_signal"
-
-    def __init__(self, config_entry: MozartConfigEntry) -> None:
-        """Init the input signal Sensor."""
-        super().__init__(config_entry)
-
-        self._attr_device_class = None
-        # self._attr_state_class = None
-        self._attr_unique_id = f"{self._unique_id}-input-signal"
-
-    async def async_added_to_hass(self) -> None:
-        """Turn on the dispatchers."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._async_update_connection_state,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
-                self._update_playback_metadata,
-            )
-        )
-
-    async def _update_playback_metadata(self, data: PlaybackContentMetadata) -> None:
-        """Update Sensor value."""
-        if data.encoding:
-            # Ensure that abbreviated formats are capitialized and non-abbreviated formats are made "human readable"
-            encoding = titleize(underscore(data.encoding))
-            if data.encoding.capitalize() == encoding:
-                encoding = data.encoding.upper()
-
-            input_channel_processing = None
-            if data.input_channel_processing:
-                input_channel_processing = titleize(
-                    underscore(data.input_channel_processing)
-                )
-
-            self._attr_native_value = f"{encoding}{f' - {input_channel_processing}' if input_channel_processing else ''}{f' - {data.input_channels}' if data.input_channels else ''}"
-        else:
-            self._attr_native_value = None
 
         self.async_write_ha_state()
 
@@ -390,7 +294,7 @@ class HaloSensorBatteryLevel(HaloSensor):
         super().__init__(config_entry)
 
         self._attr_device_class = SensorDeviceClass.BATTERY
-        self._attr_unique_id = f"{self._unique_id}-battery-level"
+        self._attr_unique_id = f"{self._unique_id}_battery_level"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""

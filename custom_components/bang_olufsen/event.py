@@ -12,7 +12,7 @@ from homeassistant.components.homeassistant import ServiceResponse
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from . import HaloConfigEntry, MozartConfigEntry, set_platform_initialized
+from . import HaloConfigEntry, MozartConfigEntry
 from .const import (
     BEO_REMOTE_CONTROL_KEYS,
     BEO_REMOTE_KEY_EVENTS,
@@ -33,10 +33,12 @@ from .const import (
     DEVICE_BUTTONS,
     DOMAIN,
     HALO_SYSTEM_EVENTS,
+    MANUFACTURER,
     MODEL_SUPPORT_DEVICE_BUTTONS,
     MODEL_SUPPORT_MAP,
     MODEL_SUPPORT_PROXIMITY,
     PROXIMITY_EVENTS,
+    BangOlufsenModel,
     WebsocketNotification,
 )
 from .entity import HaloEntity, MozartEntity
@@ -81,11 +83,9 @@ async def async_setup_entry(
 
         entities.extend(await _get_halo_entities(config_entry))
     else:
-        entities.extend(await _get_mozart_entities(config_entry))
+        entities.extend(await _get_mozart_entities(hass, config_entry))
 
     async_add_entities(new_entities=entities)
-
-    set_platform_initialized(config_entry.runtime_data)
 
 
 class BangOlufsenEvent(EventEntity):
@@ -103,7 +103,7 @@ class BangOlufsenEvent(EventEntity):
 # Mozart entities
 
 
-class BangOlufsenMozartEvent(MozartEntity, BangOlufsenEvent):
+class MozartEvent(MozartEntity, BangOlufsenEvent):
     """Base Mozart Event class."""
 
     def __init__(self, config_entry: MozartConfigEntry) -> None:
@@ -112,55 +112,74 @@ class BangOlufsenMozartEvent(MozartEntity, BangOlufsenEvent):
 
 
 async def _get_mozart_entities(
+    hass: HomeAssistant,
     config_entry: MozartConfigEntry,
-) -> list[BangOlufsenMozartEvent]:
+) -> list[MozartEvent]:
     """Get Mozart Event entities from config entry."""
-    entities: list[BangOlufsenMozartEvent] = []
+    entities: list[MozartEvent] = []
 
     # Add physical "buttons"
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_BUTTONS]:
         entities.extend(
             [
-                BangOlufsenButtonEvent(config_entry, button_type)
+                MozartButtonEvent(config_entry, button_type)
                 for button_type in DEVICE_BUTTONS
             ]
         )
 
     # Check if device supports proximity detection.
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_PROXIMITY]:
-        entities.append(BangOlufsenEventProximity(config_entry))
+        entities.append(MozartEventProximity(config_entry))
 
     # Check for connected Beoremote One
-    if remotes := await get_remotes(config_entry.runtime_data.client):
-        for remote in remotes:
-            # Add Light keys
-            entities.extend(
-                [
-                    BangOlufsenRemoteKeyEvent(
-                        config_entry,
-                        remote,
-                        f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}",
-                    )
-                    for key_type in BEO_REMOTE_KEYS
-                ]
-            )
+    remotes = await get_remotes(config_entry.runtime_data.client)
 
-            # Add Control keys
-            entities.extend(
-                [
-                    BangOlufsenRemoteKeyEvent(
-                        config_entry,
-                        remote,
-                        f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}",
-                    )
-                    for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
-                ]
+    for remote in remotes:
+        # Add Light keys
+        entities.extend(
+            [
+                MozartRemoteKeyEvent(
+                    config_entry,
+                    remote,
+                    f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}",
+                )
+                for key_type in BEO_REMOTE_KEYS
+            ]
+        )
+
+        # Add Control keys
+        entities.extend(
+            [
+                MozartRemoteKeyEvent(
+                    config_entry,
+                    remote,
+                    f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}",
+                )
+                for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
+            ]
+        )
+
+    # If the remote is no longer available, then delete the device.
+    # The remote may appear as being available to the device after it has been unpaired on the remote
+    # As it has to be removed from the device on the app.
+
+    device_registry = dr.async_get(hass)
+    devices = device_registry.devices.get_devices_for_config_entry_id(
+        config_entry.entry_id
+    )
+    for device in devices:
+        if (
+            device.model == BangOlufsenModel.BEOREMOTE_ONE
+            and device.serial_number not in [remote.serial_number for remote in remotes]
+        ):
+            device_registry.async_update_device(
+                device.id, remove_config_entry_id=config_entry.entry_id
             )
 
     return entities
 
 
-class BangOlufsenButtonEvent(BangOlufsenMozartEvent):
+class MozartButtonEvent(MozartEvent):
     """Event class for Button events."""
 
     _attr_device_class = EventDeviceClass.BUTTON
@@ -195,7 +214,7 @@ class BangOlufsenButtonEvent(BangOlufsenMozartEvent):
         )
 
 
-class BangOlufsenRemoteKeyEvent(BangOlufsenMozartEvent):
+class MozartRemoteKeyEvent(MozartEvent):
     """Event class for Beoremote One key events."""
 
     _attr_device_class = EventDeviceClass.BUTTON
@@ -216,7 +235,13 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenMozartEvent):
             f"{remote.serial_number}_{config_entry.unique_id}_{key_type}"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{remote.serial_number}_{config_entry.unique_id}")}
+            identifiers={(DOMAIN, f"{remote.serial_number}_{config_entry.unique_id}")},
+            name=f"{BangOlufsenModel.BEOREMOTE_ONE}-{remote.serial_number}-{config_entry.unique_id}",
+            model=BangOlufsenModel.BEOREMOTE_ONE,
+            serial_number=remote.serial_number,
+            sw_version=remote.app_version,
+            manufacturer=MANUFACTURER,
+            via_device=(DOMAIN, self._unique_id),
         )
         # Make the native key name Home Assistant compatible
         self._attr_translation_key = key_type.lower().replace("/", "_")
@@ -241,7 +266,7 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenMozartEvent):
         )
 
 
-class BangOlufsenEventProximity(BangOlufsenMozartEvent):
+class MozartEventProximity(MozartEvent):
     """Event class for proximity sensor events."""
 
     _attr_device_class = EventDeviceClass.MOTION
@@ -275,7 +300,7 @@ class BangOlufsenEventProximity(BangOlufsenMozartEvent):
 # Halo entities
 
 
-class BangOlufsenHaloEvent(HaloEntity, BangOlufsenEvent):
+class HaloEvent(HaloEntity, BangOlufsenEvent):
     """Base Halo Event class."""
 
     def __init__(self, config_entry: HaloConfigEntry) -> None:
@@ -285,13 +310,13 @@ class BangOlufsenHaloEvent(HaloEntity, BangOlufsenEvent):
 
 async def _get_halo_entities(
     config_entry: HaloConfigEntry,
-) -> list[BangOlufsenHaloEvent]:
+) -> list[HaloEvent]:
     """Get Halo Event entities from config entry."""
-    entities: list[BangOlufsenHaloEvent] = [BangOlufsenEventHaloSystem(config_entry)]
+    entities: list[HaloEvent] = [HaloEventSystem(config_entry)]
     return entities
 
 
-class BangOlufsenEventHaloSystem(BangOlufsenHaloEvent):
+class HaloEventSystem(HaloEvent):
     """Event class for Halo system events."""
 
     _attr_entity_registry_enabled_default = True

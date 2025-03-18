@@ -289,12 +289,6 @@
       },
       "home_control_uri": {
         "default": "mdi:link-variant"
-      },
-      "input_signal": {
-        "default": "mdi:audio-input-stereo-minijack"
-      },
-      "media_id": {
-        "default": "mdi:information"
       }
     }
   },

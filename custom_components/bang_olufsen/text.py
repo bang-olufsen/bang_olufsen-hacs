@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MozartConfigEntry, set_platform_initialized
+from . import MozartConfigEntry
 from .const import CONNECTION_STATUS, MODEL_SUPPORT_HOME_CONTROL, MODEL_SUPPORT_MAP
 from .entity import MozartEntity
 
@@ -25,11 +25,9 @@ async def async_setup_entry(
 
     # Add the Home Control URI entity if the device supports it
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_HOME_CONTROL]:
-        entities.append(BangOlufsenTextHomeControlUri(config_entry))
+        entities.append(MozartTextHomeControlUri(config_entry))
 
     async_add_entities(new_entities=entities)
-
-    set_platform_initialized(config_entry.runtime_data)
 
 
 class BangOlufsenText(TextEntity, MozartEntity):
@@ -42,7 +40,7 @@ class BangOlufsenText(TextEntity, MozartEntity):
         self._attr_entity_category = EntityCategory.CONFIG
 
 
-class BangOlufsenTextHomeControlUri(BangOlufsenText):
+class MozartTextHomeControlUri(BangOlufsenText):
     """Home Control URI Text."""
 
     _attr_entity_registry_enabled_default = False
@@ -52,7 +50,7 @@ class BangOlufsenTextHomeControlUri(BangOlufsenText):
         """Init the Home Control URI Text."""
         super().__init__(config_entry)
 
-        self._attr_unique_id = f"{self._unique_id}-home-control-uri"
+        self._attr_unique_id = f"{self._unique_id}_home_control_uri"
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
