@@ -11,7 +11,7 @@ import logging
 from typing import Final, Literal, TypedDict, cast
 from uuid import uuid1
 
-from aiohttp import ClientSession, ClientTimeout, WSMessageTypeError
+from aiohttp import ClientSession, ClientTimeout, WSMessageTypeError, WSMsgType
 from aiohttp.client_exceptions import (
     ClientConnectorError,
     ClientOSError,
@@ -411,9 +411,15 @@ class Halo:
 
                     while self._websocket_listener_active:
                         with contextlib.suppress(asyncio.TimeoutError):
-                            event = await websocket.receive_str(timeout=0.1)
+                            event = await websocket.receive(timeout=0.1)
 
-                            await self._on_message(event)
+                            # Only try to handle valid message types
+                            if event.type == WSMsgType.TEXT:
+                                await self._on_message(event.data)
+                            else:
+                                logger.debug(
+                                    "Received invalid WebSocket message: %s", event
+                                )
 
                         with contextlib.suppress(asyncio.QueueEmpty):
                             update = self._websocket_queue.get_nowait()
