@@ -11,7 +11,13 @@ import logging
 from typing import Final, Literal, TypedDict, cast
 from uuid import uuid1
 
-from aiohttp import ClientSession, ClientTimeout, WSMessageTypeError, WSMsgType
+from aiohttp import (
+    ClientSession,
+    ClientTimeout,
+    WSMessage,
+    WSMessageTypeError,
+    WSMsgType,
+)
 from aiohttp.client_exceptions import (
     ClientConnectorError,
     ClientOSError,
@@ -412,14 +418,7 @@ class Halo:
                     while self._websocket_listener_active:
                         with contextlib.suppress(asyncio.TimeoutError):
                             event = await websocket.receive(timeout=0.1)
-
-                            # Only try to handle valid message types
-                            if event.type == WSMsgType.TEXT:
-                                await self._on_message(event.data)
-                            else:
-                                logger.debug(
-                                    "Received invalid WebSocket message: %s", event
-                                )
+                            await self._on_message(event)
 
                         with contextlib.suppress(asyncio.QueueEmpty):
                             update = self._websocket_queue.get_nowait()
@@ -460,11 +459,18 @@ class Halo:
         else:
             return True
 
-    async def _on_message(self, event: str) -> None:
+    async def _on_message(self, event: WSMessage) -> None:
         """Handle WebSocket events."""
+        # Only try to handle valid message types
+        if event.type != WSMsgType.TEXT:
+            if event.type in (WSMsgType.ERROR, WSMsgType.CLOSED):
+                raise TypeError
+            logger.debug("Received invalid WebSocket message: %s", event)
+            return
+
         # Get the object type and deserialized object.
         try:
-            deserialized_data = BaseEvent.from_json(event).event
+            deserialized_data = BaseEvent.from_json(event.data).event
         except (ValueError, AttributeError) as error:
             logger.error(
                 "%s unable to deserialize WebSocket event: (%s) with error: (%s : %s)",
@@ -484,7 +490,9 @@ class Halo:
             )
 
         if self._on_all_events_raw:
-            await self._trigger_callback(self._on_all_events_raw, json.loads(event))
+            await self._trigger_callback(
+                self._on_all_events_raw, json.loads(event.data)
+            )
 
         # Handle specific events if defined
         triggered_event = self._event_callbacks[deserialized_data.type]
