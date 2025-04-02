@@ -34,6 +34,16 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.ssl import get_default_context
 from homeassistant.util.uuid import random_uuid_hex
 
+from .beoremote_halo.halo import Halo
+from .beoremote_halo.models import (
+    BaseConfiguration,
+    Button,
+    Configuration,
+    Icon,
+    Icons,
+    Page,
+    Text,
+)
 from .const import (
     ATTR_FRIENDLY_NAME,
     ATTR_HALO_SERIAL_NUMBER,
@@ -58,16 +68,6 @@ from .const import (
     ZEROCONF_HALO,
     ZEROCONF_MOZART,
     BangOlufsenModel,
-)
-from .halo import (
-    BaseConfiguration,
-    Button,
-    Configuration,
-    Halo,
-    Icon,
-    Icons,
-    Page,
-    Text,
 )
 from .util import get_serial_number_from_jid
 

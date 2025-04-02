@@ -21,8 +21,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.device_registry as dr
 from homeassistant.util.ssl import get_default_context
 
-from .const import DOMAIN, MANUFACTURER
-from .halo import Halo
+from .beoremote_halo.halo import Halo
+from .beoremote_halo.models import BaseConfiguration
+from .const import CONF_HALO, DOMAIN, MANUFACTURER
 from .util import is_halo
 from .websocket import HaloWebsocket, MozartWebsocket
 
@@ -126,12 +127,24 @@ async def _setup_mozart(hass: HomeAssistant, config_entry: MozartConfigEntry) ->
 async def _setup_halo(hass: HomeAssistant, config_entry: HaloConfigEntry) -> bool:
     """Set up a Halo."""
 
-    client = Halo(host=config_entry.data[CONF_HOST])
+    # Get/set configuration
+    if config_entry.options:
+        client = Halo(
+            config_entry.data[CONF_HOST],
+            BaseConfiguration.from_dict(config_entry.options[CONF_HALO]),
+        )
+    else:
+        client = Halo(config_entry.data[CONF_HOST])
 
     # Check API and WebSocket connection
     try:
-        await client.check_device_connection()
-    except Exception as error:
+        await client.check_device_connection(raise_error=True)
+    except (
+        ClientConnectorError,
+        ClientOSError,
+        ServerTimeoutError,
+        WSMessageTypeError,
+    ) as error:
         raise ConfigEntryNotReady(
             f"Unable to connect to {config_entry.title}"
         ) from error
@@ -145,7 +158,7 @@ async def _setup_halo(hass: HomeAssistant, config_entry: HaloConfigEntry) -> boo
     await hass.config_entries.async_forward_entry_setups(config_entry, HALO_PLATFORMS)
 
     # Start WebSocket connection when all entities have been initialized
-    await client.connect_events(reconnect=True)
+    await client.connect(reconnect=True)
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_update_options))
 
@@ -164,9 +177,13 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if is_halo(config_entry):
         if TYPE_CHECKING:
             assert isinstance(config_entry.runtime_data, HaloData)
-        await config_entry.runtime_data.client.disconnect_events()
+
+        await config_entry.runtime_data.client.disconnect()
         platforms = HALO_PLATFORMS
     else:
+        if TYPE_CHECKING:
+            assert isinstance(config_entry.runtime_data, MozartData)
+
         config_entry.runtime_data.client.disconnect_notifications()
         await config_entry.runtime_data.client.close_api_client()
         platforms = MOZART_PLATFORMS

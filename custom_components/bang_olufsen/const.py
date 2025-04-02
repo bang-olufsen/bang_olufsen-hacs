@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 
-from .halo import Icons, SystemEventState
+from .beoremote_halo.models import Icons, SystemEventState
 
 
 class BangOlufsenSource:

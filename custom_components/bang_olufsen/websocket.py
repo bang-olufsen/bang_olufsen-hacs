@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 from mozart_api.models import (
     BatteryState,
     BeoRemoteButton,
-    ButtonEvent,
+    ButtonEvent as MozartButtonEvent,
     ListeningModeProps,
     PlaybackContentMetadata,
     PlaybackError,
@@ -24,7 +24,10 @@ from mozart_api.models import (
     VolumeState,
     WebsocketNotificationTag,
 )
-from mozart_api.mozart_client import BaseWebSocketResponse, MozartClient
+from mozart_api.mozart_client import (
+    BaseWebSocketResponse as MozartBaseWebSocketResponse,
+    MozartClient,
+)
 import numpy as np
 from voluptuous import Invalid
 
@@ -64,9 +67,23 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.enum import try_parse_enum
 
+from .beoremote_halo.const import MAX_VALUE, MIN_VALUE
+from .beoremote_halo.halo import Halo
+from .beoremote_halo.models import (
+    BaseWebSocketResponse as HaloBaseWebSocketResponse,
+    ButtonEvent as HaloButtonEvent,
+    ButtonEventState,
+    ButtonState,
+    PowerEvent,
+    StatusEvent,
+    SystemEvent,
+    Update,
+    UpdateButton,
+    WheelEvent,
+)
+from .beoremote_halo.util import clamp_button_value, interpolate_button_value
 from .const import (
     CONF_ENTITY_MAP,
-    CONF_HALO,
     CONNECTION_STATUS,
     EVENT_TRANSLATION_MAP,
     HALO_WEBSOCKET_EVENT,
@@ -76,23 +93,6 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import HaloBase, MozartBase
-from .halo import (
-    MAX_VALUE,
-    MIN_VALUE,
-    BaseConfiguration,
-    BaseUpdate,
-    BaseWebSocketResponse as HaloBaseWebSocketResponse,
-    Button,
-    ButtonEvent as HaloButtonEvent,
-    ButtonEventState,
-    ButtonState,
-    Halo,
-    PowerEvent,
-    StatusEvent,
-    SystemEvent,
-    UpdateButton,
-    WheelEvent,
-)
 from .util import get_remotes
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,7 +109,6 @@ class WheelCounter:
 class HaloWebsocket(HaloBase):
     """WebSocket for Halo."""
 
-    _configuration: BaseConfiguration | None = None
     _entity_map: dict[str, str] = {}
     _wheel_action_handlers: dict[str, WheelCounter] = {}
 
@@ -148,10 +147,6 @@ class HaloWebsocket(HaloBase):
                 self.hass,
                 entity_ids,
                 self._handle_entity_state_change,
-            )
-            # Handle configuration
-            self._configuration = BaseConfiguration.from_dict(
-                self.entry.options[CONF_HALO]
             )
             # Create wheel counters
             self._wheel_action_handlers = {
@@ -196,43 +191,6 @@ class HaloWebsocket(HaloBase):
             SENSOR_DOMAIN: self._handle_no_wheel_action,
             SWITCH_DOMAIN: self._handle_switch_wheel_action_callback,
         }
-
-    def _get_button_from_id(self, button_id: str) -> Button | None:
-        """Get Button from button_id."""
-        if self._configuration is not None:
-            for page in self._configuration.configuration.pages:
-                for button in page.buttons:
-                    if button.id == button_id:
-                        return button
-        return None
-
-    def _update_configuration(
-        self, button_id: str, button_state: ButtonState, button_value: int
-    ) -> None:
-        """Update Configuration with a button's current value."""
-        if TYPE_CHECKING:
-            assert self._configuration
-
-        for page_idx, page in enumerate(self._configuration.configuration.pages):
-            for button_idx, button in enumerate(page.buttons):
-                if button.id == button_id:
-                    self._configuration.configuration.pages[page_idx].buttons[
-                        button_idx
-                    ].state = button_state
-
-                    self._configuration.configuration.pages[page_idx].buttons[
-                        button_idx
-                    ].value = button_value
-
-        # TO DO: Evaluate when config_entry options should be updated
-        # new_entry_data = dict(self._entry.options)
-        # new_entry_data[CONF_HALO] = self._configuration.to_dict()
-
-        # self.hass.config_entries.async_update_entry(self._entry, options=new_entry_data)
-
-    def _clamp_value(self, value: int) -> int:
-        """Clamp a value to work with Halo value."""
-        return int(np.clip(value, MIN_VALUE, MAX_VALUE))
 
     async def _handle_no_button_action(
         self, entity_state: State, button_id: str
@@ -291,7 +249,7 @@ class HaloWebsocket(HaloBase):
             return
 
         # Get button from Halo configuration
-        if (button := self._get_button_from_id(button_id)) is None:
+        if (button := self._client.get_button_from_id(button_id)) is None:
             _LOGGER.error("Unable to retrieve Halo button for %s", entity_id)
             return
 
@@ -303,12 +261,9 @@ class HaloWebsocket(HaloBase):
             )
             return
 
-        # Update configuration
-        self._update_configuration(button.id, button_state, button_value)
-
         # Send update to Halo
-        await self._client.send(
-            BaseUpdate(update=UpdateButton(button.id, button_state, button_value))
+        await self._client.update(
+            Update(update=UpdateButton(button.id, button_state, button_value))
         )
 
     async def _handle_entity_button_action(self, button_id: str) -> None:
@@ -396,18 +351,16 @@ class HaloWebsocket(HaloBase):
                 and state.attributes[ATTR_MIN] != 0
                 and state.attributes[ATTR_MAX] != 100
             ):
-                converted_state = int(
-                    np.interp(
-                        converted_state,
-                        [state.attributes[ATTR_MIN], state.attributes[ATTR_MAX]],
-                        [MIN_VALUE, MAX_VALUE],
-                    )
+                converted_state = interpolate_button_value(
+                    converted_state,
+                    state.attributes[ATTR_MIN],
+                    state.attributes[ATTR_MAX],
                 )
             else:
-                converted_state = self._clamp_value(converted_state)
+                converted_state = clamp_button_value(converted_state)
 
         except ValueError:
-            _LOGGER.exception("Error when handling number or sensor state %s", state)
+            _LOGGER.debug("Error when handling number or sensor state %s", state)
 
             button_state = ButtonState.INACTIVE
             button_value = 0
@@ -426,7 +379,7 @@ class HaloWebsocket(HaloBase):
         self, entity_state: State, button_id: str
     ) -> None:
         """Handle Number Button entity button actions."""
-        if (button := self._get_button_from_id(button_id)) is None:
+        if (button := self._client.get_button_from_id(button_id)) is None:
             _LOGGER.error(
                 "Unable to retrieve Halo button for %s", entity_state.entity_id
             )
@@ -526,9 +479,7 @@ class HaloWebsocket(HaloBase):
             )
             button_value = 100 if state.state == STATE_ON else 0
         except ValueError:
-            _LOGGER.exception(
-                "Error when handling switch or binary_sensor state %s", state
-            )
+            _LOGGER.debug("Error when handling switch or binary_sensor state %s", state)
 
             button_state = ButtonState.INACTIVE
             button_value = 0
@@ -608,15 +559,9 @@ class HaloWebsocket(HaloBase):
                 else 0
             )
             # Brightness does not go to 255?
-            converted_state = int(
-                np.interp(
-                    brightness,
-                    [0, 254],
-                    [MIN_VALUE, MAX_VALUE],
-                )
-            )
+            converted_state = interpolate_button_value(brightness, 0, 254)
         except ValueError:
-            _LOGGER.exception("Error when handling light state %s", state)
+            _LOGGER.debug("Error when handling light state %s", state)
 
             button_state = ButtonState.INACTIVE
             button_value = 0
@@ -695,10 +640,7 @@ class HaloWebsocket(HaloBase):
         """Handle WebSocket connection made."""
         _LOGGER.debug("Connected to the %s event channel", self.entry.title)
 
-        if self._configuration:
-            # Send initial configuration
-            await self._client.send(self._configuration)
-
+        if self._client.configuration:
             # Send entity states as updates
             for entity_id in self._entity_map.values():
                 await self._update_entity_button_values(entity_id)
@@ -872,7 +814,7 @@ class MozartWebsocket(MozartBase):
             EVENT_TRANSLATION_MAP[notification.type],
         )
 
-    def on_button_notification(self, notification: ButtonEvent) -> None:
+    def on_button_notification(self, notification: MozartButtonEvent) -> None:
         """Send button dispatch."""
         assert notification.state
         # Send to event entity
@@ -1022,7 +964,9 @@ class MozartWebsocket(MozartBase):
                 sw_version=software_status.software_version,
             )
 
-    def on_all_notifications_raw(self, notification: BaseWebSocketResponse) -> None:
+    def on_all_notifications_raw(
+        self, notification: MozartBaseWebSocketResponse
+    ) -> None:
         """Receive all notifications."""
 
         _LOGGER.debug("%s", notification)

@@ -14,9 +14,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HaloConfigEntry, MozartConfigEntry
+from .beoremote_halo.models import PowerEvent, PowerEventState
 from .const import CONNECTION_STATUS, WebsocketNotification
 from .entity import HaloEntity, MozartEntity
-from .halo import PowerEvent, PowerEventState
 from .util import is_halo
 
 

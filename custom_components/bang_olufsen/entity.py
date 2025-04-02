@@ -32,8 +32,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
+from .beoremote_halo.halo import Halo
 from .const import DOMAIN
-from .halo import Halo
 
 
 class BangOlufsenBase:
@@ -122,7 +122,7 @@ class HaloBase(BangOlufsenBase):
     """Base class for Halo."""
 
     def __init__(self, config_entry: ConfigEntry, client: Halo | None = None) -> None:
-        """Initialize Mozart specific variables."""
+        """Initialize Halo specific variables."""
         super().__init__(config_entry)
 
         # Set the Halo client.
@@ -143,7 +143,10 @@ class HaloEntity(Entity, HaloBase):
         """Initialize the object."""
         super().__init__(config_entry)
 
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
+        self._attr_device_info = DeviceInfo(
+            configuration_url=f"http://{self._host}:8080",
+            identifiers={(DOMAIN, self._unique_id)},
+        )
 
     @callback
     def _async_update_connection_state(self, connection_state: bool) -> None:

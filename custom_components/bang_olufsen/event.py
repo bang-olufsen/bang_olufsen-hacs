@@ -21,13 +21,18 @@ from homeassistant.helpers.entity_platform import (
 )
 
 from . import HaloConfigEntry, MozartConfigEntry
+from .beoremote_halo.models import (
+    SystemEvent,
+    Update,
+    UpdateDisplayPage,
+    UpdateNotification,
+)
 from .const import (
     BEO_REMOTE_CONTROL_KEYS,
     BEO_REMOTE_KEY_EVENTS,
     BEO_REMOTE_KEYS,
     BEO_REMOTE_SUBMENU_CONTROL,
     BEO_REMOTE_SUBMENU_LIGHT,
-    CONF_HALO,
     CONNECTION_STATUS,
     DEVICE_BUTTON_EVENTS,
     DEVICE_BUTTONS,
@@ -42,7 +47,6 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import HaloEntity, MozartEntity
-from .halo import BaseUpdate, Notification, SystemEvent
 from .util import get_remotes, is_halo
 
 
@@ -79,6 +83,20 @@ async def async_setup_entry(
                 ),
             },
             func="async_halo_notification",
+        )
+        platform.async_register_entity_service(
+            name="halo_display_page",
+            schema={
+                vol.Required("page_id"): vol.All(
+                    vol.Length(min=37, max=37),
+                    cv.string,
+                ),
+                vol.Required("button_id"): vol.All(
+                    vol.Length(min=37, max=37),
+                    cv.string,
+                ),
+            },
+            func="async_halo_display_page",
         )
 
         entities.extend(await _get_halo_entities(config_entry))
@@ -356,16 +374,21 @@ class HaloEventSystem(HaloEvent):
     def async_halo_configuration(self) -> ServiceResponse:
         """Get raw configuration for the Halo."""
 
-        return cast(ServiceResponse, self.entry.options[CONF_HALO])
+        return cast(ServiceResponse, self._client.configuration.to_dict())
 
     async def async_halo_notification(self, title: str, subtitle: str) -> None:
         """Send a notification to the Halo."""
 
-        await self._client.send(
-            BaseUpdate(
-                update=Notification(
+        await self._client.update(
+            Update(
+                update=UpdateNotification(
                     title=title,
                     subtitle=subtitle,
                 )
             )
         )
+
+    async def async_halo_display_page(self, page_id: str, button_id: str) -> None:
+        """Display a page and button on a Halo."""
+
+        await self._client.update(Update(update=UpdateDisplayPage(page_id, button_id)))

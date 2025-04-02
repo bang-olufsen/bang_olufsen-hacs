@@ -223,7 +223,21 @@
         },
         "subtitle": {
           "name": "Subitle",
-          "description": "The subtitle of the notification"
+          "description": "The subtitle of the notification. 6 lines are supported before formatting starts to break. Use | in yaml mode to construct multiline strings"
+        }
+      }
+    },
+    "halo_display_page": {
+      "name": "Halo Display Page",
+      "description": "Focus on a Page and Button on a Halo",
+      "fields": {
+        "page_id": {
+          "name": "Page ID",
+          "description": "The UUID of a Page"
+        },
+        "subtitle": {
+          "name": "Button ID",
+          "description": "The UUID of a Button"
         }
       }
     },

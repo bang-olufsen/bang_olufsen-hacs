@@ -38,6 +38,8 @@ The favourite buttons correspond to the physical favourite buttons on the device
 
 Beoremote Halo support is still in active development, so several features are missing, and current features may change without any warning.
 
+Do note that the Beoremote Halo can only be connected to one platform at a time, if two platforms try to connect to the Beoremote Halo at the same time, then none of the connections will be stable and usable. This means that the Halo can't be used with [Beoliving Intelligence](https://www.bang-olufsen.com/en/dk/accessories/beoliving-intelligence) and Home Assistant at the same time.
+
 Feel free to open an [issue](https://github.com/bang-olufsen/bang_olufsen-hacs/issues) to request a feature or comment on an existing one.
 
 The Halo can currently only be added through Zeroconf discovery. Afterwards, add a configuration to the Halo by entering the options by pressing the `CONFIGURE` button.
@@ -62,6 +64,7 @@ Generally "wheel" events are handled by counting the number of detents in a "rot
 - Custom actions:
   - Get Halo configuration
   - Send notification to Halo
+  - Display a page and button on the Halo
 - Select or remove default Halo button
 
 #### Missing features
