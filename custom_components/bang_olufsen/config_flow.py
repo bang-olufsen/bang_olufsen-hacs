@@ -197,7 +197,8 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Handle Mozart based products
         if discovery_info.type == ZEROCONF_MOZART:
-            await self._zeroconf_mozart(discovery_info)
+            if (status := await self._zeroconf_mozart(discovery_info)) is not None:
+                return status
 
         # Handle Beoremote Halo
         elif discovery_info.type == ZEROCONF_HALO:
