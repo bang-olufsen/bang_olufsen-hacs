@@ -12,10 +12,11 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -376,10 +377,11 @@ class HaloOptionsFlowHandler(OptionsFlow):
                         domain=[
                             BINARY_SENSOR_DOMAIN,
                             BUTTON_DOMAIN,
-                            CLIMATE_DOMAIN,
                             INPUT_BOOLEAN_DOMAIN,
                             INPUT_BUTTON_DOMAIN,
                             INPUT_NUMBER_DOMAIN,
+                            LIGHT_DOMAIN,
+                            NUMBER_DOMAIN,
                             SCRIPT_DOMAIN,
                             SENSOR_DOMAIN,
                             SWITCH_DOMAIN,
