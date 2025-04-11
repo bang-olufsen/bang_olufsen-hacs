@@ -49,6 +49,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -156,12 +157,13 @@ class HaloWebsocket(HaloBase):
         # Dict for associating platforms with update methods
         self._entity_update_map: dict[str, Callable] = {
             BINARY_SENSOR_DOMAIN: self._handle_binary_update,
-            BUTTON_DOMAIN: self._handle_button_update,
+            BUTTON_DOMAIN: self._handle_no_update,
             INPUT_BOOLEAN_DOMAIN: self._handle_binary_update,
-            INPUT_BUTTON_DOMAIN: self._handle_button_update,
+            INPUT_BUTTON_DOMAIN: self._handle_no_update,
             INPUT_NUMBER_DOMAIN: self._handle_number_sensor_update,
             LIGHT_DOMAIN: self._handle_light_update,
             NUMBER_DOMAIN: self._handle_number_sensor_update,
+            SCRIPT_DOMAIN: self._handle_no_update,
             SENSOR_DOMAIN: self._handle_number_sensor_update,
             SWITCH_DOMAIN: self._handle_binary_update,
         }
@@ -176,6 +178,7 @@ class HaloWebsocket(HaloBase):
             LIGHT_DOMAIN: self._handle_light_button_action,
             NUMBER_DOMAIN: self._handle_number_button_action,
             SENSOR_DOMAIN: self._handle_no_button_action,
+            SCRIPT_DOMAIN: self._handle_script_button_action,
             SWITCH_DOMAIN: self._handle_binary_button_action,
         }
 
@@ -188,6 +191,7 @@ class HaloWebsocket(HaloBase):
             INPUT_NUMBER_DOMAIN: self._handle_number_wheel_action_callback,
             LIGHT_DOMAIN: self._handle_light_wheel_action_callback,
             NUMBER_DOMAIN: self._handle_number_wheel_action_callback,
+            SCRIPT_DOMAIN: self._handle_no_wheel_action,
             SENSOR_DOMAIN: self._handle_no_wheel_action,
             SWITCH_DOMAIN: self._handle_switch_wheel_action_callback,
         }
@@ -222,7 +226,7 @@ class HaloWebsocket(HaloBase):
         entity_id = event.data[CONF_ENTITY_ID]
 
         if entity_id not in self._entity_map.values():
-            logging.error("Entity %s is not in entity map")
+            _LOGGER.error("Entity %s is not in entity map")
             return
 
         await self._update_entity_button_values(entity_id)
@@ -534,8 +538,8 @@ class HaloWebsocket(HaloBase):
         self._wheel_action_handlers[entity_state.entity_id].counter = 0
         self._wheel_action_handlers[entity_state.entity_id].timer = None
 
-    def _handle_button_update(self, _: State) -> tuple[ButtonState, int]:
-        """Handle state change events of Input Button and Button entities."""
+    def _handle_no_update(self, _: State) -> tuple[ButtonState, int]:
+        """Handle state change events of Input Button, Button and Script entities."""
         # Currently do nothing when a button has been pressed.
         # Ideally there would be some indication, but it is cumbersome for now.
         return (ButtonState.INACTIVE, 0)
@@ -549,6 +553,12 @@ class HaloWebsocket(HaloBase):
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: entity_state.entity_id},
         )
+
+    async def _handle_script_button_action(self, entity_state: State, _: str) -> None:
+        """Handle Script entity button actions."""
+        _LOGGER.debug("Activating script: %s ", entity_state.name)
+
+        await self.hass.services.async_call(entity_state.domain, entity_state.name)
 
     def _handle_light_update(self, state: State) -> tuple[ButtonState, int]:
         """Handle state change events of Light entities."""

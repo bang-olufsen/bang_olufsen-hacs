@@ -55,6 +55,7 @@ Generally "wheel" events are handled by counting the number of detents in a "rot
   - Support for Button / Input Button entities
   - Support for Light entities
   - Support for Number / Input Number entities
+  - Support for Script entities
   - Support for Sensor entities
   - Support for Switch / Input Boolean entities
 - Delete pages
@@ -74,7 +75,6 @@ These features have to evaluated further and are in no particular order.
 - Modify pages
   - Modify buttons
 - Support for more Entity types
-- Entity filtering for config_flow
 - Manual setup
 - Create Event entity for button instead of selecting an existing entity
 
