@@ -164,10 +164,13 @@ class Configuration(DataClassJSONMixin):
 
     def __post_init__(self) -> None:
         """Ensure at most one Button is marked as default."""
-        default_buttons = [
-            [button for button in page.buttons if button.default is True]
-            for page in self.pages
-        ]
+
+        default_buttons: list[Button] = []
+        for page in self.pages:
+            default_buttons.extend(
+                button for button in page.buttons if button.default is True
+            )
+
         if len(default_buttons) > 1:
             raise ValueError(
                 f"Only a single Button can be default per configuration. Default buttons found {default_buttons}"
