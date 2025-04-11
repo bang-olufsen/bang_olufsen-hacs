@@ -10,6 +10,15 @@ from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
+from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -362,7 +371,20 @@ class HaloOptionsFlowHandler(OptionsFlow):
             {
                 vol.Required(CONF_PAGE_NAME): str,
                 vol.Required(CONF_ENTITIES): EntitySelector(
-                    EntitySelectorConfig(multiple=True)
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain=[
+                            BINARY_SENSOR_DOMAIN,
+                            BUTTON_DOMAIN,
+                            CLIMATE_DOMAIN,
+                            INPUT_BOOLEAN_DOMAIN,
+                            INPUT_BUTTON_DOMAIN,
+                            INPUT_NUMBER_DOMAIN,
+                            SCRIPT_DOMAIN,
+                            SENSOR_DOMAIN,
+                            SWITCH_DOMAIN,
+                        ],
+                    )
                 ),
             }
         )
