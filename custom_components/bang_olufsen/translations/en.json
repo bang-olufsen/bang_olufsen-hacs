@@ -1265,7 +1265,8 @@
             "invalid_model": "The {model} does not support configuration.",
             "invalid_page_name": "Can't add page {page_name} as names must be unique.",
             "no_default": "No current default.",
-            "no_pages": "No pages available."
+            "no_pages": "No pages available.",
+            "too_many_buttons": "Can't add {num_buttons} buttons as only 8 are supported per page."
         },
         "step": {
             "add_page": {
@@ -1273,7 +1274,7 @@
                     "entities": "Entities",
                     "page_name": "Page name"
                 },
-                "description": "Create a new page with selected entities",
+                "description": "Create a new page with selected entities. 8 buttons are supported per page",
                 "title": "Add page"
             },
             "create_buttons": {
@@ -1294,7 +1295,7 @@
                 "title": "Delete pages"
             },
             "init": {
-                "description": "Configure Beoremote Halo for Home Assistant",
+                "description": "Configure Beoremote Halo for Home Assistant. 3 pages are supported per configuration",
                 "menu_options": {
                     "add_page": "Create a new page",
                     "delete_pages": "Delete existing pages",

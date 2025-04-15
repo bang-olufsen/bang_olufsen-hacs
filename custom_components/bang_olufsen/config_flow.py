@@ -72,6 +72,8 @@ from .const import (
     DEFAULT_MODEL,
     DOMAIN,
     HALO_BUTTON_ICONS,
+    HALO_MAX_NUM_BUTTONS,
+    HALO_MAX_NUM_PAGES,
     HALO_TEXT_LENGTH,
     HALO_TITLE_LENGTH,
     MOZART_MODELS,
@@ -340,10 +342,13 @@ class HaloOptionsFlowHandler(OptionsFlow):
                 if button.default:
                     self._current_default = f"{page.title}-{button.title} ({button.id})"
 
-        return self.async_show_menu(
-            step_id="init",
-            menu_options=["add_page", "delete_pages", "modify_default"],
-        )
+        # Remove "add_page" option if 3 already are in the configuration
+        options = []
+        if len(self._configuration.configuration.pages) < HALO_MAX_NUM_PAGES:
+            options.append("add_page")
+        options.extend(["delete_pages", "modify_default"])
+
+        return self.async_show_menu(step_id="init", menu_options=options)
 
     async def async_step_add_page(
         self, user_input: dict[str, Any] | None = None
@@ -351,23 +356,31 @@ class HaloOptionsFlowHandler(OptionsFlow):
         """Add a new page."""
 
         if user_input is not None:
+            self._page = Page(user_input[CONF_PAGE_NAME], [], id=halo_uuid())
+            self._entity_ids = user_input[CONF_ENTITIES]
+
+            # Ensure that there are no more than 8 selected entities
+            if len(self._entity_ids) > HALO_MAX_NUM_BUTTONS:
+                return self.async_abort(
+                    reason="too_many_buttons",
+                    description_placeholders={
+                        "num_buttons": str(len(self._entity_ids))
+                    },
+                )
+
             # Ensure that all page names are unique
             page_names = [
                 page.title for page in self._configuration.configuration.pages
             ]
 
-            if user_input[CONF_PAGE_NAME] in page_names:
+            if self._page.title in page_names:
                 return self.async_abort(
                     reason="invalid_page_name",
-                    description_placeholders={"page_name": user_input[CONF_PAGE_NAME]},
+                    description_placeholders={"page_name": self._page.title},
                 )
-
-            self._page = Page(user_input[CONF_PAGE_NAME], [], id=halo_uuid())
-            self._entity_ids = user_input[CONF_ENTITIES]
 
             return await self.async_step_create_buttons()
 
-        # TO DO filter unsupported entities
         options_schema = vol.Schema(
             {
                 vol.Required(CONF_PAGE_NAME): str,

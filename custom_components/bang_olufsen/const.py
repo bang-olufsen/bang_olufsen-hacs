@@ -149,6 +149,8 @@ CONF_DEFAULT_BUTTON: Final = "default_button"
 HALO_TITLE_LENGTH: Final = 15
 HALO_PAGE_LENGTH: Final = 35
 HALO_TEXT_LENGTH: Final = 6
+HALO_MAX_NUM_BUTTONS: Final = 8
+HALO_MAX_NUM_PAGES: Final = 3
 
 # The names of compatible button icons for the Beoremote Halo
 HALO_BUTTON_ICONS: list[str] = [icon.name for icon in Icons]
