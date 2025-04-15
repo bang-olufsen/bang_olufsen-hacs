@@ -142,11 +142,20 @@ class Page(DataClassJSONMixin):
     """Group of `Button` elements grouped with a title in the `Configuration`.
 
     Contains a title, a list of buttons and an id.
+
+    Ensures that at most 8 buttons are in a page.
     """
 
     title: str
     buttons: list[Button]
     id: str = str(uuid1())
+
+    def __post_init__(self) -> None:
+        """Ensure configuration is valid."""
+
+        # Ensure that there are no more than 3 pages.
+        if len(self.buttons) > 8:
+            raise ValueError("Only 8 buttons are allowed in a page.")
 
 
 @dataclass
@@ -156,6 +165,7 @@ class Configuration(DataClassJSONMixin):
     Contains a list of pages, the version of the API client and an ID.
 
     Ensures that at most one `Button` is marked default.
+    Ensures that at most 3 pages are in a configuration.
     """
 
     pages: list[Page]
@@ -163,8 +173,9 @@ class Configuration(DataClassJSONMixin):
     id: str = str(uuid1())
 
     def __post_init__(self) -> None:
-        """Ensure at most one Button is marked as default."""
+        """Ensure configuration is valid."""
 
+        # Ensure that at most one Button is marked as default.
         default_buttons: list[Button] = []
         for page in self.pages:
             default_buttons.extend(
@@ -175,6 +186,10 @@ class Configuration(DataClassJSONMixin):
             raise ValueError(
                 f"Only a single Button can be default per configuration. Default buttons found {default_buttons}"
             )
+
+        # Ensure that there are no more than 3 pages.
+        if len(self.pages) > 3:
+            raise ValueError("Only 3 pages are allowed per configuration.")
 
 
 @dataclass
