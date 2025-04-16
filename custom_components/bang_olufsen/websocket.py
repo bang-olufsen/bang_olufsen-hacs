@@ -972,13 +972,11 @@ class MozartWebsocket(MozartBase):
         self, notification: MozartBaseWebSocketResponse
     ) -> None:
         """Receive all notifications."""
+        debug_notification = {
+            "device_id": self._device.id,
+            "serial_number": int(self._unique_id),
+            **notification,
+        }
 
-        _LOGGER.debug("%s", notification)
-        self.hass.bus.async_fire(
-            MOZART_WEBSOCKET_EVENT,
-            {
-                "device_id": self._device.id,
-                "serial_number": int(self._unique_id),
-                **notification,
-            },
-        )
+        _LOGGER.debug("%s", debug_notification)
+        self.hass.bus.async_fire(MOZART_WEBSOCKET_EVENT, debug_notification)
