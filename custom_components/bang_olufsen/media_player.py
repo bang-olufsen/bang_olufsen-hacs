@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import ClientConnectorError
 from inflection import titleize, underscore
-from mozart_api import __version__ as MOZART_API_VERSION
 from mozart_api.exceptions import ApiException
 from mozart_api.models import (
     Action,
@@ -96,14 +95,13 @@ from .const import (
     CONF_BEOLINK_JID,
     CONNECTION_STATUS,
     DOMAIN,
-    FALLBACK_SOURCES,
     VALID_MEDIA_TYPES,
     BangOlufsenMediaType,
     BangOlufsenSource,
     WebsocketNotification,
 )
 from .entity import MozartEntity
-from .util import get_serial_number_from_jid
+from .util import get_serial_number_from_jid, get_sources
 
 PARALLEL_UPDATES = 0
 
@@ -363,12 +361,12 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
         """Generate extra state attributes for favourites."""
         # As this is run before sources are defined, unsorted sources are found once here
         if not self._unsorted_sources:
-            sources = await self._client.get_available_sources(target_remote=False)
+            sources = await get_sources(self._client)
 
             # Store the ids and Friendly names of all sources to use in favourites attributes
             self._unsorted_sources = {
                 source.id: source.name
-                for source in cast(list[Source], sources.items)
+                for source in sources
                 if source.id and source.name
             }
 
@@ -424,31 +422,13 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
     async def _async_update_sources(self, _: Source | None = None) -> None:
         """Get sources for the specific product."""
-
         # Audio sources
-        try:
-            # Get all available sources.
-            sources = await self._client.get_available_sources(target_remote=False)
-
-        # Use a fallback list of sources
-        except ValueError:
-            # Try to get software version from device
-            if self.device_info:
-                sw_version = self.device_info.get("sw_version")
-            if not sw_version:
-                sw_version = self._software_status.software_version
-
-            _LOGGER.warning(
-                "The API is outdated compared to the device software version %s and %s. Using fallback sources",
-                MOZART_API_VERSION,
-                sw_version,
-            )
-            sources = FALLBACK_SOURCES
+        sources = await get_sources(self._client)
 
         # Save all of the relevant enabled sources, both the ID and the friendly name for displaying in a dict.
         self._audio_sources = {
             source.id: source.name
-            for source in cast(list[Source], sources.items)
+            for source in sources
             if source.is_enabled and source.id and source.name and source.is_playable
         }
 
@@ -461,7 +441,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
                 if source.is_multiroom_available is not None
                 else False
             )
-            for source in cast(list[Source], sources.items)
+            for source in sources
             if source.id
         }
 
@@ -559,12 +539,12 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
         # Try to ensure that a source is active (not unknown).
         elif self._source_change.id == BangOlufsenSource.UNKNOWN.id:
-            sources = await self._client.get_available_sources(target_remote=False)
+            sources = await get_sources(self._client)
 
             default_source = None
 
             # Get USB or Line-in, depending on which one of them is enabled
-            for source in cast(list[Source], sources.items):
+            for source in sources:
                 if source.is_enabled and source.id in (
                     BangOlufsenSource.LINE_IN.id,
                     BangOlufsenSource.USB_IN.id,

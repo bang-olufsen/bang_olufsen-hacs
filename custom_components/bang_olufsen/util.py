@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+import logging
 from typing import cast
 
-from mozart_api.models import PairedRemote
+from mozart_api import __version__ as MOZART_API_VERSION
+from mozart_api.models import PairedRemote, Source
 from mozart_api.mozart_client import MozartClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 
-from .const import MOZART_MODELS, BangOlufsenModel
+from .const import FALLBACK_SOURCES, MOZART_MODELS, BangOlufsenModel
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_serial_number_from_jid(jid: str) -> str:
@@ -46,3 +50,18 @@ async def get_remotes(client: MozartClient) -> list[PairedRemote]:
         for remote in cast(list[PairedRemote], bluetooth_remote_list.items)
         if remote.serial_number is not None
     ]
+
+
+async def get_sources(client: MozartClient) -> list[Source]:
+    """Ensure sources received, even when the API client is outdated."""
+    try:
+        return cast(
+            list[Source],
+            (await client.get_available_sources(target_remote=False)).items,
+        )
+    except ValueError:
+        _LOGGER.warning(
+            "The API client: %s is outdated compared to the device software. Using fallback sources",
+            MOZART_API_VERSION,
+        )
+        return FALLBACK_SOURCES

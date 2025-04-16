@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Final
 
-from mozart_api.models import Source, SourceArray, SourceTypeEnum
+from mozart_api.models import Source, SourceTypeEnum
 
 from homeassistant.components.media_player import (
     MediaPlayerState,
@@ -194,74 +194,72 @@ VALID_MEDIA_TYPES: Final[tuple[str, ...]] = (
 )
 
 # Fallback sources to use in case of API failure.
-FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
-    items=[
-        Source(
-            id="uriStreamer",
-            is_enabled=True,
-            is_playable=True,
-            name="Audio Streamer",
-            type=SourceTypeEnum(value="uriStreamer"),
-            is_seekable=False,
-        ),
-        Source(
-            id="bluetooth",
-            is_enabled=True,
-            is_playable=True,
-            name="Bluetooth",
-            type=SourceTypeEnum(value="bluetooth"),
-            is_seekable=False,
-        ),
-        Source(
-            id="spotify",
-            is_enabled=True,
-            is_playable=True,
-            name="Spotify Connect",
-            type=SourceTypeEnum(value="spotify"),
-            is_seekable=True,
-        ),
-        Source(
-            id="lineIn",
-            is_enabled=True,
-            is_playable=True,
-            name="Line-In",
-            type=SourceTypeEnum(value="lineIn"),
-            is_seekable=False,
-        ),
-        Source(
-            id="spdif",
-            is_enabled=True,
-            is_playable=True,
-            name="Optical",
-            type=SourceTypeEnum(value="spdif"),
-            is_seekable=False,
-        ),
-        Source(
-            id="netRadio",
-            is_enabled=True,
-            is_playable=True,
-            name="B&O Radio",
-            type=SourceTypeEnum(value="netRadio"),
-            is_seekable=False,
-        ),
-        Source(
-            id="deezer",
-            is_enabled=True,
-            is_playable=True,
-            name="Deezer",
-            type=SourceTypeEnum(value="deezer"),
-            is_seekable=True,
-        ),
-        Source(
-            id="tidalConnect",
-            is_enabled=True,
-            is_playable=True,
-            name="Tidal Connect",
-            type=SourceTypeEnum(value="tidalConnect"),
-            is_seekable=True,
-        ),
-    ]
-)
+FALLBACK_SOURCES: Final[list[Source]] = [
+    Source(
+        id="uriStreamer",
+        is_enabled=True,
+        is_playable=True,
+        name="Audio Streamer",
+        type=SourceTypeEnum(value="uriStreamer"),
+        is_seekable=False,
+    ),
+    Source(
+        id="bluetooth",
+        is_enabled=True,
+        is_playable=True,
+        name="Bluetooth",
+        type=SourceTypeEnum(value="bluetooth"),
+        is_seekable=False,
+    ),
+    Source(
+        id="spotify",
+        is_enabled=True,
+        is_playable=True,
+        name="Spotify Connect",
+        type=SourceTypeEnum(value="spotify"),
+        is_seekable=True,
+    ),
+    Source(
+        id="lineIn",
+        is_enabled=True,
+        is_playable=True,
+        name="Line-In",
+        type=SourceTypeEnum(value="lineIn"),
+        is_seekable=False,
+    ),
+    Source(
+        id="spdif",
+        is_enabled=True,
+        is_playable=True,
+        name="Optical",
+        type=SourceTypeEnum(value="spdif"),
+        is_seekable=False,
+    ),
+    Source(
+        id="netRadio",
+        is_enabled=True,
+        is_playable=True,
+        name="B&O Radio",
+        type=SourceTypeEnum(value="netRadio"),
+        is_seekable=False,
+    ),
+    Source(
+        id="deezer",
+        is_enabled=True,
+        is_playable=True,
+        name="Deezer",
+        type=SourceTypeEnum(value="deezer"),
+        is_seekable=True,
+    ),
+    Source(
+        id="tidalConnect",
+        is_enabled=True,
+        is_playable=True,
+        name="Tidal Connect",
+        type=SourceTypeEnum(value="tidalConnect"),
+        is_seekable=True,
+    ),
+]
 
 
 # Map for storing compatibility of devices.
