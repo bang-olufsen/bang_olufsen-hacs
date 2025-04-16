@@ -885,17 +885,11 @@ class MozartWebsocket(MozartBase):
             ]
             # Check if number of remote devices correspond to number of paired remotes
             if len(remote_serial_numbers) != len(device_serial_numbers):
-                # Reinitialize the config entry to update Beoremote One entities and device
-                # Wait 5 seconds for the remote to be properly available to the device
                 _LOGGER.info(
-                    "A Beoremote One has been paired or unpaired to %s. Reloading config entry to add device",
+                    "A Beoremote One has been paired or unpaired to %s. Reloading config entry to add device and entities",
                     self._device.name,
                 )
-                self.hass.loop.call_later(
-                    5,
-                    self.hass.config_entries.async_schedule_reload,
-                    self.entry.entry_id,
-                )
+                self.hass.config_entries.async_schedule_reload(self.entry.entry_id)
 
         elif notification_type is WebsocketNotification.REMOTE_MENU_CHANGED:
             async_dispatcher_send(
