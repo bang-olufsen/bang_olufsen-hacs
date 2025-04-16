@@ -73,7 +73,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.util.dt import utcnow
@@ -134,7 +134,7 @@ BANG_OLUFSEN_FEATURES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MozartConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Media Player entity from config entry."""
     entities: list[MozartMediaPlayer] = []

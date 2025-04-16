@@ -8,7 +8,7 @@ from homeassistant.components.text import TextEntity
 from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MozartConfigEntry
 from .const import CONNECTION_STATUS, MODEL_SUPPORT_HOME_CONTROL, MODEL_SUPPORT_MAP
@@ -18,7 +18,7 @@ from .entity import MozartEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MozartConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Text entities from config entry."""
     entities: list[BangOlufsenText] = []
