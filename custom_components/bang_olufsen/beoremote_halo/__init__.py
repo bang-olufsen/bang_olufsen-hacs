@@ -2,6 +2,17 @@
 
 from .const import MAX_VALUE, MIN_VALUE, VERSION
 from .halo import Halo
+from .helpers import (
+    clear_default_button,
+    delete_button,
+    delete_page,
+    get_all_buttons,
+    get_button_from_id,
+    get_button_indices,
+    get_default_button,
+    get_page_from_id,
+    get_page_index,
+)
 from .models import (
     BaseConfiguration,
     BaseWebSocketResponse,
@@ -56,4 +67,13 @@ __all__ = [
     "UpdateDisplayPage",
     "UpdateNotification",
     "WheelEvent",
+    "clear_default_button",
+    "delete_button",
+    "delete_page",
+    "get_all_buttons",
+    "get_button_from_id",
+    "get_button_indices",
+    "get_default_button",
+    "get_page_from_id",
+    "get_page_index",
 ]

@@ -16,10 +16,10 @@ from aiohttp.client_exceptions import (
 from inflection import underscore
 
 from .const import WEBSOCKET_TIMEOUT
+from .helpers import update_button
 from .models import (
     BaseConfiguration,
     BaseWebSocketResponse,
-    Button,
     ButtonEvent,
     Configuration,
     Event,
@@ -56,7 +56,7 @@ class Halo:
 
         self._websocket_active = False
         self._websocket_task: asyncio.Task
-        self._queue: asyncio.Queue[str] = asyncio.Queue()
+        self._queue: asyncio.Queue[str] | None = None
         self._on_connection_lost: Callable[[None], Awaitable[None] | None] | None = None
         self._on_connection: Callable[[None], Awaitable[None] | None] | None = None
 
@@ -78,7 +78,7 @@ class Halo:
             If the data was successfully put into WebSocket queue.
 
         """
-        if not self._websocket_active:
+        if self._queue is None:
             self._logger.debug(
                 "Unable to send %s. WebSocket connection not active", data
             )
@@ -86,7 +86,8 @@ class Halo:
 
         try:
             self._queue.put_nowait(str(data.to_json()))
-        except (asyncio.QueueFull, asyncio.QueueShutDown):
+        except (asyncio.QueueFull, asyncio.QueueShutDown) as e:
+            self._logger.debug("Unable to send data: %s with error: %s", data, e)
             return False
         else:
             return True
@@ -133,21 +134,13 @@ class Halo:
 
         """
         if update_configuration and isinstance(update.update, UpdateButton):
-            # Try to get indices for button and update configuration
-            if indices := self.get_page_and_button_index(update.update.id):
-                page_idx, button_idx = indices
-
-                self._configuration.configuration.pages[page_idx].buttons[
-                    button_idx
-                ].state = update.update.state
-
-                self._configuration.configuration.pages[page_idx].buttons[
-                    button_idx
-                ].value = update.update.value
-            else:
-                self._logger.debug(
-                    "Unable to find %s in configuration", update.update.id
-                )
+            # Update configuration
+            self._configuration = update_button(
+                self._configuration,
+                update.update.id,
+                state=update.update.state,
+                value=update.update.value,
+            )
 
         return self._send_data(update)
 
@@ -212,6 +205,9 @@ class Halo:
     async def disconnect(self) -> None:
         """Stop WebSocket connection."""
         self._websocket_active = False
+        if self._queue is not None:
+            self._queue.shutdown(True)
+            self._queue = None
         self._websocket_task.cancel()
 
     async def _websocket_connection(
@@ -236,6 +232,9 @@ class Halo:
                 ):
                     self.websocket_connected = True
 
+                    # Start queue
+                    self._queue = asyncio.Queue()
+
                     # Send configuration
                     if send_configuration:
                         self._send_data(self._configuration)
@@ -250,7 +249,7 @@ class Halo:
                             await self._on_message(event)
 
                         # Send updates
-                        with contextlib.suppress(asyncio.QueueEmpty):
+                        if not self._queue.empty():
                             await websocket.send_str(self._queue.get_nowait())
 
                     self.websocket_connected = False
@@ -264,6 +263,11 @@ class Halo:
                 ServerTimeoutError,
                 WSMessageTypeError,
             ) as error:
+                # Stop the queue while the WebSocket connection is inactive
+                if self._queue is not None:
+                    self._queue.shutdown(True)
+                    self._queue = None
+
                 if self.websocket_connected:
                     self._logger.debug("%s : %s - %s", host, type(error), error)
                     self.websocket_connected = False
@@ -372,43 +376,3 @@ class Halo:
     ) -> None:
         """Set callback for ButtonEvent."""
         self._event_callbacks["button"] = on_button_event
-
-    # Configuration helper methods
-    def get_page_and_button_index(self, button_id: str) -> tuple[int, int] | None:
-        """Get `Page` and `Button` indices in configuration from `Button` ID.
-
-        Returns:
-            `Page` index, `Button` index or `None` if button_id can't be found.
-
-        """
-        for page_idx, page in enumerate(self._configuration.configuration.pages):
-            for button_idx, button in enumerate(page.buttons):
-                if button.id == button_id:
-                    return (page_idx, button_idx)
-        return None
-
-    def get_button_from_id(self, button_id: str) -> Button | None:
-        """Get `Button` in configuration from `Button` ID.
-
-        Returns:
-            `Button` or None if `Button` can't be found.
-
-        """
-        for page in self._configuration.configuration.pages:
-            for button in page.buttons:
-                if button.id == button_id:
-                    return button
-        return None
-
-    def get_default_button_id(self) -> str | None:
-        """Get the default `Button` ID from configuration if available.
-
-        Returns:
-            `Button` ID or None.
-
-        """
-        for page in self._configuration.configuration.pages:
-            for button in page.buttons:
-                if button.default is True:
-                    return button.id
-        return None

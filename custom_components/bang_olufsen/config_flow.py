@@ -44,7 +44,17 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.ssl import get_default_context
 from homeassistant.util.uuid import random_uuid_hex
 
-from .beoremote_halo.halo import Halo
+from .beoremote_halo.helpers import (
+    clear_default_button,
+    delete_page,
+    get_all_buttons,
+    get_default_button,
+    get_page_from_id,
+    get_page_index,
+    set_default_button,
+    update_button,
+    update_page,
+)
 from .beoremote_halo.models import (
     BaseConfiguration,
     Button,
@@ -63,7 +73,7 @@ from .const import (
     CONF_DEFAULT_BUTTON,
     CONF_ENTITY_MAP,
     CONF_HALO,
-    CONF_PAGE_NAME,
+    CONF_PAGE_TITLE,
     CONF_PAGES,
     CONF_SERIAL_NUMBER,
     CONF_SUBTITLE,
@@ -82,14 +92,6 @@ from .const import (
     BangOlufsenModel,
 )
 from .util import get_serial_number_from_jid
-
-
-def halo_uuid() -> str:
-    """Get a properly formatted Halo UUID."""
-    # UUIDs from uuid1() are not unique when generated in Home Assistant (???)
-    # Use this function to generate and format UUIDs instead.
-    temp_uuid = random_uuid_hex()
-    return f"{temp_uuid[:8]}-{temp_uuid[8:12]}-{temp_uuid[12:16]}-{temp_uuid[16:20]}-{temp_uuid[20:32]}"
 
 
 class BangOlufsenEntryData(TypedDict, total=False):
@@ -120,7 +122,6 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     _beolink_jid = ""
     _mozart_client: MozartClient
-    _halo_client: Halo
     _host = ""
     _model = ""
     _name = ""
@@ -315,7 +316,10 @@ class HaloOptionsFlowHandler(OptionsFlow):
         self._entity_ids: list[str] = []
         self._entity_map: dict[str, str] = {}
         self._page: Page
-        self._current_default: str = str(None)
+        self._default_button: Button | None
+        self._page_being_modified = False
+        # Only used when modifying / adding buttons
+        self._button: Button | None = None
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -336,102 +340,82 @@ class HaloOptionsFlowHandler(OptionsFlow):
             self._entity_map = self.config_entry.options[CONF_ENTITY_MAP]
 
         # Check for a current default button.
-        # There should only be a single default in the whole configuration
-        for page in self._configuration.configuration.pages:
-            for button in page.buttons:
-                if button.default:
-                    self._current_default = f"{page.title}-{button.title} ({button.id})"
+        self._default_button = get_default_button(self._configuration)
 
-        # Remove "add_page" option if 3 already are in the configuration
         options = []
+        # Remove "page" option if 3 already are in the configuration
         if len(self._configuration.configuration.pages) < HALO_MAX_NUM_PAGES:
-            options.append("add_page")
-        options.extend(["delete_pages", "modify_default"])
+            options.append("page")
+
+        # Add options that require at least one page in the configuration
+        if len(self._configuration.configuration.pages) > 0:
+            options.extend(["modify_page", "delete_pages", "modify_default"])
 
         return self.async_show_menu(step_id="init", menu_options=options)
 
-    async def async_step_add_page(
+    async def async_step_page(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Add a new page."""
 
         if user_input is not None:
-            self._page = Page(user_input[CONF_PAGE_NAME], [], id=halo_uuid())
+            # Don't create a new page if an existing page is being modified
+            if not self._page_being_modified:
+                self._page = Page(user_input[CONF_PAGE_TITLE], [], id=self._halo_uuid())
+            else:
+                # Add the (modified?) page title to the current configuration
+                self._configuration = update_page(
+                    self._configuration, self._page.id, user_input[CONF_PAGE_TITLE]
+                )
             self._entity_ids = user_input[CONF_ENTITIES]
 
-            # Ensure that there are no more than 8 selected entities
-            if len(self._entity_ids) > HALO_MAX_NUM_BUTTONS:
-                return self.async_abort(
-                    reason="too_many_buttons",
-                    description_placeholders={
-                        "num_buttons": str(len(self._entity_ids))
-                    },
-                )
+            return await self.async_step_button()
 
-            # Ensure that all page names are unique
-            page_names = [
-                page.title for page in self._configuration.configuration.pages
-            ]
+        return self.async_show_form(step_id="page", data_schema=self._page_schema())
 
-            if self._page.title in page_names:
-                return self.async_abort(
-                    reason="invalid_page_name",
-                    description_placeholders={"page_name": self._page.title},
-                )
-
-            return await self.async_step_create_buttons()
-
-        options_schema = vol.Schema(
-            {
-                vol.Required(CONF_PAGE_NAME): str,
-                vol.Required(CONF_ENTITIES): EntitySelector(
-                    EntitySelectorConfig(
-                        multiple=True,
-                        domain=[
-                            BINARY_SENSOR_DOMAIN,
-                            BUTTON_DOMAIN,
-                            INPUT_BOOLEAN_DOMAIN,
-                            INPUT_BUTTON_DOMAIN,
-                            INPUT_NUMBER_DOMAIN,
-                            LIGHT_DOMAIN,
-                            NUMBER_DOMAIN,
-                            SCRIPT_DOMAIN,
-                            SENSOR_DOMAIN,
-                            SWITCH_DOMAIN,
-                        ],
-                    )
-                ),
-            }
-        )
-
-        return self.async_show_form(
-            step_id="add_page",
-            data_schema=options_schema,
-        )
-
-    async def async_step_create_buttons(
+    async def async_step_button(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Add buttons to new page."""
         if user_input is not None:
-            button = Button(
-                title=user_input[CONF_TITLE],
-                subtitle=user_input[CONF_SUBTITLE],
-                content=(
-                    Icon(Icons[user_input[CONF_ICON]])
-                    if CONF_ICON in user_input
-                    else Text(user_input[CONF_TEXT])
-                ),
-                id=halo_uuid(),
-            )
-            self._entity_map[button.id] = self._entity_ids[-1]
+            # Create a new button when adding a new page or adding a button to an existing page
+            if not self._page_being_modified or self._button is None:
+                button = Button(
+                    title=user_input[CONF_TITLE],
+                    subtitle=user_input[CONF_SUBTITLE],
+                    content=(
+                        Icon(Icons[user_input[CONF_ICON]])
+                        if CONF_ICON in user_input
+                        else Text(user_input[CONF_TEXT])
+                    ),
+                    id=self._halo_uuid(),
+                )
 
-            self._page.buttons.append(button)
+                # Update entity_map
+                self._entity_map[button.id] = self._entity_ids[-1]
+
+                # Add to current page
+                self._page.buttons.append(button)
+            else:
+                # Update existing button
+                self._configuration = update_button(
+                    self._configuration,
+                    self._button.id,
+                    title=user_input[CONF_TITLE],
+                    subtitle=user_input[CONF_SUBTITLE],
+                    content=(
+                        Icon(Icons[user_input[CONF_ICON]])
+                        if CONF_ICON in user_input
+                        else Text(user_input[CONF_TEXT])
+                    ),
+                )
 
             self._entity_ids.pop()
 
             if not self._entity_ids:
-                self._configuration.configuration.pages.append(self._page)
+                # Add newly created page to configuration
+                if not self._page_being_modified:
+                    self._configuration.configuration.pages.append(self._page)
 
                 return self.async_create_entry(
                     title=f"Page {self._page.title} added to configuration",
@@ -444,31 +428,57 @@ class HaloOptionsFlowHandler(OptionsFlow):
                     ),
                 )
 
+        if not self._page_being_modified:
+            button_schema = self._button_schema()
+        # Add current values as "default" values if page is being modified
+        else:
+            # Get current button attributes from entity_map and page
+            for button in self._page.buttons:
+                if self._entity_map[button.id] == self._entity_ids[-1]:
+                    self._button = button
+            # Newly added buttons won't be available in the entity_map and won't have any initial values
+            if self._button is None:
+                button_schema = self._button_schema()
+            else:
+                button_schema = self._button_schema(
+                    self._button.title, self._button.subtitle, self._button.content
+                )
+
         return self.async_show_form(
-            step_id="create_buttons",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_TITLE): vol.All(
-                        str,
-                        vol.Length(max=HALO_TITLE_LENGTH),
-                    ),
-                    vol.Optional(CONF_SUBTITLE, default=""): vol.All(
-                        str,
-                        vol.Length(max=HALO_TITLE_LENGTH),
-                    ),
-                    vol.Exclusive(CONF_ICON, "content", "Error"): SelectSelector(
-                        SelectSelectorConfig(options=HALO_BUTTON_ICONS)
-                    ),
-                    vol.Exclusive(CONF_TEXT, "content", "Error"): vol.All(
-                        str,
-                        vol.Length(max=HALO_TEXT_LENGTH),
-                    ),
-                },
-            ),
+            step_id="button",
+            data_schema=button_schema,
             description_placeholders={
                 "entity": self._entity_ids[-1],
                 "page": self._page.title,
             },
+        )
+
+    async def async_step_modify_page(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Modify a page."""
+
+        if user_input is not None:
+            page_id = self._get_uuid_from_string(user_input[CONF_PAGES])
+
+            # Get buttons from page
+            self._page = get_page_from_id(self._configuration, page_id)
+            self._page_being_modified = True
+
+            # Get entity_ids from entity_map
+            return self.async_show_form(
+                step_id="page",
+                data_schema=self._page_schema(
+                    page_title=self._page.title,
+                    entities=[
+                        self._entity_map[button.id] for button in self._page.buttons
+                    ],
+                ),
+            )
+
+        return self.async_show_form(
+            step_id="modify_page",
+            data_schema=self._page_selector_schema(multiple=False),
         )
 
     async def async_step_delete_pages(
@@ -477,15 +487,17 @@ class HaloOptionsFlowHandler(OptionsFlow):
         """Delete selected pages."""
 
         if user_input is not None:
-            for page_name in user_input[CONF_PAGES]:
-                for page in self._configuration.configuration.pages.copy():
-                    if page.title == page_name:
-                        # Remove page from configuration
-                        self._configuration.configuration.pages.remove(page)
+            for page_title in user_input[CONF_PAGES]:
+                page_id = self._get_uuid_from_string(page_title)
 
-                        # Remove used button ids from entity_map
-                        for button in page.buttons:
-                            self._entity_map.pop(button.id)
+                # Remove used button ids from entity_map
+                for button in self._configuration.configuration.pages[
+                    get_page_index(self._configuration, page_id)
+                ].buttons:
+                    self._entity_map.pop(button.id)
+
+                # Delete page from configuration
+                self._configuration = delete_page(self._configuration, page_id)
 
             return self.async_create_entry(
                 title="Updated configuration",
@@ -497,23 +509,9 @@ class HaloOptionsFlowHandler(OptionsFlow):
                     entity_map=self._entity_map,
                 ),
             )
-        pages = [page.title for page in self._configuration.configuration.pages]
-
-        if len(pages) == 0:
-            return self.async_abort(reason="no_pages")
-
         return self.async_show_form(
             step_id="delete_pages",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_PAGES): SelectSelector(
-                        SelectSelectorConfig(
-                            options=pages,
-                            multiple=True,
-                        )
-                    ),
-                }
-            ),
+            data_schema=self._page_selector_schema(multiple=True),
         )
 
     async def async_step_modify_default(
@@ -521,10 +519,23 @@ class HaloOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Enter default options."""
 
+        options = []
+        description_placeholders = {}
+
+        # Add remove_default as an option if a default button has been set
+        if self._default_button is not None:
+            options.append("remove_default")
+            description_placeholders["button"] = self._default_button.title
+            # Check if there are any buttons available to select as default (at least 1 that is not default)
+            if len(get_all_buttons(self._configuration)) > 1:
+                options.append("select_default")
+        else:
+            options.append("select_default")
+
         return self.async_show_menu(
             step_id="modify_default",
-            menu_options=["select_default", "remove_default"],
-            description_placeholders={"current_default": self._current_default},
+            menu_options=options,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_select_default(
@@ -532,23 +543,15 @@ class HaloOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Select a default button."""
         if user_input is not None:
+            # Remove any previous default button
+            self._configuration = clear_default_button(self._configuration)
+
             # Update configuration with new default
-            new_default = user_input[CONF_DEFAULT_BUTTON]
-
-            # Find the pages and buttons in the configuration
-            for page_idx, page in enumerate(self._configuration.configuration.pages):
-                for button_idx, button in enumerate(page.buttons):
-                    # Add new default to configuration
-                    if button.id in new_default:
-                        self._configuration.configuration.pages[page_idx].buttons[
-                            button_idx
-                        ].default = True
-
-                    # Remove current default from configuration
-                    if button.id in self._current_default:
-                        self._configuration.configuration.pages[page_idx].buttons[
-                            button_idx
-                        ].default = False
+            set_default_button(
+                self._configuration,
+                self._get_uuid_from_string(user_input[CONF_DEFAULT_BUTTON]),
+                True,
+            )
 
             return self.async_create_entry(
                 title="Updated configuration",
@@ -572,10 +575,6 @@ class HaloOptionsFlowHandler(OptionsFlow):
                 ]
             )
 
-        # Abort if no buttons are available
-        if len(buttons) == 0:
-            return self.async_abort(reason="no_pages")
-
         return self.async_show_form(
             step_id="select_default",
             data_schema=vol.Schema(
@@ -583,13 +582,11 @@ class HaloOptionsFlowHandler(OptionsFlow):
                     vol.Required(CONF_DEFAULT_BUTTON): SelectSelector(
                         SelectSelectorConfig(
                             options=buttons,
-                            multiple=False,
                             sort=True,
                         )
                     ),
                 }
             ),
-            description_placeholders={"current_default": self._current_default},
         )
 
     async def async_step_remove_default(
@@ -597,17 +594,8 @@ class HaloOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Remove the default attribute from a button."""
 
-        # Abort if no buttons are available
-        if self._current_default == str(None):
-            return self.async_abort(reason="no_default")
-
         # Remove current default from configuration
-        for page_idx, page in enumerate(self._configuration.configuration.pages):
-            for button_idx, button in enumerate(page.buttons):
-                if button.id in self._current_default:
-                    self._configuration.configuration.pages[page_idx].buttons[
-                        button_idx
-                    ].default = False
+        self._configuration = clear_default_button(self._configuration)
 
         return self.async_create_entry(
             title="Updated configuration",
@@ -618,4 +606,115 @@ class HaloOptionsFlowHandler(OptionsFlow):
                 halo=self._configuration.to_dict(),
                 entity_map=self._entity_map,
             ),
+        )
+
+    def _halo_uuid(self) -> str:
+        """Get a properly formatted Halo UUID."""
+        # UUIDs from uuid1() are not unique when generated in Home Assistant (???)
+        # Use this function to generate and format UUIDs instead.
+        temp_uuid = random_uuid_hex()
+        return f"{temp_uuid[:8]}-{temp_uuid[8:12]}-{temp_uuid[12:16]}-{temp_uuid[16:20]}-{temp_uuid[20:32]}"
+
+    def _get_uuid_from_string(self, string: str) -> str:
+        """Get Halo UUID from formatted string: * (<UUID>)."""
+        return string[-37:-1]
+
+    def _page_schema(
+        self,
+        page_title: str | vol.Undefined = vol.UNDEFINED,
+        entities: list[str] | vol.Undefined = vol.UNDEFINED,
+    ) -> vol.Schema:
+        """Fill schema for page modification or creation."""
+
+        return vol.Schema(
+            {
+                vol.Required(CONF_PAGE_TITLE, default=page_title): str,
+                vol.Required(CONF_ENTITIES, default=entities): vol.All(
+                    vol.Length(min=1, max=HALO_MAX_NUM_BUTTONS),
+                    EntitySelector(
+                        EntitySelectorConfig(
+                            multiple=True,
+                            domain=[
+                                BINARY_SENSOR_DOMAIN,
+                                BUTTON_DOMAIN,
+                                INPUT_BOOLEAN_DOMAIN,
+                                INPUT_BUTTON_DOMAIN,
+                                INPUT_NUMBER_DOMAIN,
+                                LIGHT_DOMAIN,
+                                NUMBER_DOMAIN,
+                                SCRIPT_DOMAIN,
+                                SENSOR_DOMAIN,
+                                SWITCH_DOMAIN,
+                            ],
+                        )
+                    ),
+                ),
+            }
+        )
+
+    def _button_schema(
+        self,
+        title: str | vol.Undefined = vol.UNDEFINED,
+        subtitle: str = "",
+        content: Icon | Text | None = None,
+    ) -> vol.Schema:
+        """Fill schema for button modification or creation."""
+
+        class ExclusiveKwargs(TypedDict, total=False):
+            schema: vol.Schemable
+            group_of_exclusion: str
+            msg: str | None
+            description: str | Any
+
+        icon_kwargs: ExclusiveKwargs = {
+            "schema": CONF_ICON,
+            "group_of_exclusion": "content",
+            "msg": "Choose either an Icon or Text",
+        }
+        text_kwargs: ExclusiveKwargs = {
+            "schema": CONF_TEXT,
+            "group_of_exclusion": "content",
+            "msg": "Choose either an Icon or Text",
+        }
+        # Add suggested value to kwargs if an Icon or Text value is available
+        if isinstance(content, Icon):
+            icon_kwargs["description"] = {"suggested_value": content.icon.name}
+        elif isinstance(content, Text):
+            text_kwargs["description"] = {"suggested_value": content.text}
+
+        return vol.Schema(
+            {
+                vol.Required(CONF_TITLE, default=title): vol.All(
+                    str,
+                    vol.Length(max=HALO_TITLE_LENGTH),
+                ),
+                vol.Optional(CONF_SUBTITLE, default=subtitle): vol.All(
+                    str,
+                    vol.Length(max=HALO_TITLE_LENGTH),
+                ),
+                vol.Exclusive(**icon_kwargs): SelectSelector(
+                    SelectSelectorConfig(options=HALO_BUTTON_ICONS)
+                ),
+                vol.Exclusive(**text_kwargs): vol.All(
+                    str,
+                    vol.Length(max=HALO_TEXT_LENGTH),
+                ),
+            },
+        )
+
+    def _page_selector_schema(self, multiple: bool) -> vol.Schema:
+        """Select a single or multiple pages from title."""
+
+        return vol.Schema(
+            {
+                vol.Required(CONF_PAGES): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            f"{page.title} - ({page.id})"
+                            for page in self._configuration.configuration.pages
+                        ],
+                        multiple=multiple,
+                    )
+                )
+            }
         )

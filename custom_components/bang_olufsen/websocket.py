@@ -70,6 +70,7 @@ from homeassistant.util.enum import try_parse_enum
 
 from .beoremote_halo.const import MAX_VALUE, MIN_VALUE
 from .beoremote_halo.halo import Halo
+from .beoremote_halo.helpers import get_button_from_id
 from .beoremote_halo.models import (
     BaseWebSocketResponse as HaloBaseWebSocketResponse,
     ButtonEvent as HaloButtonEvent,
@@ -253,7 +254,9 @@ class HaloWebsocket(HaloBase):
             return
 
         # Get button from Halo configuration
-        if (button := self._client.get_button_from_id(button_id)) is None:
+        if (
+            button := get_button_from_id(self._client.configuration, button_id)
+        ) is None:
             _LOGGER.error("Unable to retrieve Halo button for %s", entity_id)
             return
 
@@ -383,7 +386,10 @@ class HaloWebsocket(HaloBase):
         self, entity_state: State, button_id: str
     ) -> None:
         """Handle Number Button entity button actions."""
-        if (button := self._client.get_button_from_id(button_id)) is None:
+
+        if (
+            button := get_button_from_id(self._client.configuration, button_id)
+        ) is None:
             _LOGGER.error(
                 "Unable to retrieve Halo button for %s", entity_state.entity_id
             )
@@ -432,20 +438,18 @@ class HaloWebsocket(HaloBase):
 
         # Clamp the value if possible
         if {"min", "max"}.issubset(entity_state.attributes):
-            new_number = int(
-                np.clip(
-                    new_number,
-                    entity_state.attributes[ATTR_MIN],
-                    entity_state.attributes[ATTR_MAX],
-                )
+            converted_state = interpolate_button_value(
+                new_number,
+                entity_state.attributes[ATTR_MIN],
+                entity_state.attributes[ATTR_MAX],
             )
 
-        if new_number == 0:
+        if converted_state == 0:
             return
 
         # Wrap action call in a task as callbacks can't be async
         asyncio.create_task(
-            self._handle_number_wheel_action_task(entity_state, new_number)
+            self._handle_number_wheel_action_task(entity_state, converted_state)
         ).done()
 
     async def _handle_number_wheel_action_task(

@@ -1263,28 +1263,17 @@
     "options": {
         "abort": {
             "invalid_model": "The {model} does not support configuration.",
-            "invalid_page_name": "Can't add page {page_name} as names must be unique.",
-            "no_default": "No current default.",
-            "no_pages": "No pages available.",
             "too_many_buttons": "Can't add {num_buttons} buttons as only 8 are supported per page."
         },
         "step": {
-            "add_page": {
-                "data": {
-                    "entities": "Entities",
-                    "page_name": "Page name"
-                },
-                "description": "Create a new page with selected entities. 8 buttons are supported per page",
-                "title": "Add page"
-            },
-            "create_buttons": {
+            "button": {
                 "data": {
                     "icon": "Icon",
                     "subtitle": "Subtitle",
                     "text": "Text",
                     "title": "Title"
                 },
-                "description": "Select a configuration for the {entity} button in the {page} page",
+                "description": "Select a configuration for the {entity} button in the {page} page. Icon and Text can't both be defined, but one of them is required",
                 "title": "Configure button"
             },
             "delete_pages": {
@@ -1295,26 +1284,42 @@
                 "title": "Delete pages"
             },
             "init": {
-                "description": "Configure Beoremote Halo for Home Assistant. 3 pages are supported per configuration",
+                "description": "Configure Beoremote Halo for Home Assistant.",
                 "menu_options": {
-                    "add_page": "Create a new page",
                     "delete_pages": "Delete existing pages",
-                    "modify_default": "Modify default button"
+                    "modify_default": "Modify default button",
+                    "modify_page": "Modify an existing page",
+                    "page": "Create a new page"
                 }
             },
             "modify_default": {
-                "description": "Select or remove a default button for the Beoremote Halo. Current default is: {current_default}",
+                "description": "Select or remove a default button for the Beoremote Halo.",
                 "menu_options": {
-                    "remove_default": "Remove the default attribute from a button",
-                    "select_default": "Select a new default button"
+                    "remove_default": "Remove the default attribute from {button}",
+                    "select_default": "Select the default button"
                 },
                 "title": "Modify default"
+            },
+            "modify_page": {
+                "data": {
+                    "pages": "Pages"
+                },
+                "description": "Modify the title and buttons of an existing page",
+                "title": "Modify page"
+            },
+            "page": {
+                "data": {
+                    "entities": "Entities",
+                    "page_title": "Page title"
+                },
+                "description": "Create or modify a page with selected entities as buttons.",
+                "title": "Page"
             },
             "select_default": {
                 "data": {
                     "default_button": "Default button"
                 },
-                "description": "Select a new default button. Current default is: {current_default} and can't be selected",
+                "description": "Select the default button",
                 "title": "Select default"
             }
         }

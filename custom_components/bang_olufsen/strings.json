@@ -39,31 +39,36 @@
   "options": {
     "abort": {
       "invalid_model": "The {model} does not support configuration.",
-      "no_pages": "No pages available.",
-      "no_default": "No current default.",
-      "invalid_page_name": "Can't add page {page_name} as names must be unique.",
       "too_many_buttons": "Can't add {num_buttons} buttons as only 8 are supported per page."
     },
     "step": {
       "init": {
-        "description": "Configure Beoremote Halo for Home Assistant. 3 pages are supported per configuration",
+        "description": "Configure Beoremote Halo for Home Assistant.",
         "menu_options": {
-          "add_page": "Create a new page",
+          "page": "Create a new page",
+          "modify_page": "Modify an existing page",
           "delete_pages": "Delete existing pages",
           "modify_default": "Modify default button"
         }
       },
-      "add_page": {
-        "title": "Add page",
-        "description": "Create a new page with selected entities. 8 buttons are supported per page",
+      "page": {
+        "title": "Page",
+        "description": "Create or modify a page with selected entities as buttons.",
         "data": {
-          "page_name": "Page name",
+          "page_title": "Page title",
           "entities": "Entities"
         }
       },
-      "create_buttons": {
+      "modify_page": {
+        "title": "Modify page",
+        "description": "Modify the title and buttons of an existing page",
+        "data": {
+          "pages": "Pages"
+        }
+      },
+      "button": {
         "title": "Configure button",
-        "description": "Select a configuration for the {entity} button in the {page} page",
+        "description": "Select a configuration for the {entity} button in the {page} page. Icon and Text can't both be defined, but one of them is required",
         "data": {
           "icon": "Icon",
           "text": "Text",
@@ -80,15 +85,15 @@
       },
       "modify_default": {
         "title": "Modify default",
-        "description": "Select or remove a default button for the Beoremote Halo. Current default is: {current_default}",
+        "description": "Select or remove a default button for the Beoremote Halo.",
         "menu_options": {
-          "select_default": "Select a new default button",
-          "remove_default": "Remove the default attribute from a button"
+          "select_default": "Select the default button",
+          "remove_default": "Remove the default attribute from {button}"
         }
       },
       "select_default": {
         "title": "Select default",
-        "description": "Select a new default button. Current default is: {current_default} and can't be selected",
+        "description": "Select the default button",
         "data": {
           "default_button": "Default button"
         }

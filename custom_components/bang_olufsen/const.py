@@ -137,7 +137,7 @@ CONF_BEOLINK_JID: Final = "jid"
 CONF_SERIAL_NUMBER: Final = "serial_number"
 
 # Halo configuration
-CONF_PAGE_NAME: Final = "page_name"
+CONF_PAGE_TITLE: Final = "page_title"
 CONF_PAGE: Final = "page"
 CONF_PAGES: Final = "pages"
 CONF_TEXT: Final = "text"
