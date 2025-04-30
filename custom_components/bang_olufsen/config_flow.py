@@ -17,6 +17,7 @@ from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -663,6 +664,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
                                 INPUT_NUMBER_DOMAIN,
                                 LIGHT_DOMAIN,
                                 NUMBER_DOMAIN,
+                                SCENE_DOMAIN,
                                 SCRIPT_DOMAIN,
                                 SENSOR_DOMAIN,
                                 SWITCH_DOMAIN,

@@ -49,6 +49,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -164,6 +165,7 @@ class HaloWebsocket(HaloBase):
             INPUT_NUMBER_DOMAIN: self._handle_number_sensor_update,
             LIGHT_DOMAIN: self._handle_light_update,
             NUMBER_DOMAIN: self._handle_number_sensor_update,
+            SCENE_DOMAIN: self._handle_no_update,
             SCRIPT_DOMAIN: self._handle_no_update,
             SENSOR_DOMAIN: self._handle_number_sensor_update,
             SWITCH_DOMAIN: self._handle_binary_update,
@@ -178,8 +180,9 @@ class HaloWebsocket(HaloBase):
             INPUT_NUMBER_DOMAIN: self._handle_number_button_action,
             LIGHT_DOMAIN: self._handle_light_button_action,
             NUMBER_DOMAIN: self._handle_number_button_action,
-            SENSOR_DOMAIN: self._handle_no_button_action,
+            SCENE_DOMAIN: self._handle_scene_button_action,
             SCRIPT_DOMAIN: self._handle_script_button_action,
+            SENSOR_DOMAIN: self._handle_no_button_action,
             SWITCH_DOMAIN: self._handle_binary_button_action,
         }
 
@@ -192,6 +195,7 @@ class HaloWebsocket(HaloBase):
             INPUT_NUMBER_DOMAIN: self._handle_number_wheel_action_callback,
             LIGHT_DOMAIN: self._handle_light_wheel_action_callback,
             NUMBER_DOMAIN: self._handle_number_wheel_action_callback,
+            SCENE_DOMAIN: self._handle_no_wheel_action,
             SCRIPT_DOMAIN: self._handle_no_wheel_action,
             SENSOR_DOMAIN: self._handle_no_wheel_action,
             SWITCH_DOMAIN: self._handle_switch_wheel_action_callback,
@@ -641,6 +645,16 @@ class HaloWebsocket(HaloBase):
         # Reset counter and timer
         self._wheel_action_handlers[entity_state.entity_id].counter = 0
         self._wheel_action_handlers[entity_state.entity_id].timer = None
+
+    async def _handle_scene_button_action(self, entity_state: State, _: str) -> None:
+        """Handle Scene entity button actions."""
+        _LOGGER.debug("Sending %s to %s", SERVICE_TURN_ON, entity_state.entity_id)
+
+        await self.hass.services.async_call(
+            entity_state.domain,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_state.entity_id},
+        )
 
     def _update_connection_status(self) -> None:
         """Update all entities of the connection status."""
