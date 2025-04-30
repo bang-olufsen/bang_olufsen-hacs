@@ -231,7 +231,7 @@ class HaloWebsocket(HaloBase):
         entity_id = event.data[CONF_ENTITY_ID]
 
         if entity_id not in self._entity_map.values():
-            _LOGGER.error("Entity %s is not in entity map")
+            _LOGGER.error("Entity %s is not in entity map", entity_id)
             return
 
         await self._update_entity_button_values(entity_id)
