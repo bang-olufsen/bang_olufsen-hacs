@@ -318,8 +318,9 @@ class HaloOptionsFlowHandler(OptionsFlow):
         self._page: Page
         self._default_button: Button | None
         self._page_being_modified = False
-        # Only used when modifying / adding buttons
+        # Only used when modifying / adding / removing buttons
         self._button: Button | None = None
+        self._entity_ids_in_page: list[str] = []
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -359,15 +360,35 @@ class HaloOptionsFlowHandler(OptionsFlow):
         """Add a new page."""
 
         if user_input is not None:
+            self._entity_ids = user_input[CONF_ENTITIES]
+
             # Don't create a new page if an existing page is being modified
             if not self._page_being_modified:
                 self._page = Page(user_input[CONF_PAGE_TITLE], [], id=self._halo_uuid())
             else:
-                # Add the (modified?) page title to the current configuration
+                new_buttons = self._page.buttons
+
+                # Remove any deleted buttons
+                entity_ids_to_remove = [
+                    entity_id
+                    for entity_id in self._entity_ids_in_page
+                    if entity_id not in self._entity_ids
+                ]
+
+                # Get button ID and remove from page and entity_map
+                for entity_id in entity_ids_to_remove:
+                    for button in self._page.buttons:
+                        if self._entity_map[button.id] == entity_id:
+                            self._entity_map.pop(button.id)
+                            new_buttons.remove(button)
+
+                # Add the (modified?) page title and buttons to the current configuration
                 self._configuration = update_page(
-                    self._configuration, self._page.id, user_input[CONF_PAGE_TITLE]
+                    self._configuration,
+                    self._page.id,
+                    user_input[CONF_PAGE_TITLE],
+                    new_buttons,
                 )
-            self._entity_ids = user_input[CONF_ENTITIES]
 
             return await self.async_step_button()
 
@@ -464,15 +485,15 @@ class HaloOptionsFlowHandler(OptionsFlow):
             # Get buttons from page
             self._page = get_page_from_id(self._configuration, page_id)
             self._page_being_modified = True
+            self._entity_ids_in_page = [
+                self._entity_map[button.id] for button in self._page.buttons
+            ]
 
-            # Get entity_ids from entity_map
             return self.async_show_form(
                 step_id="page",
                 data_schema=self._page_schema(
                     page_title=self._page.title,
-                    entities=[
-                        self._entity_map[button.id] for button in self._page.buttons
-                    ],
+                    entities=self._entity_ids_in_page,
                 ),
             )
 
