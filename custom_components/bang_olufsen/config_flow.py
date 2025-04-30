@@ -458,6 +458,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
         # Add current values as "default" values if page is being modified
         else:
             # Get current button attributes from entity_map and page
+            self._button = None
             for button in self._page.buttons:
                 if self._entity_map[button.id] == self._entity_ids[-1]:
                     self._button = button
