@@ -55,9 +55,14 @@ Generally "wheel" events are handled by counting the number of detents in a "rot
   - Support for Button / Input Button entities
   - Support for Light entities
   - Support for Number / Input Number entities
+  - Support for Scene entities
   - Support for Script entities
   - Support for Sensor entities
   - Support for Switch / Input Boolean entities
+- Modify pages
+  - Modify page name
+  - Add / remove buttons
+  - Modify button attributes
 - Delete pages
 - Battery charging Binary Sensor Entity
 - Battery Level Sensor Entity
@@ -72,8 +77,6 @@ Generally "wheel" events are handled by counting the number of detents in a "rot
 
 These features have to evaluated further and are in no particular order.
 
-- Modify pages
-  - Modify buttons
 - Support for more Entity types
 - Manual setup
 - Create Event entity for button instead of selecting an existing entity
