@@ -363,6 +363,9 @@ class HaloOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             self._entity_ids = user_input[CONF_ENTITIES]
 
+            # Reverse the entity_ids list to match the order of creation/modification match the Halo's display order
+            self._entity_ids.reverse()
+
             # Don't create a new page if an existing page is being modified
             if not self._page_being_modified:
                 self._page = Page(user_input[CONF_PAGE_TITLE], [], id=self._halo_uuid())
