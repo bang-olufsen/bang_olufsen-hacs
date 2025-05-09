@@ -140,6 +140,7 @@ CONF_SERIAL_NUMBER: Final = "serial_number"
 CONF_PAGE_TITLE: Final = "page_title"
 CONF_PAGES: Final = "pages"
 CONF_TEXT: Final = "text"
+CONF_VALUE: Final = "value"
 CONF_HALO: Final = "halo"
 CONF_ENTITY_MAP: Final = "entity_map"
 CONF_TITLE: Final = "title"
@@ -165,7 +166,7 @@ class EntityMapValues(TypedDict):
     """TypedDict for Halo button information and settings."""
 
     entity_id: str
-    # Use entity state instead of Icon / Text
+    # Use entity value instead of Icon / Text
     state: bool
 
 

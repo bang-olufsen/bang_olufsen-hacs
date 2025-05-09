@@ -303,7 +303,7 @@ class HaloWebsocket(HaloBase):
         }
 
         # Add entity value as title update if defined
-        if self._entity_map[button_id][CONF_VALUE] is True:
+        if self._entity_map[button_id][CONF_STATE] is True:
             update_kwargs[CONF_CONTENT] = Text(
                 trim_button_text(str(entity_state.state))
             )
