@@ -1,6 +1,7 @@
 """Test fixtures for bang_olufsen."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, patch
 
 from mozart_api import BeolinkJoinResult, Preset, Scene
@@ -41,6 +42,15 @@ from .const import (
     TEST_FRIENDLY_NAME,
     TEST_FRIENDLY_NAME_3,
     TEST_FRIENDLY_NAME_4,
+    TEST_HALO_BUTTON_2_ID,
+    TEST_HALO_BUTTON_ID,
+    TEST_HALO_CONFIGURATION_ID,
+    TEST_HALO_DATA_CREATE_ENTRY,
+    TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION,
+    TEST_HALO_NAME,
+    TEST_HALO_PAGE_ID,
+    TEST_HALO_SERIAL,
+    TEST_HALO_UUID_TARGET,
     TEST_HOST_3,
     TEST_HOST_4,
     TEST_JID_1,
@@ -78,6 +88,18 @@ def mock_config_entry_core() -> MockConfigEntry:
         unique_id=TEST_SERIAL_NUMBER_2,
         data=TEST_DATA_CREATE_ENTRY_2,
         title=TEST_NAME_2,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_halo() -> MockConfigEntry:
+    """Mock config entry for Beoremote Halo."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_HALO_SERIAL,
+        data=TEST_HALO_DATA_CREATE_ENTRY,
+        options=deepcopy(TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION),
+        title=TEST_HALO_NAME,
     )
 
 
@@ -129,6 +151,36 @@ async def integration_fixture(
     await mock_websocket_connection(hass, mock_mozart_client)
 
     return (mock_config_entry, mock_mozart_client)
+
+
+@pytest.fixture(name="integration_halo")
+async def integration_halo_fixture(
+    hass: HomeAssistant,
+    mock_halo_client: AsyncMock,
+    mock_config_entry_halo: MockConfigEntry,
+) -> tuple[MockConfigEntry, AsyncMock]:
+    """Set up the Bang & Olufsen integration with A Beoremote Halo with initial configuration."""
+
+    mock_config_entry_halo.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_halo.entry_id)
+    await hass.async_block_till_done()
+
+    return (mock_config_entry_halo, mock_halo_client)
+
+
+@pytest.fixture
+def mock_halo_uuid() -> Generator[AsyncMock]:
+    """Mock _halo_uuid() to get predictable output."""
+    with patch(
+        TEST_HALO_UUID_TARGET,
+        side_effect=[
+            TEST_HALO_CONFIGURATION_ID,
+            TEST_HALO_PAGE_ID,
+            TEST_HALO_BUTTON_ID,
+            TEST_HALO_BUTTON_2_ID,
+        ],
+    ):
+        yield
 
 
 @pytest.fixture
@@ -469,6 +521,24 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.connect_notifications = AsyncMock()
         client.disconnect_notifications = Mock()
         client.websocket_connected = False
+
+        yield client
+
+
+@pytest.fixture
+def mock_halo_client() -> Generator[AsyncMock]:
+    """Mock Halo."""
+    with patch(
+        "homeassistant.components.bang_olufsen.Halo", autospec=True
+    ) as mock_client:
+        client = mock_client.return_value
+
+        # WebSocket methods
+        client.update = AsyncMock()
+        client.check_device_connection = AsyncMock()
+        client.connect = AsyncMock()
+        client.disconnect = AsyncMock()
+        client.websocket_connected = True
 
         yield client
 

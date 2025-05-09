@@ -4,30 +4,20 @@ from .models import BaseConfiguration, Button, ButtonState, Icon, Page, Text
 
 
 # Configuration modification helper methods
-def clear_default_button(configuration: BaseConfiguration) -> BaseConfiguration:
-    """Remove the default flag from a configuration if present.
+def clear_default_button(configuration: BaseConfiguration) -> None:
+    """Remove the default flag from a configuration if present."""
 
-    Returns:
-        Modified configuration or unmodified if default was not set.
-
-    """
     if (button := get_default_button(configuration)) is not None:
-        configuration = set_default_button(configuration, button.id, False)
-    return configuration
+        set_default_button(configuration, button.id, False)
 
 
 def set_default_button(
     configuration: BaseConfiguration, button_id: str, default: bool
-) -> BaseConfiguration:
-    """Set the default flag for a `Button` in a configuration.
+) -> None:
+    """Set the default flag for a `Button` in a configuration."""
 
-    Returns:
-        Modified configuration.
-
-    """
     page_idx, button_idx = get_button_indices(configuration, button_id)
     configuration.configuration.pages[page_idx].buttons[button_idx].default = default
-    return configuration
 
 
 def update_button(
@@ -39,15 +29,12 @@ def update_button(
     value: int | None = None,
     state: ButtonState | None = None,
     default: bool | None = None,
-) -> BaseConfiguration:
+) -> None:
     """Update a `Button`s attributes.
 
-    Attributes that are set to `None` are left unmodified
-
-    Returns:
-        Modified configuration.
-
+    Attributes that are set to `None` are left unmodified.
     """
+
     # Get button's indices to modify values in configuration
     page_idx, button_idx = get_button_indices(configuration, id)
 
@@ -70,23 +57,18 @@ def update_button(
             button_idx
         ].default = default
 
-    return configuration
-
 
 def update_page(
     configuration: BaseConfiguration,
     id: str,
     title: str | None = None,
     buttons: list[Button] | None = None,
-) -> BaseConfiguration:
+) -> None:
     """Update a `Page`s attributes.
 
-    Attributes that are set to `None` are left unmodified
-
-    Returns:
-        Modified configuration.
-
+    Attributes that are set to `None` are left unmodified.
     """
+
     # Get page index
     page_idx = get_page_index(configuration, id)
 
@@ -95,30 +77,17 @@ def update_page(
     if buttons is not None:
         configuration.configuration.pages[page_idx].buttons = buttons
 
-    return configuration
 
+def delete_button(configuration: BaseConfiguration, id: str) -> None:
+    """Delete a `Button` from a configuration."""
 
-def delete_button(configuration: BaseConfiguration, id: str) -> BaseConfiguration:
-    """Delete a `Button` from a configuration.
-
-    Returns:
-        Modified configuration.
-
-    """
     page_idx, button_idx = get_button_indices(configuration, id)
     configuration.configuration.pages[page_idx].buttons.pop(button_idx)
-    return configuration
 
 
-def delete_page(configuration: BaseConfiguration, id: str) -> BaseConfiguration:
-    """Delete a `Page` from a configuration.
-
-    Returns:
-        Modified configuration.
-
-    """
+def delete_page(configuration: BaseConfiguration, id: str) -> None:
+    """Delete a `Page` from a configuration."""
     configuration.configuration.pages.pop(get_page_index(configuration, id))
-    return configuration
 
 
 # Configuration get helper methods

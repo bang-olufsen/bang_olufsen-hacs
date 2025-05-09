@@ -410,7 +410,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
                 if content_id:
                     favourite_attribute["content_id"] = content_id
 
-            # Check content for source if it hasn't been defined in actionlist
+            # Check content for source if it hasn't been defined in action list
             if "source" not in favourite_attribute:
                 if favourite.content and favourite.content.source.value:
                     favourite_attribute["source"] = self._unsorted_sources[
@@ -487,7 +487,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
         # Update input signal attribute
         if data.encoding:
-            # Ensure that abbreviated formats are capitialized and non-abbreviated formats are made "human readable"
+            # Ensure that abbreviated formats are capitalized and non-abbreviated formats are made "human readable"
             encoding = titleize(underscore(data.encoding))
             if data.encoding.capitalize() == encoding:
                 encoding = data.encoding.upper()

@@ -28,11 +28,11 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import (
-    ATTR_NAME,
     CONF_ENTITIES,
     CONF_HOST,
     CONF_ICON,
     CONF_MODEL,
+    CONF_NAME,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
@@ -45,6 +45,15 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.ssl import get_default_context
 from homeassistant.util.uuid import random_uuid_hex
 
+from .beoremote_halo.const import (
+    BUTTON_TEXT_MAX_LENGTH,
+    BUTTON_TITLE_MAX_LENGTH,
+    MAX_BUTTONS,
+    MAX_PAGES,
+    MIN_BUTTONS_VALIDATION,
+    MIN_PAGES,
+    PAGE_TITLE_MAX_LENGTH,
+)
 from .beoremote_halo.helpers import (
     clear_default_button,
     delete_page,
@@ -83,10 +92,12 @@ from .const import (
     DEFAULT_MODEL,
     DOMAIN,
     HALO_BUTTON_ICONS,
-    HALO_MAX_NUM_BUTTONS,
-    HALO_MAX_NUM_PAGES,
-    HALO_TEXT_LENGTH,
-    HALO_TITLE_LENGTH,
+    HALO_OPTION_DELETE_PAGES,
+    HALO_OPTION_MODIFY_DEFAULT,
+    HALO_OPTION_MODIFY_PAGE,
+    HALO_OPTION_PAGE,
+    HALO_OPTION_REMOVE_DEFAULT,
+    HALO_OPTION_SELECT_DEFAULT,
     MOZART_MODELS,
     ZEROCONF_HALO,
     ZEROCONF_MOZART,
@@ -104,7 +115,8 @@ class BangOlufsenEntryData(TypedDict, total=False):
     # Mozart
     jid: str
     # Halo
-    # Does not seem to handle objects well through restarts
+    # Does not seem to handle objects well through restarts,
+    # so a dict of the configuration is stored instead
     halo: dict | None
     entity_map: dict[str, str]
 
@@ -217,7 +229,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         # Handle Beoremote Halo
         elif discovery_info.type == ZEROCONF_HALO:
             self._zeroconf_halo(discovery_info)
-            name_key = ATTR_NAME
+            name_key = CONF_NAME
 
         await self.async_set_unique_id(self._serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
@@ -274,7 +286,6 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 jid=self._beolink_jid,
                 model=self._model,
                 name=self._name,
-                halo=None,
             ),
         )
 
@@ -313,7 +324,9 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
     def __init__(self) -> None:
         """Initialize options."""
-        self._configuration: BaseConfiguration = BaseConfiguration(Configuration([]))
+        self._configuration: BaseConfiguration = BaseConfiguration(
+            Configuration(pages=[], id=self._halo_uuid())
+        )
         self._entity_ids: list[str] = []
         self._entity_map: dict[str, str] = {}
         self._page: Page
@@ -345,13 +358,19 @@ class HaloOptionsFlowHandler(OptionsFlow):
         self._default_button = get_default_button(self._configuration)
 
         options = []
-        # Remove "page" option if 3 already are in the configuration
-        if len(self._configuration.configuration.pages) < HALO_MAX_NUM_PAGES:
-            options.append("page")
+        # Add page option less than 3 pages are in the configuration
+        if len(self._configuration.configuration.pages) < MAX_PAGES:
+            options.append(HALO_OPTION_PAGE)
 
         # Add options that require at least one page in the configuration
-        if len(self._configuration.configuration.pages) > 0:
-            options.extend(["modify_page", "delete_pages", "modify_default"])
+        if len(self._configuration.configuration.pages) > MIN_PAGES:
+            options.extend(
+                [
+                    HALO_OPTION_MODIFY_PAGE,
+                    HALO_OPTION_DELETE_PAGES,
+                    HALO_OPTION_MODIFY_DEFAULT,
+                ]
+            )
 
         return self.async_show_menu(step_id="init", menu_options=options)
 
@@ -387,7 +406,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
                             new_buttons.remove(button)
 
                 # Add the (modified?) page title and buttons to the current configuration
-                self._configuration = update_page(
+                update_page(
                     self._configuration,
                     self._page.id,
                     user_input[CONF_PAGE_TITLE],
@@ -396,7 +415,9 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
             return await self.async_step_button()
 
-        return self.async_show_form(step_id="page", data_schema=self._page_schema())
+        return self.async_show_form(
+            step_id=HALO_OPTION_PAGE, data_schema=self._page_schema()
+        )
 
     async def async_step_button(
         self, user_input: dict[str, Any] | None = None
@@ -423,7 +444,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
                 self._page.buttons.append(button)
             else:
                 # Update existing button
-                self._configuration = update_button(
+                update_button(
                     self._configuration,
                     self._button.id,
                     title=user_input[CONF_TITLE],
@@ -453,22 +474,19 @@ class HaloOptionsFlowHandler(OptionsFlow):
                     ),
                 )
 
-        if not self._page_being_modified:
-            button_schema = self._button_schema()
-        # Add current values as "default" values if page is being modified
-        else:
-            # Get current button attributes from entity_map and page
+        # Schema without default values for new buttons
+        button_schema = self._button_schema()
+
+        # If a page is being modified, then default values for existing buttons should used
+        if self._page_being_modified:
             self._button = None
             for button in self._page.buttons:
                 if self._entity_map[button.id] == self._entity_ids[-1]:
                     self._button = button
-            # Newly added buttons won't be available in the entity_map and won't have any initial values
-            if self._button is None:
-                button_schema = self._button_schema()
-            else:
-                button_schema = self._button_schema(
-                    self._button.title, self._button.subtitle, self._button.content
-                )
+
+                    button_schema = self._button_schema(
+                        self._button.title, self._button.subtitle, self._button.content
+                    )
 
         return self.async_show_form(
             step_id="button",
@@ -495,7 +513,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
             ]
 
             return self.async_show_form(
-                step_id="page",
+                step_id=HALO_OPTION_PAGE,
                 data_schema=self._page_schema(
                     page_title=self._page.title,
                     entities=self._entity_ids_in_page,
@@ -503,7 +521,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
             )
 
         return self.async_show_form(
-            step_id="modify_page",
+            step_id=HALO_OPTION_MODIFY_PAGE,
             data_schema=self._page_selector_schema(multiple=False),
         )
 
@@ -523,7 +541,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
                     self._entity_map.pop(button.id)
 
                 # Delete page from configuration
-                self._configuration = delete_page(self._configuration, page_id)
+                delete_page(self._configuration, page_id)
 
             return self.async_create_entry(
                 title="Updated configuration",
@@ -536,7 +554,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
                 ),
             )
         return self.async_show_form(
-            step_id="delete_pages",
+            step_id=HALO_OPTION_DELETE_PAGES,
             data_schema=self._page_selector_schema(multiple=True),
         )
 
@@ -550,16 +568,18 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
         # Add remove_default as an option if a default button has been set
         if self._default_button is not None:
-            options.append("remove_default")
+            options.append(HALO_OPTION_REMOVE_DEFAULT)
             description_placeholders["button"] = self._default_button.title
-            # Check if there are any buttons available to select as default (at least 1 that is not default)
-            if len(get_all_buttons(self._configuration)) > 1:
-                options.append("select_default")
-        else:
-            options.append("select_default")
+
+        # Check if there are any buttons available to select as default (at least 1 that is not default)
+        if (
+            self._default_button is None
+            or len(get_all_buttons(self._configuration)) > 1
+        ):
+            options.append(HALO_OPTION_SELECT_DEFAULT)
 
         return self.async_show_menu(
-            step_id="modify_default",
+            step_id=HALO_OPTION_MODIFY_DEFAULT,
             menu_options=options,
             description_placeholders=description_placeholders,
         )
@@ -570,7 +590,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
         """Select a default button."""
         if user_input is not None:
             # Remove any previous default button
-            self._configuration = clear_default_button(self._configuration)
+            clear_default_button(self._configuration)
 
             # Update configuration with new default
             set_default_button(
@@ -602,7 +622,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
             )
 
         return self.async_show_form(
-            step_id="select_default",
+            step_id=HALO_OPTION_SELECT_DEFAULT,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_DEFAULT_BUTTON): SelectSelector(
@@ -621,7 +641,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
         """Remove the default attribute from a button."""
 
         # Remove current default from configuration
-        self._configuration = clear_default_button(self._configuration)
+        clear_default_button(self._configuration)
 
         return self.async_create_entry(
             title="Updated configuration",
@@ -654,9 +674,16 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
         return vol.Schema(
             {
-                vol.Required(CONF_PAGE_TITLE, default=page_title): str,
+                vol.Required(CONF_PAGE_TITLE, default=page_title): vol.All(
+                    str,
+                    vol.Length(max=PAGE_TITLE_MAX_LENGTH),
+                ),
                 vol.Required(CONF_ENTITIES, default=entities): vol.All(
-                    vol.Length(min=1, max=HALO_MAX_NUM_BUTTONS),
+                    vol.Length(
+                        min=MIN_BUTTONS_VALIDATION,
+                        max=MAX_BUTTONS,
+                        msg=f"Between {MIN_BUTTONS_VALIDATION}-{MAX_BUTTONS} buttons have to be in a page",
+                    ),
                     EntitySelector(
                         EntitySelectorConfig(
                             multiple=True,
@@ -682,7 +709,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
     def _button_schema(
         self,
         title: str | vol.Undefined = vol.UNDEFINED,
-        subtitle: str = "",
+        subtitle: str | None = "",
         content: Icon | Text | None = None,
     ) -> vol.Schema:
         """Fill schema for button modification or creation."""
@@ -713,18 +740,18 @@ class HaloOptionsFlowHandler(OptionsFlow):
             {
                 vol.Required(CONF_TITLE, default=title): vol.All(
                     str,
-                    vol.Length(max=HALO_TITLE_LENGTH),
+                    vol.Length(max=BUTTON_TITLE_MAX_LENGTH),
                 ),
                 vol.Optional(CONF_SUBTITLE, default=subtitle): vol.All(
                     str,
-                    vol.Length(max=HALO_TITLE_LENGTH),
+                    vol.Length(max=BUTTON_TITLE_MAX_LENGTH),
                 ),
                 vol.Exclusive(**icon_kwargs): SelectSelector(
                     SelectSelectorConfig(options=HALO_BUTTON_ICONS)
                 ),
                 vol.Exclusive(**text_kwargs): vol.All(
                     str,
-                    vol.Length(max=HALO_TEXT_LENGTH),
+                    vol.Length(max=BUTTON_TEXT_MAX_LENGTH),
                 ),
             },
         )

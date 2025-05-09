@@ -102,9 +102,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class WheelCounter:
-    """Store Task and counter for wheel event service calls."""
+class WheelTaskHandler:
+    """Store Task, Timer and counter for wheel event service calls."""
 
+    task: asyncio.Task | None = None
     timer: asyncio.TimerHandle | None = None
     counter: int = 0
 
@@ -113,7 +114,7 @@ class HaloWebsocket(HaloBase):
     """WebSocket for Halo."""
 
     _entity_map: dict[str, str] = {}
-    _wheel_action_handlers: dict[str, WheelCounter] = {}
+    _wheel_action_handlers: dict[str, WheelTaskHandler] = {}
 
     def __init__(
         self,
@@ -153,7 +154,7 @@ class HaloWebsocket(HaloBase):
             )
             # Create wheel counters
             self._wheel_action_handlers = {
-                entity_id: WheelCounter() for entity_id in entity_ids
+                entity_id: WheelTaskHandler() for entity_id in entity_ids
             }
 
         # Dict for associating platforms with update methods
@@ -451,10 +452,15 @@ class HaloWebsocket(HaloBase):
         if converted_state == 0:
             return
 
+        # Avoid sending service calls if they do not change the entity state
+        if int(float(entity_state.state)) == converted_state:
+            _LOGGER.debug("Skipping wheel action task")
+            return
+
         # Wrap action call in a task as callbacks can't be async
-        asyncio.create_task(
+        self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
             self._handle_number_wheel_action_task(entity_state, converted_state)
-        ).done()
+        )
 
     async def _handle_number_wheel_action_task(
         self, entity_state: State, new_number: int
@@ -526,9 +532,9 @@ class HaloWebsocket(HaloBase):
             return
 
         # Wrap action call in a task as callbacks can't be async
-        asyncio.create_task(
+        self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
             self._handle_switch_wheel_action_task(entity_state, action)
-        ).done()
+        )
 
     async def _handle_switch_wheel_action_task(
         self, entity_state: State, action: str
@@ -571,13 +577,18 @@ class HaloWebsocket(HaloBase):
     def _handle_light_update(self, state: State) -> tuple[ButtonState, int]:
         """Handle state change events of Light entities."""
         try:
-            brightness = (
-                state.attributes[ATTR_BRIGHTNESS]
-                if state.attributes[ATTR_BRIGHTNESS] is not None
-                else 0
-            )
-            # Brightness does not go to 255?
-            converted_state = interpolate_button_value(brightness, 0, 254)
+            # Determine value based on available attributes
+            if ATTR_BRIGHTNESS in state.attributes:
+                brightness = (
+                    state.attributes[ATTR_BRIGHTNESS]
+                    if state.attributes[ATTR_BRIGHTNESS] is not None
+                    else 0
+                )
+                converted_state = interpolate_button_value(brightness, 1, 255)
+
+            else:
+                converted_state = MAX_VALUE if state.state == STATE_ON else MIN_VALUE
+
         except ValueError:
             _LOGGER.debug("Error when handling light state %s", state)
 
@@ -587,7 +598,7 @@ class HaloWebsocket(HaloBase):
         else:
             # Process the on/off state for a light
             button_state = (
-                ButtonState.ACTIVE if state.state == "on" else ButtonState.INACTIVE
+                ButtonState.ACTIVE if state.state == STATE_ON else ButtonState.INACTIVE
             )
             # Process the value state for a light
             button_value = converted_state
@@ -617,9 +628,9 @@ class HaloWebsocket(HaloBase):
             return
 
         # Wrap action call in a task as callbacks can't be async
-        asyncio.create_task(
+        self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
             self._handle_light_wheel_action_task(entity_state, brightness_step)
-        ).done()
+        )
 
     async def _handle_light_wheel_action_task(
         self, entity_state: State, brightness_step: int

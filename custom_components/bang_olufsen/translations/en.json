@@ -1293,9 +1293,9 @@
                 }
             },
             "modify_default": {
-                "description": "Select or remove a default button for the Beoremote Halo.",
+                "description": "Select or remove a default button for the Beoremote Halo. Default buttons are automatically selected as the active button on the Beoremote Halo after a small timeout.",
                 "menu_options": {
-                    "remove_default": "Remove the default attribute from {button}",
+                    "remove_default": "Remove the default attribute from button: {button}",
                     "select_default": "Select the default button"
                 },
                 "title": "Modify default"
@@ -1462,7 +1462,7 @@
             "fields": {
                 "subtitle": {
                     "description": "The subtitle of the notification. 6 lines are supported before formatting starts to break. Use | in yaml mode to construct multiline strings",
-                    "name": "Subitle"
+                    "name": "Subtitle"
                 },
                 "title": {
                     "description": "The title of the notification",

@@ -6,9 +6,18 @@ from typing import TypedDict
 from uuid import uuid1
 
 from mashumaro import field_options
+from mashumaro.config import BaseConfig
 from mashumaro.mixins.json import DataClassJSONMixin
 
-from .const import MAX_VALUE, MIN_VALUE, VERSION
+from .const import (
+    MAX_BUTTONS,
+    MAX_PAGES,
+    MAX_VALUE,
+    MIN_BUTTONS,
+    MIN_PAGES,
+    MIN_VALUE,
+    VERSION,
+)
 
 
 class Icons(StrEnum):
@@ -117,24 +126,29 @@ class Button(DataClassJSONMixin):
     Contains a title, content (either an icon or text), subtitle, value, state and if it is the default.
     `Button`s marked as default will be pre-selected when interacting with the Halo. Only a single Button can be default in a configuration.
 
-    Ensures that the value is in the supported range.
+    Ensures that the value is in the range 0-100.
     """
 
     title: str
-    # None is allowed during serializing, but not during deserializing
-    content: Icon | Text | None
-    subtitle: str = ""
-    value: int = 0
-    state: ButtonState = ButtonState.INACTIVE
-    default: bool = False
+    content: Icon | Text
+    subtitle: str | None = None
+    value: int | None = None
+    state: ButtonState | None = None
+    default: bool | None = False
     id: str = str(uuid1())
+
+    class Config(BaseConfig):
+        """Mashumaro config."""
+
+        omit_none = True
 
     def __post_init__(self) -> None:
         """Ensure value is in a valid range."""
-        if self.value < MIN_VALUE or self.value > MAX_VALUE:
-            raise ValueError(
-                f"Button value must be in the range: {MIN_VALUE}..{MAX_VALUE}"
-            )
+        if self.value is not None:
+            if self.value < MIN_VALUE or self.value > MAX_VALUE:
+                raise ValueError(
+                    f"Invalid button value: {self.value}. Button value must be in the range: {MIN_VALUE}-{MAX_VALUE}"
+                )
 
 
 @dataclass
@@ -143,7 +157,7 @@ class Page(DataClassJSONMixin):
 
     Contains a title, a list of buttons and an id.
 
-    Ensures that at most 8 buttons are in a page.
+    Ensures that at 1-8 buttons are in a page.
     """
 
     title: str
@@ -151,11 +165,14 @@ class Page(DataClassJSONMixin):
     id: str = str(uuid1())
 
     def __post_init__(self) -> None:
-        """Ensure configuration is valid."""
+        """Ensure page is valid."""
 
-        # Ensure that there are no more than 3 pages.
-        if len(self.buttons) > 8:
-            raise ValueError("Only 8 buttons are allowed in a page.")
+        # Ensure that there are  0-8 buttons.
+        number_of_buttons = len(self.buttons)
+        if number_of_buttons < MIN_BUTTONS or number_of_buttons > MAX_BUTTONS:
+            raise ValueError(
+                f"Invalid number of buttons: {number_of_buttons}. Only {MIN_BUTTONS}-{MAX_BUTTONS} buttons are allowed in a page."
+            )
 
 
 @dataclass
@@ -165,7 +182,7 @@ class Configuration(DataClassJSONMixin):
     Contains a list of pages, the version of the API client and an ID.
 
     Ensures that at most one `Button` is marked default.
-    Ensures that at most 3 pages are in a configuration.
+    Ensures that at 1-3 pages are in a configuration.
     """
 
     pages: list[Page]
@@ -187,9 +204,12 @@ class Configuration(DataClassJSONMixin):
                 f"Only a single Button can be default per configuration. Default buttons found {default_buttons}"
             )
 
-        # Ensure that there are no more than 3 pages.
-        if len(self.pages) > 3:
-            raise ValueError("Only 3 pages are allowed per configuration.")
+        # Ensure that there are 0-3 pages.
+        number_of_pages = len(self.pages)
+        if number_of_pages < MIN_PAGES or number_of_pages > MAX_PAGES:
+            raise ValueError(
+                f"Invalid number of pages: {number_of_pages}. Only {MIN_PAGES}-{MAX_PAGES} pages are allowed per configuration."
+            )
 
 
 @dataclass
@@ -326,22 +346,31 @@ class Event(DataClassJSONMixin):
 class UpdateButton(DataClassJSONMixin):
     """Button update to be sent to the Halo.
 
-    Contains id, state and value.
+    Contains all defined button attributes
 
-    Sending this will update the state and value of a single `Button` in a configuration.
+    Sending this will update the defined attributes of a single `Button` in a configuration.
     """
 
     id: str
-    state: ButtonState = ButtonState.INACTIVE
-    value: int = 0
+    state: ButtonState | None = None
+    value: int | None = None
+    title: str | None = None
+    subtitle: str | None = None
+    content: Text | None = None
     type: str = field(default="button", init=False)
+
+    class Config(BaseConfig):
+        """Mashumaro config."""
+
+        omit_none = True
 
     def __post_init__(self) -> None:
         """Ensure value is in a valid range."""
-        if self.value < MIN_VALUE or self.value > MAX_VALUE:
-            raise ValueError(
-                f"Button value must be in the range: {MIN_VALUE}..{MAX_VALUE}"
-            )
+        if self.value is not None:
+            if self.value < MIN_VALUE or self.value > MAX_VALUE:
+                raise ValueError(
+                    f"Invalid button value: {self.value}. Button value must be in the range: {MIN_VALUE}-{MAX_VALUE}"
+                )
 
 
 @dataclass
@@ -353,6 +382,11 @@ class UpdateDisplayPage(DataClassJSONMixin):
     Sending this will make the Halo focus on a specified button on a page.
     """
 
+    class Config(BaseConfig):
+        """Mashumaro config."""
+
+        omit_none = True
+
     page_id: str = field(metadata=field_options(alias="pageid"))
     button_id: str = field(metadata=field_options(alias="buttonid"))
     type: str = field(default="displaypage", init=False)
@@ -362,8 +396,13 @@ class UpdateDisplayPage(DataClassJSONMixin):
 class UpdateNotification(DataClassJSONMixin):
     """Notification."""
 
-    title: str
-    subtitle: str
+    class Config(BaseConfig):
+        """Mashumaro config."""
+
+        omit_none = True
+
+    title: str | None = None
+    subtitle: str | None = None
     type: str = field(default="notification", init=False)
     id: str = str(uuid1())
 

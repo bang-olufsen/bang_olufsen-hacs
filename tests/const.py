@@ -23,45 +23,66 @@ from mozart_api.models import (
     VolumeState,
 )
 
+from homeassistant.components.bang_olufsen.beoremote_halo.models import Icons
 from homeassistant.components.bang_olufsen.const import (
     ATTR_FRIENDLY_NAME,
+    ATTR_HALO_SERIAL_NUMBER,
     ATTR_ITEM_NUMBER,
     ATTR_MOZART_SERIAL_NUMBER,
     ATTR_TYPE_NUMBER,
     CONF_BEOLINK_JID,
+    CONF_DEFAULT_BUTTON,
+    CONF_ENTITY_MAP,
     CONF_HALO,
+    CONF_PAGE_TITLE,
+    CONF_PAGES,
+    CONF_TEXT,
+    CONF_TITLE,
     BangOlufsenSource,
 )
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
+from homeassistant.const import (
+    CONF_ENTITIES,
+    CONF_HOST,
+    CONF_ICON,
+    CONF_MODEL,
+    CONF_NAME,
+)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-TEST_HOST = "192.168.0.1"
-TEST_HOST_INVALID = "192.168.0"
-TEST_HOST_IPV6 = "1111:2222:3333:4444:5555:6666:7777:8888"
+# Device models
 TEST_MODEL_BALANCE = "Beosound Balance"
 TEST_MODEL_CORE = "Beoconnect Core"
 TEST_MODEL_THEATRE = "Beosound Theatre"
 TEST_MODEL_LEVEL = "Beosound Level"
-TEST_SERIAL_NUMBER = "11111111"
-TEST_NAME = f"{TEST_MODEL_BALANCE}-{TEST_SERIAL_NUMBER}"
+TEST_MODEL_HALO = "Beoremote Halo"
+
+# Mozart device 1
 TEST_FRIENDLY_NAME = "Living room Balance"
-TEST_TYPE_NUMBER = "1111"
+TEST_HOST = "192.168.0.1"
+TEST_SERIAL_NUMBER = "11111111"
 TEST_ITEM_NUMBER = "1111111"
+TEST_TYPE_NUMBER = "1111"
 TEST_JID_1 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER}@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID = "media_player.beosound_balance_11111111"
+TEST_NAME = f"{TEST_MODEL_BALANCE}-{TEST_SERIAL_NUMBER}"
 
+TEST_BUTTON_EVENT_ENTITY_ID = "event.beosound_balance_11111111_play_pause"
+
+# Mozart device 2
 TEST_FRIENDLY_NAME_2 = "Laundry room Core"
+TEST_HOST_2 = "192.168.0.2"
 TEST_SERIAL_NUMBER_2 = "22222222"
-TEST_NAME_2 = f"{TEST_MODEL_CORE}-{TEST_SERIAL_NUMBER_2}"
 TEST_JID_2 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_2}@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID_2 = "media_player.beoconnect_core_22222222"
-TEST_HOST_2 = "192.168.0.2"
+TEST_NAME_2 = f"{TEST_MODEL_CORE}-{TEST_SERIAL_NUMBER_2}"
 
+# Mozart device 3
 TEST_FRIENDLY_NAME_3 = "Lego room Balance"
+TEST_HOST_3 = "192.168.0.3"
 TEST_JID_3 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.33333333@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID_3 = "media_player.beosound_balance_33333333"
-TEST_HOST_3 = "192.168.0.3"
 
+# Mozart device 4
 TEST_FRIENDLY_NAME_4 = "Lounge room Balance"
 TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.44444444@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID_4 = "media_player.beosound_balance_44444444"
@@ -72,31 +93,249 @@ TEST_REMOTE_SERIAL = "55555555"
 TEST_REMOTE_SERIAL_PAIRED = f"{TEST_REMOTE_SERIAL}_{TEST_SERIAL_NUMBER}"
 TEST_REMOTE_SW_VERSION = "1.0.0"
 
-TEST_BUTTON_EVENT_ENTITY_ID = "event.beosound_balance_11111111_play_pause"
 TEST_REMOTE_KEY_EVENT_ENTITY_ID = "event.beoremote_one_55555555_11111111_control_play"
+
+# Beoremote Halo
+TEST_HALO_SERIAL = "66666666"
+TEST_HALO_NAME = f"Beoremote Halo-{TEST_HALO_SERIAL}"
+TEST_HALO_BATTERY_SENSOR_ENTITY_ID = (
+    f"sensor.beoremote_halo_{TEST_HALO_SERIAL}_battery_level"
+)
+TEST_HALO_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID = (
+    f"binary_sensor.beoremote_halo_{TEST_HALO_SERIAL}_battery_charging"
+)
+
+# Config flow
+TEST_HOST_INVALID = "192.168.0"
+TEST_HOST_IPV6 = "1111:2222:3333:4444:5555:6666:7777:8888"
 
 TEST_HOSTNAME_ZEROCONF = TEST_NAME.replace(" ", "-") + ".local."
 TEST_TYPE_ZEROCONF = "_bangolufsen._tcp.local."
 TEST_NAME_ZEROCONF = TEST_NAME.replace(" ", "-") + "." + TEST_TYPE_ZEROCONF
 
-TEST_DATA_USER = {CONF_HOST: TEST_HOST, CONF_MODEL: TEST_MODEL_BALANCE}
-TEST_DATA_USER_INVALID = {CONF_HOST: TEST_HOST_INVALID, CONF_MODEL: TEST_MODEL_BALANCE}
+TEST_HALO_HOSTNAME_ZEROCONF = f"BeoremoteHalo-{TEST_HALO_SERIAL}.local"
+TEST_HALO_TYPE_ZEROCONF = "_zenith._tcp.local."
+TEST_HALO_NAME_ZEROCONF = (
+    f"BeoremoteHalo-{TEST_SERIAL_NUMBER}.{TEST_HALO_TYPE_ZEROCONF}"
+)
 
+TEST_DATA_USER = {CONF_HOST: TEST_HOST, CONF_MODEL: TEST_MODEL_BALANCE}
+TEST_DATA_USER_INVALID = {
+    CONF_HOST: TEST_HOST_INVALID,
+    CONF_MODEL: TEST_MODEL_BALANCE,
+}
 
 TEST_DATA_CREATE_ENTRY = {
     CONF_HOST: TEST_HOST,
     CONF_MODEL: TEST_MODEL_BALANCE,
     CONF_BEOLINK_JID: TEST_JID_1,
     CONF_NAME: TEST_NAME,
-    CONF_HALO: None,
 }
 TEST_DATA_CREATE_ENTRY_2 = {
     CONF_HOST: TEST_HOST_2,
     CONF_MODEL: TEST_MODEL_CORE,
     CONF_BEOLINK_JID: TEST_JID_2,
     CONF_NAME: TEST_NAME_2,
-    CONF_HALO: None,
 }
+
+TEST_HALO_DATA_CREATE_ENTRY = {
+    CONF_HOST: TEST_HOST,
+    CONF_MODEL: TEST_MODEL_HALO,
+    CONF_BEOLINK_JID: "",
+    CONF_NAME: TEST_HALO_NAME,
+}
+
+# Halo config flow options
+TEST_HALO_PAGE_TITLE = "Test page"
+TEST_HALO_PAGE_ENTITIES = [TEST_HALO_BATTERY_SENSOR_ENTITY_ID]
+TEST_HALO_DATA_PAGE = {
+    CONF_PAGE_TITLE: TEST_HALO_PAGE_TITLE,
+    CONF_ENTITIES: TEST_HALO_PAGE_ENTITIES,
+}
+TEST_HALO_DATA_BUTTON = {
+    CONF_TITLE: "Battery",
+    CONF_ICON: Icons.ENERGIZE.name,
+}
+TEST_HALO_DATA_BUTTON_MODIFIED = {
+    CONF_TITLE: "Battery",
+    CONF_TEXT: "%",
+}
+TEST_HALO_DATA_BUTTON_2 = {
+    # String limit of 15
+    CONF_TITLE: "Bat. Charging",
+    CONF_TEXT: "State",
+}
+
+TEST_HALO_UUID_TARGET = "homeassistant.components.bang_olufsen.config_flow.HaloOptionsFlowHandler._halo_uuid"
+
+TEST_HALO_CONFIGURATION_ID = "8f1b81fe-2748-11f0-b515-d0abd5978ec0"
+TEST_HALO_PAGE_ID = "c45c74b4-3c39-6c87-f858-22b24dc2ad8b"
+TEST_HALO_BUTTON_ID = "cf7a7540-fac2-aee2-ad95-1a7f90ac29f1"
+TEST_HALO_BUTTON_2_ID = "2ea37900-aaf6-4acd-5ce5-72ad24d7537b"
+
+TEST_HALO_DATA_CONFIGURATION = {
+    "configuration": {
+        "pages": [
+            {
+                "title": TEST_HALO_PAGE_TITLE,
+                "buttons": [
+                    {
+                        "title": TEST_HALO_DATA_BUTTON[CONF_TITLE],
+                        "content": {"icon": Icons.ENERGIZE.value},
+                        "subtitle": "",
+                        "default": False,
+                        "id": TEST_HALO_BUTTON_ID,
+                    },
+                ],
+                "id": TEST_HALO_PAGE_ID,
+            }
+        ],
+        "version": "1.0.2",
+        "id": TEST_HALO_CONFIGURATION_ID,
+    }
+}
+TEST_HALO_DATA_CONFIGURATION_EMPTY = {
+    "configuration": {
+        "pages": [],
+        "version": "1.0.2",
+        "id": TEST_HALO_CONFIGURATION_ID,
+    }
+}
+
+TEST_HALO_DATA_CONFIGURATION_DEFAULT = {
+    "configuration": {
+        "pages": [
+            {
+                "title": TEST_HALO_PAGE_TITLE,
+                "buttons": [
+                    {
+                        "title": TEST_HALO_DATA_BUTTON[CONF_TITLE],
+                        "content": {"icon": Icons.ENERGIZE.value},
+                        "subtitle": "",
+                        "default": True,
+                        "id": TEST_HALO_BUTTON_ID,
+                    },
+                ],
+                "id": TEST_HALO_PAGE_ID,
+            }
+        ],
+        "version": "1.0.2",
+        "id": TEST_HALO_CONFIGURATION_ID,
+    }
+}
+
+TEST_HALO_DATA_CONFIGURATION_2_BUTTONS = {
+    "configuration": {
+        "pages": [
+            {
+                "title": TEST_HALO_PAGE_TITLE,
+                "buttons": [
+                    {
+                        "title": TEST_HALO_DATA_BUTTON[CONF_TITLE],
+                        "content": {"icon": Icons.ENERGIZE.value},
+                        "subtitle": "",
+                        "default": False,
+                        "id": TEST_HALO_BUTTON_ID,
+                    },
+                    {
+                        "title": TEST_HALO_DATA_BUTTON_2[CONF_TITLE],
+                        "content": {"text": TEST_HALO_DATA_BUTTON_2[CONF_TEXT]},
+                        "subtitle": "",
+                        "default": False,
+                        "id": TEST_HALO_BUTTON_2_ID,
+                    },
+                ],
+                "id": TEST_HALO_PAGE_ID,
+            }
+        ],
+        "version": "1.0.2",
+        "id": TEST_HALO_CONFIGURATION_ID,
+    }
+}
+
+TEST_HALO_DATA_CONFIGURATION_2_BUTTONS_MODIFIED = {
+    "configuration": {
+        "pages": [
+            {
+                "title": TEST_HALO_PAGE_TITLE,
+                "buttons": [
+                    {
+                        "title": TEST_HALO_DATA_BUTTON_MODIFIED[CONF_TITLE],
+                        "content": {"text": "%"},
+                        "subtitle": "",
+                        "default": False,
+                        "id": TEST_HALO_BUTTON_ID,
+                    },
+                    {
+                        "title": TEST_HALO_DATA_BUTTON_2[CONF_TITLE],
+                        "content": {"text": TEST_HALO_DATA_BUTTON_2[CONF_TEXT]},
+                        "subtitle": "",
+                        "default": False,
+                        "id": TEST_HALO_BUTTON_2_ID,
+                    },
+                ],
+                "id": TEST_HALO_PAGE_ID,
+            }
+        ],
+        "version": "1.0.2",
+        "id": TEST_HALO_CONFIGURATION_ID,
+    }
+}
+
+TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION = {
+    CONF_HOST: TEST_HOST,
+    CONF_MODEL: TEST_MODEL_HALO,
+    CONF_NAME: TEST_HALO_NAME,
+    CONF_HALO: TEST_HALO_DATA_CONFIGURATION,
+    CONF_ENTITY_MAP: {TEST_HALO_BUTTON_ID: TEST_HALO_BATTERY_SENSOR_ENTITY_ID},
+}
+TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION_EMPTY = {
+    CONF_HOST: TEST_HOST,
+    CONF_MODEL: TEST_MODEL_HALO,
+    CONF_NAME: TEST_HALO_NAME,
+    CONF_HALO: TEST_HALO_DATA_CONFIGURATION_EMPTY,
+    CONF_ENTITY_MAP: {},
+}
+TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION_DEFAULT = {
+    CONF_HOST: TEST_HOST,
+    CONF_MODEL: TEST_MODEL_HALO,
+    CONF_NAME: TEST_HALO_NAME,
+    CONF_HALO: TEST_HALO_DATA_CONFIGURATION_DEFAULT,
+    CONF_ENTITY_MAP: {TEST_HALO_BUTTON_ID: TEST_HALO_BATTERY_SENSOR_ENTITY_ID},
+}
+TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION_2_BUTTONS = {
+    CONF_HOST: TEST_HOST,
+    CONF_MODEL: TEST_MODEL_HALO,
+    CONF_NAME: TEST_HALO_NAME,
+    CONF_HALO: TEST_HALO_DATA_CONFIGURATION_2_BUTTONS,
+    CONF_ENTITY_MAP: {
+        TEST_HALO_BUTTON_ID: TEST_HALO_BATTERY_SENSOR_ENTITY_ID,
+        TEST_HALO_BUTTON_2_ID: TEST_HALO_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID,
+    },
+}
+TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION_2_BUTTONS_MODIFIED = {
+    CONF_HOST: TEST_HOST,
+    CONF_MODEL: TEST_MODEL_HALO,
+    CONF_NAME: TEST_HALO_NAME,
+    CONF_HALO: TEST_HALO_DATA_CONFIGURATION_2_BUTTONS_MODIFIED,
+    CONF_ENTITY_MAP: {
+        TEST_HALO_BUTTON_ID: TEST_HALO_BATTERY_SENSOR_ENTITY_ID,
+        TEST_HALO_BUTTON_2_ID: TEST_HALO_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID,
+    },
+}
+
+TEST_HALO_PAGE = f"{TEST_HALO_PAGE_TITLE} - ({TEST_HALO_PAGE_ID})"
+TEST_HALO_DATA_SELECT_PAGE = {CONF_PAGES: TEST_HALO_PAGE}
+TEST_HALO_DATA_SELECT_PAGES = {CONF_PAGES: [TEST_HALO_PAGE]}
+TEST_HALO_DATA_PAGE_2_BUTTONS = {
+    CONF_PAGE_TITLE: TEST_HALO_PAGE_TITLE,
+    CONF_ENTITIES: [
+        TEST_HALO_BATTERY_SENSOR_ENTITY_ID,
+        TEST_HALO_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID,
+    ],
+}
+TEST_HALO_BUTTON = f"{TEST_HALO_PAGE_TITLE}-{TEST_HALO_DATA_BUTTON[CONF_TITLE]} ({TEST_HALO_BUTTON_ID})"
+TEST_HALO_DATA_SELECT_DEFAULT = {CONF_DEFAULT_BUTTON: TEST_HALO_BUTTON}
 
 TEST_DATA_ZEROCONF = ZeroconfServiceInfo(
     ip_address=IPv4Address(TEST_HOST),
@@ -135,6 +374,19 @@ TEST_DATA_ZEROCONF_IPV6 = ZeroconfServiceInfo(
         ATTR_MOZART_SERIAL_NUMBER: TEST_SERIAL_NUMBER,
         ATTR_TYPE_NUMBER: TEST_TYPE_NUMBER,
         ATTR_ITEM_NUMBER: TEST_ITEM_NUMBER,
+    },
+)
+
+TEST_HALO_DATA_ZEROCONF = ZeroconfServiceInfo(
+    ip_address=IPv4Address(TEST_HOST),
+    ip_addresses=[IPv4Address(TEST_HOST)],
+    port=80,
+    hostname=TEST_HALO_HOSTNAME_ZEROCONF,
+    type=TEST_HALO_TYPE_ZEROCONF,
+    name=TEST_HALO_NAME_ZEROCONF,
+    properties={
+        ATTR_HALO_SERIAL_NUMBER: TEST_HALO_SERIAL,
+        CONF_NAME: TEST_MODEL_HALO,
     },
 )
 
