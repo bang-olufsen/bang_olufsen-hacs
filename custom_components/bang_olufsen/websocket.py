@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 import contextlib
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from mozart_api.models import (
     BatteryState,
@@ -57,6 +57,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
+    CONF_ID,
+    CONF_STATE,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -80,19 +82,27 @@ from .beoremote_halo.models import (
     PowerEvent,
     StatusEvent,
     SystemEvent,
+    Text,
     Update,
     UpdateButton,
     WheelEvent,
 )
-from .beoremote_halo.util import clamp_button_value, interpolate_button_value
+from .beoremote_halo.util import (
+    clamp_button_value,
+    interpolate_button_value,
+    trim_button_text,
+)
 from .const import (
+    CONF_CONTENT,
     CONF_ENTITY_MAP,
+    CONF_VALUE,
     CONNECTION_STATUS,
     EVENT_TRANSLATION_MAP,
     HALO_WEBSOCKET_EVENT,
     HALO_WHEEL_TIMEOUT,
     MOZART_WEBSOCKET_EVENT,
     BangOlufsenModel,
+    EntityMapValues,
     WebsocketNotification,
 )
 from .entity import HaloBase, MozartBase
@@ -113,7 +123,8 @@ class WheelTaskHandler:
 class HaloWebsocket(HaloBase):
     """WebSocket for Halo."""
 
-    _entity_map: dict[str, str] = {}
+    _entity_map: dict[str, EntityMapValues] = {}
+    _entity_ids: list[str] = []
     _wheel_action_handlers: dict[str, WheelTaskHandler] = {}
 
     def __init__(
@@ -145,20 +156,25 @@ class HaloWebsocket(HaloBase):
         # Track entity changes to sync with Halo configuration
         if config_entry.options:
             self._entity_map = config_entry.options[CONF_ENTITY_MAP]
+            self._entity_ids = [
+                entity_settings[CONF_ENTITY_ID]
+                for entity_settings in self._entity_map.values()
+            ]
 
-            entity_ids = set(self._entity_map.values())
             async_track_state_change_event(
                 self.hass,
-                entity_ids,
+                self._entity_ids,
                 self._handle_entity_state_change,
             )
             # Create wheel counters
             self._wheel_action_handlers = {
-                entity_id: WheelTaskHandler() for entity_id in entity_ids
+                entity_id: WheelTaskHandler() for entity_id in self._entity_ids
             }
 
         # Dict for associating platforms with update methods
-        self._entity_update_map: dict[str, Callable] = {
+        self._entity_update_map: dict[
+            str, Callable[[State], tuple[ButtonState, int]]
+        ] = {
             BINARY_SENSOR_DOMAIN: self._handle_binary_update,
             BUTTON_DOMAIN: self._handle_no_update,
             INPUT_BOOLEAN_DOMAIN: self._handle_binary_update,
@@ -173,7 +189,9 @@ class HaloWebsocket(HaloBase):
         }
 
         # Dict for associating platforms with button methods
-        self._entity_button_action_map: dict[str, Callable] = {
+        self._entity_button_action_map: dict[
+            str, Callable[[State, str], Coroutine[Any, Any, None]]
+        ] = {
             BINARY_SENSOR_DOMAIN: self._handle_no_button_action,
             BUTTON_DOMAIN: self._handle_button_button_action,
             INPUT_BOOLEAN_DOMAIN: self._handle_binary_button_action,
@@ -188,7 +206,7 @@ class HaloWebsocket(HaloBase):
         }
 
         # Dict for associating platforms with wheel methods
-        self._entity_wheel_callback_map: dict[str, Callable] = {
+        self._entity_wheel_callback_map: dict[str, Callable[[State], None]] = {
             BINARY_SENSOR_DOMAIN: self._handle_no_wheel_action,
             BUTTON_DOMAIN: self._handle_no_wheel_action,
             INPUT_BOOLEAN_DOMAIN: self._handle_switch_wheel_action_callback,
@@ -216,8 +234,8 @@ class HaloWebsocket(HaloBase):
         """Send Halo Button configuration updates of current entity states."""
         # Get the button ids
         button_ids = []
-        for mapped_button_id, mapped_entity_id in self._entity_map.items():
-            if mapped_entity_id == entity_id:
+        for mapped_button_id, mapped_entity_settings in self._entity_map.items():
+            if mapped_entity_settings[CONF_ENTITY_ID] == entity_id:
                 button_ids.append(mapped_button_id)
 
         # Handle update for pages that the entity is present on
@@ -231,7 +249,7 @@ class HaloWebsocket(HaloBase):
         """Handle state change of entities."""
         entity_id = event.data[CONF_ENTITY_ID]
 
-        if entity_id not in self._entity_map.values():
+        if entity_id not in self._entity_ids:
             _LOGGER.error("Entity %s is not in entity map", entity_id)
             return
 
@@ -241,6 +259,14 @@ class HaloWebsocket(HaloBase):
 
     async def _handle_entity_update(self, entity_id: str, button_id: str) -> None:
         """Handle state change events of entities."""
+
+        class UpdateButtonKwargs(TypedDict, total=False):
+            id: str
+            state: ButtonState
+            value: int
+            title: str
+            subtitle: str
+            content: Text
 
         entity_state = self.hass.states.get(entity_id)
         if entity_state is None:
@@ -267,23 +293,30 @@ class HaloWebsocket(HaloBase):
 
         # Avoid unnecessary updates when Home Assistant is started if nothing has changed
         if button.state == button_state and button.value == button_value:
-            _LOGGER.debug(
-                "Skipping update for %s button on",
-                button.title,
-            )
+            _LOGGER.debug("Skipping update for %s button", button.title)
             return
 
+        update_kwargs: UpdateButtonKwargs = {
+            CONF_ID: button.id,
+            CONF_STATE: button_state,
+            CONF_VALUE: button_value,
+        }
+
+        # Add entity value as title update if defined
+        if self._entity_map[button_id][CONF_VALUE] is True:
+            update_kwargs[CONF_CONTENT] = Text(
+                trim_button_text(str(entity_state.state))
+            )
+
         # Send update to Halo
-        await self._client.update(
-            Update(update=UpdateButton(button.id, button_state, button_value))
-        )
+        await self._client.update(Update(update=UpdateButton(**update_kwargs)))
 
     async def _handle_entity_button_action(self, button_id: str) -> None:
         """Handle actions of entities."""
 
         # Get entity_id
         try:
-            entity_id = self._entity_map[button_id]
+            entity_id = self._entity_map[button_id][CONF_ENTITY_ID]
         except KeyError:
             _LOGGER.error(
                 "Error associating button %s with an entity id. Entity map %s",
@@ -313,7 +346,7 @@ class HaloWebsocket(HaloBase):
 
         # Get entity_id
         try:
-            entity_id = self._entity_map[button_id]
+            entity_id = self._entity_map[button_id][CONF_ENTITY_ID]
         except KeyError:
             _LOGGER.error(
                 "Error associating button %s with an entity id. Entity map %s",
@@ -332,15 +365,11 @@ class HaloWebsocket(HaloBase):
             self._wheel_action_handlers[entity_state.entity_id].counter += counts
 
             # Cancel any scheduled action calls
-            if (
-                timer := self._wheel_action_handlers[entity_state.entity_id].timer
-            ) is not None:
+            if (timer := self._wheel_action_handlers[entity_id].timer) is not None:
                 timer.cancel()
 
             # Schedule a new action call
-            self._wheel_action_handlers[
-                entity_state.entity_id
-            ].timer = self.hass.loop.call_later(
+            self._wheel_action_handlers[entity_id].timer = self.hass.loop.call_later(
                 HALO_WHEEL_TIMEOUT,
                 self._entity_wheel_callback_map[entity_state.domain],
                 entity_state,
@@ -504,7 +533,9 @@ class HaloWebsocket(HaloBase):
 
         return (button_state, button_value)
 
-    async def _handle_binary_button_action(self, entity_state: State, _: str) -> None:
+    async def _handle_binary_button_action(
+        self, entity_state: State, button_id: str
+    ) -> None:
         """Handle Input Boolean and switch Button entity actions."""
         _LOGGER.debug("Sending %s to %s", SERVICE_SET_VALUE, entity_state.entity_id)
 
@@ -558,7 +589,9 @@ class HaloWebsocket(HaloBase):
         # Ideally there would be some indication, but it is cumbersome for now.
         return (ButtonState.INACTIVE, 0)
 
-    async def _handle_button_button_action(self, entity_state: State, _: str) -> None:
+    async def _handle_button_button_action(
+        self, entity_state: State, button_id: str
+    ) -> None:
         """Handle Button entity button actions."""
         _LOGGER.debug("Sending %s to %s", SERVICE_PRESS, entity_state.entity_id)
 
@@ -568,7 +601,9 @@ class HaloWebsocket(HaloBase):
             {ATTR_ENTITY_ID: entity_state.entity_id},
         )
 
-    async def _handle_script_button_action(self, entity_state: State, _: str) -> None:
+    async def _handle_script_button_action(
+        self, entity_state: State, button_id: str
+    ) -> None:
         """Handle Script entity button actions."""
         _LOGGER.debug("Activating script: %s ", entity_state.name)
 
@@ -605,7 +640,9 @@ class HaloWebsocket(HaloBase):
 
         return (button_state, button_value)
 
-    async def _handle_light_button_action(self, entity_state: State, _: str) -> None:
+    async def _handle_light_button_action(
+        self, entity_state: State, button_id: str
+    ) -> None:
         """Handle Light entity button actions."""
         _LOGGER.debug("Sending %s to %s", SERVICE_TOGGLE, entity_state.entity_id)
 
@@ -657,7 +694,9 @@ class HaloWebsocket(HaloBase):
         self._wheel_action_handlers[entity_state.entity_id].counter = 0
         self._wheel_action_handlers[entity_state.entity_id].timer = None
 
-    async def _handle_scene_button_action(self, entity_state: State, _: str) -> None:
+    async def _handle_scene_button_action(
+        self, entity_state: State, button_id: str
+    ) -> None:
         """Handle Scene entity button actions."""
         _LOGGER.debug("Sending %s to %s", SERVICE_TURN_ON, entity_state.entity_id)
 
@@ -681,8 +720,9 @@ class HaloWebsocket(HaloBase):
 
         if self._client.configuration:
             # Send entity states as updates
-            for entity_id in self._entity_map.values():
+            for entity_id in self._entity_ids:
                 await self._update_entity_button_values(entity_id)
+
         else:
             _LOGGER.debug(
                 "Add a configuration for Home Assistant entities to %s in config flow options",

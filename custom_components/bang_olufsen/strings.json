@@ -68,12 +68,13 @@
       },
       "button": {
         "title": "Configure button",
-        "description": "Select a configuration for the {entity} button in the {page} page. Icon and Text can't both be defined, but one of them is required",
+        "description": "Select a configuration for the {entity} button in the {page} page.\n\nChoose either Icon, Text or Value for the content in the middle of the button.",
         "data": {
-          "icon": "Icon",
-          "text": "Text",
-          "title": "Title",
-          "subtitle": "Subtitle"
+          "icon": "Icon for content",
+          "text": "Text for content",
+          "title": "Title underneath button",
+          "subtitle": "Subtitle underneath title",
+          "value": "Use entity state for content"
         }
       },
       "delete_pages": {
@@ -85,7 +86,7 @@
       },
       "modify_default": {
         "title": "Modify default",
-        "description": "Select or remove a default button for the Beoremote Halo. Default buttons are automatically selected as the active button on the Beoremote Halo after a small timeout.",
+        "description": "Select or remove a default button for the Beoremote Halo.\n\nDefault buttons are automatically selected as the active button on the Beoremote Halo after a small timeout.",
         "menu_options": {
           "select_default": "Select the default button",
           "remove_default": "Remove the default attribute from button: {button}"

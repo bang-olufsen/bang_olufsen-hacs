@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Final
+from typing import Final, TypedDict
 
 from mozart_api.models import Source, SourceTypeEnum
 
@@ -145,6 +145,7 @@ CONF_ENTITY_MAP: Final = "entity_map"
 CONF_TITLE: Final = "title"
 CONF_SUBTITLE: Final = "subtitle"
 CONF_DEFAULT_BUTTON: Final = "default_button"
+CONF_CONTENT: Final = "content"
 # Menu options / step IDs
 HALO_OPTION_PAGE = "page"
 HALO_OPTION_MODIFY_PAGE = "modify_page"
@@ -158,6 +159,15 @@ HALO_BUTTON_ICONS: list[str] = [icon.name for icon in Icons]
 
 # Timeout for sending wheel events in seconds
 HALO_WHEEL_TIMEOUT: Final = 0.125
+
+
+class EntityMapValues(TypedDict):
+    """TypedDict for Halo button information and settings."""
+
+    entity_id: str
+    # Use entity state instead of Icon / Text
+    state: bool
+
 
 # Mozart models
 MOZART_MODELS: Final[list[BangOlufsenModel]] = [

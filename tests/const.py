@@ -36,16 +36,19 @@ from homeassistant.components.bang_olufsen.const import (
     CONF_HALO,
     CONF_PAGE_TITLE,
     CONF_PAGES,
+    CONF_SUBTITLE,
     CONF_TEXT,
     CONF_TITLE,
     BangOlufsenSource,
 )
 from homeassistant.const import (
     CONF_ENTITIES,
+    CONF_ENTITY_ID,
     CONF_HOST,
     CONF_ICON,
     CONF_MODEL,
     CONF_NAME,
+    CONF_STATE,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -154,16 +157,22 @@ TEST_HALO_DATA_PAGE = {
 }
 TEST_HALO_DATA_BUTTON = {
     CONF_TITLE: "Battery",
+    CONF_SUBTITLE: "",
     CONF_ICON: Icons.ENERGIZE.name,
 }
 TEST_HALO_DATA_BUTTON_MODIFIED = {
-    CONF_TITLE: "Battery",
+    CONF_TITLE: "Battery :)",
+    CONF_SUBTITLE: "for the Halo",
     CONF_TEXT: "%",
 }
 TEST_HALO_DATA_BUTTON_2 = {
     # String limit of 15
     CONF_TITLE: "Bat. Charging",
     CONF_TEXT: "State",
+}
+TEST_HALO_DATA_BUTTON_2_MODIFIED = {
+    CONF_TITLE: "Bat. Charging",
+    CONF_STATE: True,
 }
 
 TEST_HALO_UUID_TARGET = "homeassistant.components.bang_olufsen.config_flow.HaloOptionsFlowHandler._halo_uuid"
@@ -182,7 +191,7 @@ TEST_HALO_DATA_CONFIGURATION = {
                     {
                         "title": TEST_HALO_DATA_BUTTON[CONF_TITLE],
                         "content": {"icon": Icons.ENERGIZE.value},
-                        "subtitle": "",
+                        "subtitle": TEST_HALO_DATA_BUTTON[CONF_SUBTITLE],
                         "default": False,
                         "id": TEST_HALO_BUTTON_ID,
                     },
@@ -211,7 +220,7 @@ TEST_HALO_DATA_CONFIGURATION_DEFAULT = {
                     {
                         "title": TEST_HALO_DATA_BUTTON[CONF_TITLE],
                         "content": {"icon": Icons.ENERGIZE.value},
-                        "subtitle": "",
+                        "subtitle": TEST_HALO_DATA_BUTTON[CONF_SUBTITLE],
                         "default": True,
                         "id": TEST_HALO_BUTTON_ID,
                     },
@@ -233,7 +242,7 @@ TEST_HALO_DATA_CONFIGURATION_2_BUTTONS = {
                     {
                         "title": TEST_HALO_DATA_BUTTON[CONF_TITLE],
                         "content": {"icon": Icons.ENERGIZE.value},
-                        "subtitle": "",
+                        "subtitle": TEST_HALO_DATA_BUTTON[CONF_SUBTITLE],
                         "default": False,
                         "id": TEST_HALO_BUTTON_ID,
                     },
@@ -262,13 +271,14 @@ TEST_HALO_DATA_CONFIGURATION_2_BUTTONS_MODIFIED = {
                     {
                         "title": TEST_HALO_DATA_BUTTON_MODIFIED[CONF_TITLE],
                         "content": {"text": "%"},
-                        "subtitle": "",
+                        "subtitle": TEST_HALO_DATA_BUTTON_MODIFIED[CONF_SUBTITLE],
                         "default": False,
                         "id": TEST_HALO_BUTTON_ID,
                     },
                     {
                         "title": TEST_HALO_DATA_BUTTON_2[CONF_TITLE],
-                        "content": {"text": TEST_HALO_DATA_BUTTON_2[CONF_TEXT]},
+                        # An empty text string is the default value for the "Value" content option
+                        "content": {"text": ""},
                         "subtitle": "",
                         "default": False,
                         "id": TEST_HALO_BUTTON_2_ID,
@@ -287,7 +297,12 @@ TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION = {
     CONF_MODEL: TEST_MODEL_HALO,
     CONF_NAME: TEST_HALO_NAME,
     CONF_HALO: TEST_HALO_DATA_CONFIGURATION,
-    CONF_ENTITY_MAP: {TEST_HALO_BUTTON_ID: TEST_HALO_BATTERY_SENSOR_ENTITY_ID},
+    CONF_ENTITY_MAP: {
+        TEST_HALO_BUTTON_ID: {
+            CONF_ENTITY_ID: TEST_HALO_BATTERY_SENSOR_ENTITY_ID,
+            CONF_STATE: False,
+        },
+    },
 }
 TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION_EMPTY = {
     CONF_HOST: TEST_HOST,
@@ -301,7 +316,12 @@ TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION_DEFAULT = {
     CONF_MODEL: TEST_MODEL_HALO,
     CONF_NAME: TEST_HALO_NAME,
     CONF_HALO: TEST_HALO_DATA_CONFIGURATION_DEFAULT,
-    CONF_ENTITY_MAP: {TEST_HALO_BUTTON_ID: TEST_HALO_BATTERY_SENSOR_ENTITY_ID},
+    CONF_ENTITY_MAP: {
+        TEST_HALO_BUTTON_ID: {
+            CONF_ENTITY_ID: TEST_HALO_BATTERY_SENSOR_ENTITY_ID,
+            CONF_STATE: False,
+        },
+    },
 }
 TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION_2_BUTTONS = {
     CONF_HOST: TEST_HOST,
@@ -309,8 +329,14 @@ TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION_2_BUTTONS = {
     CONF_NAME: TEST_HALO_NAME,
     CONF_HALO: TEST_HALO_DATA_CONFIGURATION_2_BUTTONS,
     CONF_ENTITY_MAP: {
-        TEST_HALO_BUTTON_ID: TEST_HALO_BATTERY_SENSOR_ENTITY_ID,
-        TEST_HALO_BUTTON_2_ID: TEST_HALO_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID,
+        TEST_HALO_BUTTON_ID: {
+            CONF_ENTITY_ID: TEST_HALO_BATTERY_SENSOR_ENTITY_ID,
+            CONF_STATE: False,
+        },
+        TEST_HALO_BUTTON_2_ID: {
+            CONF_ENTITY_ID: TEST_HALO_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID,
+            CONF_STATE: False,
+        },
     },
 }
 TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION_2_BUTTONS_MODIFIED = {
@@ -319,8 +345,14 @@ TEST_HALO_DATA_CREATE_ENTRY_WITH_CONFIGURATION_2_BUTTONS_MODIFIED = {
     CONF_NAME: TEST_HALO_NAME,
     CONF_HALO: TEST_HALO_DATA_CONFIGURATION_2_BUTTONS_MODIFIED,
     CONF_ENTITY_MAP: {
-        TEST_HALO_BUTTON_ID: TEST_HALO_BATTERY_SENSOR_ENTITY_ID,
-        TEST_HALO_BUTTON_2_ID: TEST_HALO_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID,
+        TEST_HALO_BUTTON_ID: {
+            CONF_ENTITY_ID: TEST_HALO_BATTERY_SENSOR_ENTITY_ID,
+            CONF_STATE: False,
+        },
+        TEST_HALO_BUTTON_2_ID: {
+            CONF_ENTITY_ID: TEST_HALO_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID,
+            CONF_STATE: True,
+        },
     },
 }
 

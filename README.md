@@ -64,6 +64,7 @@ Generally "wheel" events are handled by counting the number of detents in a "rot
   - Add / remove buttons
   - Modify button attributes
 - Delete pages
+- Entity state as a button's "content"
 - Battery charging Binary Sensor Entity
 - Battery Level Sensor Entity
 - System statues Event entity (Can be used as a proximity sensor)

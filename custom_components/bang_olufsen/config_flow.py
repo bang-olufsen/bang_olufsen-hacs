@@ -29,13 +29,17 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_ENTITIES,
+    CONF_ENTITY_ID,
     CONF_HOST,
     CONF_ICON,
     CONF_MODEL,
     CONF_NAME,
+    CONF_STATE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
+    BooleanSelectorConfig,
     EntitySelector,
     EntitySelectorConfig,
     SelectSelector,
@@ -102,6 +106,7 @@ from .const import (
     ZEROCONF_HALO,
     ZEROCONF_MOZART,
     BangOlufsenModel,
+    EntityMapValues,
 )
 from .util import get_serial_number_from_jid
 
@@ -118,7 +123,7 @@ class BangOlufsenEntryData(TypedDict, total=False):
     # Does not seem to handle objects well through restarts,
     # so a dict of the configuration is stored instead
     halo: dict | None
-    entity_map: dict[str, str]
+    entity_map: dict[str, EntityMapValues]
 
 
 # Map exception types to strings
@@ -328,7 +333,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
             Configuration(pages=[], id=self._halo_uuid())
         )
         self._entity_ids: list[str] = []
-        self._entity_map: dict[str, str] = {}
+        self._entity_map: dict[str, EntityMapValues] = {}
         self._page: Page
         self._default_button: Button | None
         self._page_being_modified = False
@@ -401,7 +406,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
                 # Get button ID and remove from page and entity_map
                 for entity_id in entity_ids_to_remove:
                     for button in self._page.buttons:
-                        if self._entity_map[button.id] == entity_id:
+                        if self._entity_map[button.id][CONF_ENTITY_ID] == entity_id:
                             self._entity_map.pop(button.id)
                             new_buttons.remove(button)
 
@@ -429,16 +434,15 @@ class HaloOptionsFlowHandler(OptionsFlow):
                 button = Button(
                     title=user_input[CONF_TITLE],
                     subtitle=user_input[CONF_SUBTITLE],
-                    content=(
-                        Icon(Icons[user_input[CONF_ICON]])
-                        if CONF_ICON in user_input
-                        else Text(user_input[CONF_TEXT])
-                    ),
+                    content=self._determine_content(user_input),
                     id=self._halo_uuid(),
                 )
 
                 # Update entity_map
-                self._entity_map[button.id] = self._entity_ids[-1]
+                self._entity_map[button.id] = {
+                    CONF_ENTITY_ID: self._entity_ids[-1],
+                    CONF_STATE: user_input.get(CONF_STATE, False),
+                }
 
                 # Add to current page
                 self._page.buttons.append(button)
@@ -449,11 +453,11 @@ class HaloOptionsFlowHandler(OptionsFlow):
                     self._button.id,
                     title=user_input[CONF_TITLE],
                     subtitle=user_input[CONF_SUBTITLE],
-                    content=(
-                        Icon(Icons[user_input[CONF_ICON]])
-                        if CONF_ICON in user_input
-                        else Text(user_input[CONF_TEXT])
-                    ),
+                    content=self._determine_content(user_input),
+                )
+                # Check if the state should be updated in the entity_map
+                self._entity_map[self._button.id][CONF_STATE] = user_input.get(
+                    CONF_STATE, False
                 )
 
             self._entity_ids.pop()
@@ -481,11 +485,14 @@ class HaloOptionsFlowHandler(OptionsFlow):
         if self._page_being_modified:
             self._button = None
             for button in self._page.buttons:
-                if self._entity_map[button.id] == self._entity_ids[-1]:
+                if self._entity_map[button.id][CONF_ENTITY_ID] == self._entity_ids[-1]:
                     self._button = button
 
                     button_schema = self._button_schema(
-                        self._button.title, self._button.subtitle, self._button.content
+                        self._button.title,
+                        self._button.subtitle,
+                        self._button.content,
+                        self._entity_map[button.id][CONF_STATE],
                     )
 
         return self.async_show_form(
@@ -509,7 +516,8 @@ class HaloOptionsFlowHandler(OptionsFlow):
             self._page = get_page_from_id(self._configuration, page_id)
             self._page_being_modified = True
             self._entity_ids_in_page = [
-                self._entity_map[button.id] for button in self._page.buttons
+                self._entity_map[button.id][CONF_ENTITY_ID]
+                for button in self._page.buttons
             ]
 
             return self.async_show_form(
@@ -654,6 +662,20 @@ class HaloOptionsFlowHandler(OptionsFlow):
             ),
         )
 
+    def _determine_content(self, user_input: dict[str, Any]) -> Icon | Text:
+        """Determine content based on user_input."""
+        content: Icon | Text
+
+        if CONF_ICON in user_input:
+            content = Icon(Icons[user_input[CONF_ICON]])
+        elif CONF_TEXT in user_input:
+            content = Text(user_input[CONF_TEXT])
+        else:
+            # Entity state would replace this
+            content = Text("")
+
+        return content
+
     def _halo_uuid(self) -> str:
         """Get a properly formatted Halo UUID."""
         # UUIDs from uuid1() are not unique when generated in Home Assistant (???)
@@ -711,6 +733,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
         title: str | vol.Undefined = vol.UNDEFINED,
         subtitle: str | None = "",
         content: Icon | Text | None = None,
+        state: bool = False,
     ) -> vol.Schema:
         """Fill schema for button modification or creation."""
 
@@ -720,21 +743,21 @@ class HaloOptionsFlowHandler(OptionsFlow):
             msg: str | None
             description: str | Any
 
-        icon_kwargs: ExclusiveKwargs = {
-            "schema": CONF_ICON,
+        exclusive_kwargs: ExclusiveKwargs = {
             "group_of_exclusion": "content",
-            "msg": "Choose either an Icon or Text",
+            "msg": "Choose either an Icon, Text or entity state",
         }
-        text_kwargs: ExclusiveKwargs = {
-            "schema": CONF_TEXT,
-            "group_of_exclusion": "content",
-            "msg": "Choose either an Icon or Text",
-        }
-        # Add suggested value to kwargs if an Icon or Text value is available
+        icon_kwargs: ExclusiveKwargs = {"schema": CONF_ICON, **exclusive_kwargs}
+        text_kwargs: ExclusiveKwargs = {"schema": CONF_TEXT, **exclusive_kwargs}
+        state_kwargs: ExclusiveKwargs = {"schema": CONF_STATE, **exclusive_kwargs}
+
+        # Add suggested value to kwargs if an Icon, Text or state is available
         if isinstance(content, Icon):
             icon_kwargs["description"] = {"suggested_value": content.icon.name}
         elif isinstance(content, Text):
             text_kwargs["description"] = {"suggested_value": content.text}
+        if state is True:
+            state_kwargs["description"] = {"suggested_value": state}
 
         return vol.Schema(
             {
@@ -753,6 +776,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
                     str,
                     vol.Length(max=BUTTON_TEXT_MAX_LENGTH),
                 ),
+                vol.Exclusive(**state_kwargs): BooleanSelector(BooleanSelectorConfig()),
             },
         )
 

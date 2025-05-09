@@ -1268,12 +1268,13 @@
         "step": {
             "button": {
                 "data": {
-                    "icon": "Icon",
-                    "subtitle": "Subtitle",
-                    "text": "Text",
-                    "title": "Title"
+                    "icon": "Icon for content",
+                    "subtitle": "Subtitle underneath title",
+                    "text": "Text for content",
+                    "title": "Title underneath button",
+                    "value": "Use entity state for content"
                 },
-                "description": "Select a configuration for the {entity} button in the {page} page. Icon and Text can't both be defined, but one of them is required",
+                "description": "Select a configuration for the {entity} button in the {page} page.\n\nChoose either Icon, Text or Value for the content in the middle of the button.",
                 "title": "Configure button"
             },
             "delete_pages": {
@@ -1293,7 +1294,7 @@
                 }
             },
             "modify_default": {
-                "description": "Select or remove a default button for the Beoremote Halo. Default buttons are automatically selected as the active button on the Beoremote Halo after a small timeout.",
+                "description": "Select or remove a default button for the Beoremote Halo.\n\nDefault buttons are automatically selected as the active button on the Beoremote Halo after a small timeout.",
                 "menu_options": {
                     "remove_default": "Remove the default attribute from button: {button}",
                     "select_default": "Select the default button"
