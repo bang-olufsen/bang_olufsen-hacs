@@ -268,6 +268,9 @@ class HaloWebsocket(HaloBase):
             subtitle: str
             content: Text
 
+        # Determine if the entity state should be used as content
+        use_state = self._entity_map[button_id][CONF_STATE]
+
         entity_state = self.hass.states.get(entity_id)
         if entity_state is None:
             _LOGGER.debug("Error retrieving state for %s", entity_id)
@@ -277,6 +280,9 @@ class HaloWebsocket(HaloBase):
             button_state, button_value = self._entity_update_map[entity_state.domain](
                 entity_state
             )
+            # Create content that will be used if the "state" setting is enabled for the button
+            content = Text(trim_button_text(str(entity_state.state)))
+
         except KeyError:
             _LOGGER.error(
                 "The Halo does not handle %s platform Button state updates yet",
@@ -293,8 +299,12 @@ class HaloWebsocket(HaloBase):
 
         # Avoid unnecessary updates when Home Assistant is started if nothing has changed
         if button.state == button_state and button.value == button_value:
-            _LOGGER.debug("Skipping update for %s button", button.title)
-            return
+            # Check button content if the entity state is used
+            if use_state is True and button.content != content:
+                pass
+            else:
+                _LOGGER.debug("Skipping update for %s button", button.title)
+                return
 
         update_kwargs: UpdateButtonKwargs = {
             CONF_ID: button.id,
@@ -302,11 +312,9 @@ class HaloWebsocket(HaloBase):
             CONF_VALUE: button_value,
         }
 
-        # Add entity value as title update if defined
-        if self._entity_map[button_id][CONF_STATE] is True:
-            update_kwargs[CONF_CONTENT] = Text(
-                trim_button_text(str(entity_state.state))
-            )
+        # Add entity value as content update if defined
+        if use_state is True:
+            update_kwargs[CONF_CONTENT] = content
 
         # Send update to Halo
         await self._client.update(Update(update=UpdateButton(**update_kwargs)))
