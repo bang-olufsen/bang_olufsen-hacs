@@ -224,8 +224,9 @@ class Halo:
                     ClientSession(
                         timeout=ClientTimeout(connect=WEBSOCKET_TIMEOUT)
                     ) as session,
+                    # Increase heartbeat time to handle slow pongs better
                     session.ws_connect(
-                        url=host, heartbeat=WEBSOCKET_TIMEOUT
+                        url=host, heartbeat=WEBSOCKET_TIMEOUT * 2
                     ) as websocket,
                 ):
                     self.websocket_connected = True
