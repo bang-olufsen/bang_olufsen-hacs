@@ -141,7 +141,7 @@ async def integration_fixture(
     hass: HomeAssistant,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-) -> tuple[MockConfigEntry, AsyncMock]:
+) -> None:
     """Set up the Bang & Olufsen integration."""
 
     mock_config_entry.add_to_hass(hass)
@@ -150,22 +150,18 @@ async def integration_fixture(
 
     await mock_websocket_connection(hass, mock_mozart_client)
 
-    return (mock_config_entry, mock_mozart_client)
-
 
 @pytest.fixture(name="integration_halo")
 async def integration_halo_fixture(
     hass: HomeAssistant,
     mock_halo_client: AsyncMock,
     mock_config_entry_halo: MockConfigEntry,
-) -> tuple[MockConfigEntry, AsyncMock]:
-    """Set up the Bang & Olufsen integration with A Beoremote Halo with initial configuration."""
+) -> None:
+    """Set up the Bang & Olufsen integration with a Beoremote Halo with initial configuration."""
 
     mock_config_entry_halo.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry_halo.entry_id)
     await hass.async_block_till_done()
-
-    return (mock_config_entry_halo, mock_halo_client)
 
 
 @pytest.fixture

@@ -38,14 +38,15 @@ from tests.common import MockConfigEntry
 async def test_connection(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    integration: tuple[MockConfigEntry, AsyncMock],
+    integration: None,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test on_connection and on_connection_lost logs and calls correctly."""
-    config_entry, client = integration
 
-    client.websocket_connected = True
+    mock_mozart_client.websocket_connected = True
 
-    connection_callback = client.get_on_connection.call_args[0][0]
+    connection_callback = mock_mozart_client.get_on_connection.call_args[0][0]
 
     caplog.set_level(logging.DEBUG)
 
@@ -53,7 +54,7 @@ async def test_connection(
 
     async_dispatcher_connect(
         hass,
-        f"{config_entry.unique_id}_{CONNECTION_STATUS}",
+        f"{mock_config_entry.unique_id}_{CONNECTION_STATUS}",
         mock_connection_callback,
     )
 
@@ -68,18 +69,19 @@ async def test_connection(
 async def test_connection_lost(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    integration: tuple[MockConfigEntry, AsyncMock],
+    integration: None,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test on_connection_lost logs and calls correctly."""
-    config_entry, client = integration
 
-    connection_lost_callback = client.get_on_connection_lost.call_args[0][0]
+    connection_lost_callback = mock_mozart_client.get_on_connection_lost.call_args[0][0]
 
     mock_connection_lost_callback = Mock()
 
     async_dispatcher_connect(
         hass,
-        f"{config_entry.unique_id}_{CONNECTION_STATUS}",
+        f"{mock_config_entry.unique_id}_{CONNECTION_STATUS}",
         mock_connection_lost_callback,
     )
 
@@ -93,13 +95,14 @@ async def test_connection_lost(
 async def test_on_software_update_state(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
-    integration: tuple[MockConfigEntry, AsyncMock],
+    integration: None,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test software version is updated through on_software_update_state."""
-    config_entry, client = integration
 
     software_update_state_callback = (
-        client.get_software_update_state_notifications.call_args[0][0]
+        mock_mozart_client.get_software_update_state_notifications.call_args[0][0]
     )
 
     # Trigger the notification
@@ -107,10 +110,10 @@ async def test_on_software_update_state(
 
     await hass.async_block_till_done()
 
-    assert config_entry.unique_id
+    assert mock_config_entry.unique_id
     assert (
         device := device_registry.async_get_device(
-            identifiers={(DOMAIN, config_entry.unique_id)}
+            identifiers={(DOMAIN, mock_config_entry.unique_id)}
         )
     )
     assert device.sw_version == "1.0.0"
@@ -120,14 +123,15 @@ async def test_on_remote_control_already_added(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
     entity_registry: EntityRegistry,
-    integration: tuple[MockConfigEntry, AsyncMock],
+    integration: None,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that the integration does nothing when a remote that already has a device triggers a check."""
-    config_entry, client = integration
 
     # Check device and API call count
-    assert client.get_bluetooth_remotes.call_count == 3
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check entities
@@ -137,7 +141,7 @@ async def test_on_remote_control_already_added(
             *get_remote_entity_ids(),
         ]
     )
-    remote_callback = client.get_notification_notifications.call_args[0][0]
+    remote_callback = mock_mozart_client.get_notification_notifications.call_args[0][0]
 
     # Trigger the notification
     await remote_callback(
@@ -149,7 +153,7 @@ async def test_on_remote_control_already_added(
     await hass.async_block_till_done()
 
     # Check device and API call count (triggered once by the WebSocket notification)
-    assert client.get_bluetooth_remotes.call_count == 4
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 4
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check entities
@@ -168,14 +172,15 @@ async def test_on_remote_control_paired(
     caplog: pytest.LogCaptureFixture,
     device_registry: DeviceRegistry,
     entity_registry: EntityRegistry,
-    integration: tuple[MockConfigEntry, AsyncMock],
+    integration: None,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that the integration reloads when a new remote has been paired."""
-    config_entry, client = integration
 
     # Check device and API call count
-    assert client.get_bluetooth_remotes.call_count == 3
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (button events and media_player)
@@ -186,7 +191,7 @@ async def test_on_remote_control_paired(
         ]
     )
     # "Pair" a new remote
-    client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
+    mock_mozart_client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
         items=[
             # Already paired
             PairedRemote(
@@ -208,7 +213,7 @@ async def test_on_remote_control_paired(
             ),
         ]
     )
-    remote_callback = client.get_notification_notifications.call_args[0][0]
+    remote_callback = mock_mozart_client.get_notification_notifications.call_args[0][0]
 
     # Trigger the notification
     await remote_callback(
@@ -219,14 +224,14 @@ async def test_on_remote_control_paired(
     await hass.async_block_till_done()
 
     # Check device and API call count
-    assert client.get_bluetooth_remotes.call_count == 8
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 8
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
     assert device_registry.async_get_device(
         {(DOMAIN, f"66666666_{TEST_SERIAL_NUMBER}")}
     )
     # Check logger
     assert (
-        f"A Beoremote One has been paired or unpaired to {config_entry.title}. Reloading config entry to add device and entities"
+        f"A Beoremote One has been paired or unpaired to {mock_config_entry.title}. Reloading config entry to add device and entities"
         in caplog.text
     )
 
@@ -248,14 +253,15 @@ async def test_on_remote_control_unpaired(
     caplog: pytest.LogCaptureFixture,
     device_registry: DeviceRegistry,
     entity_registry: EntityRegistry,
-    integration: tuple[MockConfigEntry, AsyncMock],
+    integration: None,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that the integration reloads when a remote has been unpaired."""
-    config_entry, client = integration
 
     # Check device and API call count
-    assert client.get_bluetooth_remotes.call_count == 3
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (button events and media_player)
@@ -266,8 +272,10 @@ async def test_on_remote_control_unpaired(
         ]
     )
     # "Unpair" the remote
-    client.get_bluetooth_remotes.return_value = PairedRemoteResponse(items=[])
-    remote_callback = client.get_notification_notifications.call_args[0][0]
+    mock_mozart_client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
+        items=[]
+    )
+    remote_callback = mock_mozart_client.get_notification_notifications.call_args[0][0]
 
     # Trigger the notification
     await remote_callback(
@@ -278,14 +286,14 @@ async def test_on_remote_control_unpaired(
     await hass.async_block_till_done()
 
     # Check device and API call count
-    assert client.get_bluetooth_remotes.call_count == 6
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 6
     assert (
         device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)}) is None
     )
 
     # Check logger
     assert (
-        f"A Beoremote One has been paired or unpaired to {config_entry.title}. Reloading config entry to add device and entities"
+        f"A Beoremote One has been paired or unpaired to {mock_config_entry.title}. Reloading config entry to add device and entities"
         in caplog.text
     )
 
@@ -300,12 +308,15 @@ async def test_on_all_notifications_raw(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_registry: DeviceRegistry,
-    integration: tuple[MockConfigEntry, AsyncMock],
+    integration: None,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test on_all_notifications_raw logs and fires as expected."""
-    config_entry, client = integration
 
-    all_notifications_raw_callback = client.get_all_notifications_raw.call_args[0][0]
+    all_notifications_raw_callback = (
+        mock_mozart_client.get_all_notifications_raw.call_args[0][0]
+    )
 
     raw_notification = {
         "eventData": {
@@ -318,15 +329,15 @@ async def test_on_all_notifications_raw(
     }
 
     # Get device ID for the modified notification that is sent as an event and in the log
-    assert config_entry.unique_id
+    assert mock_config_entry.unique_id
     assert (
         device := device_registry.async_get_device(
-            identifiers={(DOMAIN, config_entry.unique_id)}
+            identifiers={(DOMAIN, mock_config_entry.unique_id)}
         )
     )
     raw_notification_full = {
         "device_id": device.id,
-        "serial_number": int(config_entry.unique_id),
+        "serial_number": int(mock_config_entry.unique_id),
         **raw_notification,
     }
 

@@ -25,7 +25,7 @@ from tests.common import MockConfigEntry
 
 async def test_button_and_key_event_creation(
     hass: HomeAssistant,
-    integration: tuple[MockConfigEntry, AsyncMock],
+    integration: None,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -73,22 +73,23 @@ async def test_no_button_and_remote_key_event_creation(
 
 async def test_button(
     hass: HomeAssistant,
-    integration: tuple[MockConfigEntry, AsyncMock],
+    integration: None,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
     entity_registry: EntityRegistry,
 ) -> None:
     """Test button event entity."""
-    config_entry, client = integration
 
     # Enable the entity
     entity_registry.async_update_entity(TEST_BUTTON_EVENT_ENTITY_ID, disabled_by=None)
-    hass.config_entries.async_schedule_reload(config_entry.entry_id)
+    hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
 
     assert (states := hass.states.get(TEST_BUTTON_EVENT_ENTITY_ID))
     assert states.state is STATE_UNKNOWN
     assert states.attributes[ATTR_EVENT_TYPES] == list(DEVICE_BUTTON_EVENTS)
 
     # Check button reacts as expected to WebSocket events
-    notification_callback = client.get_button_notifications.call_args[0][0]
+    notification_callback = mock_mozart_client.get_button_notifications.call_args[0][0]
 
     notification_callback(ButtonEvent(button="PlayPause", state="shortPress (Release)"))
     await hass.async_block_till_done()
@@ -103,24 +104,27 @@ async def test_button(
 
 async def test_remote_key(
     hass: HomeAssistant,
-    integration: tuple[MockConfigEntry, AsyncMock],
+    integration: None,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
     entity_registry: EntityRegistry,
 ) -> None:
     """Test remote key event entity."""
-    config_entry, client = integration
 
     # Enable the entity
     entity_registry.async_update_entity(
         TEST_REMOTE_KEY_EVENT_ENTITY_ID, disabled_by=None
     )
-    hass.config_entries.async_schedule_reload(config_entry.entry_id)
+    hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
 
     assert (states := hass.states.get(TEST_REMOTE_KEY_EVENT_ENTITY_ID))
     assert states.state is STATE_UNKNOWN
     assert states.attributes[ATTR_EVENT_TYPES] == list(BEO_REMOTE_KEY_EVENTS)
 
     # Check button reacts as expected to WebSocket events
-    notification_callback = client.get_beo_remote_button_notifications.call_args[0][0]
+    notification_callback = (
+        mock_mozart_client.get_beo_remote_button_notifications.call_args[0][0]
+    )
 
     notification_callback(BeoRemoteButton(key="Control/Play", type="KeyPress"))
     await hass.async_block_till_done()

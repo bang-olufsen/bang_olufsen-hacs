@@ -304,14 +304,14 @@ async def test_halo_config_flow_options_add_page(
 
 
 async def test_halo_config_flow_options_delete_page(
-    hass: HomeAssistant,
-    integration_halo: tuple[MockConfigEntry, AsyncMock],
+    hass: HomeAssistant, integration_halo: None, mock_config_entry_halo: MockConfigEntry
 ) -> None:
     """Test Halo options by deleting an existing page."""
-    config_entry, client = integration_halo
 
     # Start options
-    result_init = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result_init = await hass.config_entries.options.async_init(
+        mock_config_entry_halo.entry_id
+    )
     assert result_init["type"] is FlowResultType.MENU
     assert result_init["step_id"] == "init"
     # Ensure only the expected options are available
@@ -541,13 +541,14 @@ async def test_halo_config_flow_options_remove_button(hass: HomeAssistant) -> No
 
 
 async def test_halo_config_flow_options_add_button(
-    hass: HomeAssistant, integration_halo: tuple[MockConfigEntry, AsyncMock]
+    hass: HomeAssistant, integration_halo: None, mock_config_entry_halo: MockConfigEntry
 ) -> None:
     """Test Halo options by adding a button to an existing page."""
-    config_entry, client = integration_halo
 
     # Start options
-    result_init = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result_init = await hass.config_entries.options.async_init(
+        mock_config_entry_halo.entry_id
+    )
     assert result_init["type"] is FlowResultType.MENU
     assert result_init["step_id"] == "init"
     # Ensure only the expected options are available
@@ -608,13 +609,16 @@ async def test_halo_config_flow_options_add_button(
 
 
 async def test_halo_config_flow_options_add_default(
-    hass: HomeAssistant, integration_halo: tuple[MockConfigEntry, AsyncMock]
+    hass: HomeAssistant,
+    integration_halo: None,
+    mock_config_entry_halo: MockConfigEntry,
 ) -> None:
     """Test Halo options by adding a default button."""
-    config_entry, client = integration_halo
 
     # Start options
-    result_init = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result_init = await hass.config_entries.options.async_init(
+        mock_config_entry_halo.entry_id
+    )
     assert result_init["type"] is FlowResultType.MENU
     assert result_init["step_id"] == "init"
     # Ensure only the expected options are available

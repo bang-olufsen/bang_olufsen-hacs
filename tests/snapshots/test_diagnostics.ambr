@@ -3,7 +3,6 @@
   dict({
     'config_entry': dict({
       'data': dict({
-        'halo': None,
         'host': '192.168.0.1',
         'jid': '1111.1111111.11111111@products.bang-olufsen.com',
         'model': 'Beosound Balance',
