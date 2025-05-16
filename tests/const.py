@@ -69,21 +69,40 @@ TEST_JID_1 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER}@produc
 TEST_MEDIA_PLAYER_ENTITY_ID = "media_player.beosound_balance_11111111"
 TEST_NAME = f"{TEST_MODEL_BALANCE}-{TEST_SERIAL_NUMBER}"
 
-TEST_BUTTON_EVENT_ENTITY_ID = "event.beosound_balance_11111111_play_pause"
+TEST_BUTTON_EVENT_ENTITY_ID = f"event.beosound_balance_{TEST_SERIAL_NUMBER}_play_pause"
+TEST_PROXIMITY_EVENT_ENTITY_ID = (
+    f"event.beosound_balance_{TEST_SERIAL_NUMBER}_proximity"
+)
+
 
 # Mozart device 2
 TEST_FRIENDLY_NAME_2 = "Laundry room Core"
 TEST_HOST_2 = "192.168.0.2"
 TEST_SERIAL_NUMBER_2 = "22222222"
 TEST_JID_2 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_2}@products.bang-olufsen.com"
-TEST_MEDIA_PLAYER_ENTITY_ID_2 = "media_player.beoconnect_core_22222222"
+TEST_MEDIA_PLAYER_ENTITY_ID_2 = f"media_player.beoconnect_core_{TEST_SERIAL_NUMBER_2}"
 TEST_NAME_2 = f"{TEST_MODEL_CORE}-{TEST_SERIAL_NUMBER_2}"
 
 # Mozart device 3
-TEST_FRIENDLY_NAME_3 = "Lego room Balance"
+TEST_FRIENDLY_NAME_3 = "Lego room Level"
 TEST_HOST_3 = "192.168.0.3"
-TEST_JID_3 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.33333333@products.bang-olufsen.com"
-TEST_MEDIA_PLAYER_ENTITY_ID_3 = "media_player.beosound_balance_33333333"
+TEST_SERIAL_NUMBER_3 = "33333333"
+TEST_JID_3 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_3}@products.bang-olufsen.com"
+TEST_MEDIA_PLAYER_ENTITY_ID_3 = f"media_player.beosound_level_{TEST_SERIAL_NUMBER_3}"
+TEST_NAME_3 = f"{TEST_MODEL_LEVEL}-{TEST_SERIAL_NUMBER_3}"
+
+TEST_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID = (
+    f"binary_sensor.beosound_level_{TEST_SERIAL_NUMBER_3}_battery_charging"
+)
+TEST_BATTERY_CHARGING_TIME_SENSOR_ENTITY_ID = (
+    f"sensor.beosound_level_{TEST_SERIAL_NUMBER_3}_battery_charging_time"
+)
+TEST_BATTERY_LEVEL_SENSOR_ENTITY_ID = (
+    f"sensor.beosound_level_{TEST_SERIAL_NUMBER_3}_battery_level"
+)
+TEST_BATTERY_PLAYING_TIME_SENSOR_ENTITY_ID = (
+    f"sensor.beosound_level_{TEST_SERIAL_NUMBER_3}_battery_playing_time"
+)
 
 # Mozart device 4
 TEST_FRIENDLY_NAME_4 = "Lounge room Balance"
@@ -107,6 +126,10 @@ TEST_HALO_BATTERY_SENSOR_ENTITY_ID = (
 TEST_HALO_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID = (
     f"binary_sensor.beoremote_halo_{TEST_HALO_SERIAL}_battery_charging"
 )
+TEST_HALO_SYSTEM_STATUS_EVENT_ENTITY_ID = (
+    f"event.beoremote_halo_{TEST_HALO_SERIAL}_system_status"
+)
+
 
 # Config flow
 TEST_HOST_INVALID = "192.168.0"
@@ -139,6 +162,13 @@ TEST_DATA_CREATE_ENTRY_2 = {
     CONF_MODEL: TEST_MODEL_CORE,
     CONF_BEOLINK_JID: TEST_JID_2,
     CONF_NAME: TEST_NAME_2,
+}
+
+TEST_DATA_CREATE_ENTRY_3 = {
+    CONF_HOST: TEST_HOST_3,
+    CONF_MODEL: TEST_MODEL_LEVEL,
+    CONF_BEOLINK_JID: TEST_JID_3,
+    CONF_NAME: TEST_NAME_3,
 }
 
 TEST_HALO_DATA_CREATE_ENTRY = {

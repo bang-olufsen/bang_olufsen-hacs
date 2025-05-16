@@ -10,14 +10,19 @@ from homeassistant.components.bang_olufsen.const import (
     DEVICE_BUTTONS,
 )
 
-from .const import TEST_REMOTE_SERIAL, TEST_SERIAL_NUMBER
+from .const import (
+    TEST_MEDIA_PLAYER_ENTITY_ID,
+    TEST_PROXIMITY_EVENT_ENTITY_ID,
+    TEST_REMOTE_SERIAL,
+    TEST_SERIAL_NUMBER,
+)
 
 
 def get_balance_entity_ids() -> list[str]:
     """Return a list of entity_ids that the Beosound Balance provides."""
     entity_ids: list[str] = [
-        "media_player.beosound_balance_11111111",
-        "event.beosound_balance_11111111_proximity",
+        TEST_MEDIA_PLAYER_ENTITY_ID,
+        TEST_PROXIMITY_EVENT_ENTITY_ID,
     ]
     entity_ids.extend(
         [
