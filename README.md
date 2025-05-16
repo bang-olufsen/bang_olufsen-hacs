@@ -53,6 +53,7 @@ Generally "wheel" events are handled by counting the number of detents in a "rot
 - Add pages containing Home Assistant Entities as buttons
   - Support for Binary Sensor entities
   - Support for Button / Input Button entities
+  - Support for Cover entities
   - Support for Light entities
   - Support for Number / Input Number entities
   - Support for Scene entities
@@ -67,7 +68,7 @@ Generally "wheel" events are handled by counting the number of detents in a "rot
 - Entity state as a button's "content"
 - Battery charging Binary Sensor Entity
 - Battery Level Sensor Entity
-- System statues Event entity (Can be used as a proximity sensor)
+- System status Event entity (Can be used as a proximity sensor)
 - Custom actions:
   - Get Halo configuration
   - Send notification to Halo
