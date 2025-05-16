@@ -356,7 +356,7 @@ class UpdateButton(DataClassJSONMixin):
     value: int | None = None
     title: str | None = None
     subtitle: str | None = None
-    content: Text | None = None
+    content: Text | Icon | None = None
     type: str = field(default="button", init=False)
 
     class Config(BaseConfig):

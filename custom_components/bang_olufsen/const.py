@@ -159,7 +159,7 @@ HALO_OPTION_REMOVE_DEFAULT = "remove_default"
 HALO_BUTTON_ICONS: list[str] = [icon.name for icon in Icons]
 
 # Timeout for sending wheel events in seconds
-HALO_WHEEL_TIMEOUT: Final = 0.125
+HALO_WHEEL_TIMEOUT: Final = 0.250
 
 
 class EntityMapValues(TypedDict):

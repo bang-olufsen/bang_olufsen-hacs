@@ -141,20 +141,23 @@ def get_page_from_id(configuration: BaseConfiguration, page_id: str) -> Page:
     raise ValueError(f"Unable to get Page with ID: {id}")
 
 
-def get_button_from_id(
-    configuration: BaseConfiguration, button_id: str
-) -> Button | None:
+def get_button_from_id(configuration: BaseConfiguration, button_id: str) -> Button:
     """Get `Button` in configuration from `Button` ID.
 
+    Raises:
+        ValueError: If the button can't be found.
+
     Returns:
-        `Button` or None if `Button` can't be found.
+        `Button`.
 
     """
     for page in configuration.configuration.pages:
         for button in page.buttons:
             if button.id == button_id:
                 return button
-    return None
+    raise ValueError(
+        f"Unable to retrieve button with id {button_id} from configuration."
+    )
 
 
 def get_default_button(configuration: BaseConfiguration) -> Button | None:

@@ -46,7 +46,7 @@ The Halo can currently only be added through Zeroconf discovery. Afterwards, add
 
 All actions have to be manually defined for each entity type, which is why not all entities work at this point.
 
-Generally "wheel" events are handled by counting the number of detents in a "rotation" with a resetting timeout of currently 125ms and acting accordingly. This means that an action is called only when the wheel has been stationary for 125ms. This seems to be the most stable way to handle entities that are "slow" to change states.
+Generally "wheel" events are handled by counting the number of detents in a "rotation" with a resetting timeout of currently 250ms and acting accordingly. This means that an action is called only when the wheel has been stationary for 250ms. This seems to be the most stable way to handle entities that are "slow" to change states.
 
 #### Current features
 
@@ -66,6 +66,7 @@ Generally "wheel" events are handled by counting the number of detents in a "rot
   - Modify button attributes
 - Delete pages
 - Entity state as a button's "content"
+- "Preview" value shown in the middle of buttons
 - Battery charging Binary Sensor Entity
 - Battery Level Sensor Entity
 - System status Event entity (Can be used as a proximity sensor)

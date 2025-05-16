@@ -92,6 +92,7 @@ from .beoremote_halo.models import (
     ButtonEvent as HaloButtonEvent,
     ButtonEventState,
     ButtonState,
+    Icon,
     PowerEvent,
     StatusEvent,
     SystemEvent,
@@ -130,6 +131,7 @@ class WheelTaskHandler:
 
     task: asyncio.Task | None = None
     timer: asyncio.TimerHandle | None = None
+    content: Text | Icon | None = None
     counter: int = 0
 
 
@@ -231,20 +233,22 @@ class HaloWebsocket(HaloBase):
             SWITCH_DOMAIN: self._handle_binary_action,
         }
 
-        # Dict for associating platforms with wheel methods
-        self._entity_wheel_action_map: dict[str, Callable[[State], None]] = {
-            BINARY_SENSOR_DOMAIN: self._handle_no_wheel_action,
-            BUTTON_DOMAIN: self._handle_no_wheel_action,
-            COVER_DOMAIN: self._handle_cover_wheel_action,
-            INPUT_BOOLEAN_DOMAIN: self._handle_binary_wheel_action,
-            INPUT_BUTTON_DOMAIN: self._handle_no_wheel_action,
-            INPUT_NUMBER_DOMAIN: self._handle_number_wheel_action,
-            LIGHT_DOMAIN: self._handle_light_wheel_action,
-            NUMBER_DOMAIN: self._handle_number_wheel_action,
-            SCENE_DOMAIN: self._handle_no_wheel_action,
-            SCRIPT_DOMAIN: self._handle_no_wheel_action,
-            SENSOR_DOMAIN: self._handle_no_wheel_action,
-            SWITCH_DOMAIN: self._handle_binary_wheel_action,
+        # Dict for associating platforms with wheel action calculation methods
+        self._entity_wheel_calculation_map: dict[
+            str, Callable[[State], tuple[str, str, dict[str, Any]] | None]
+        ] = {
+            BINARY_SENSOR_DOMAIN: self._calculate_no_wheel_action,
+            BUTTON_DOMAIN: self._calculate_no_wheel_action,
+            COVER_DOMAIN: self._calculate_cover_wheel_action,
+            INPUT_BOOLEAN_DOMAIN: self._calculate_binary_wheel_action,
+            INPUT_BUTTON_DOMAIN: self._calculate_no_wheel_action,
+            INPUT_NUMBER_DOMAIN: self._calculate_number_wheel_value,
+            LIGHT_DOMAIN: self._calculate_light_wheel_action,
+            NUMBER_DOMAIN: self._calculate_number_wheel_value,
+            SCENE_DOMAIN: self._calculate_no_wheel_action,
+            SCRIPT_DOMAIN: self._calculate_no_wheel_action,
+            SENSOR_DOMAIN: self._calculate_no_wheel_action,
+            SWITCH_DOMAIN: self._calculate_binary_wheel_action,
         }
 
     def _get_entity_state_from_id(self, button_id: str) -> State | None:
@@ -297,10 +301,10 @@ class HaloWebsocket(HaloBase):
         content = Text(trim_button_text(str(entity_state.state)))
 
         # Get button from Halo configuration
-        if (
-            button := get_button_from_id(self._client.configuration, button_id)
-        ) is None:
-            _LOGGER.error("Unable to retrieve Halo button for %s", entity_id)
+        try:
+            button = get_button_from_id(self._client.configuration, button_id)
+        except ValueError:
+            _LOGGER.debug("Error retrieving button %s from configuration", button_id)
             return
 
         # Avoid unnecessary updates when Home Assistant is started if nothing has changed
@@ -496,13 +500,7 @@ class HaloWebsocket(HaloBase):
     async def _handle_number_action(self, entity_state: State, button_id: str) -> None:
         """Handle Number Button entity button actions."""
 
-        if (
-            button := get_button_from_id(self._client.configuration, button_id)
-        ) is None:
-            _LOGGER.error(
-                "Unable to retrieve Halo button for %s", entity_state.entity_id
-            )
-            return
+        button = get_button_from_id(self._client.configuration, button_id)
 
         if button.state == ButtonState.ACTIVE:
             if "min" in entity_state.attributes:
@@ -547,31 +545,36 @@ class HaloWebsocket(HaloBase):
 
         await self.hass.services.async_call(entity_state.domain, entity_state.name)
 
-    # Button wheel action methods
-    def _handle_binary_wheel_action(self, entity_state: State) -> None:
-        """Handle Switch entity wheel action callback."""
+    # Button wheel calculation methods
+    def _calculate_binary_wheel_action(
+        self, entity_state: State
+    ) -> tuple[str, str, dict[str, Any]] | None:
+        """Calculate Switch entity wheel value and return action variables."""
 
         # Ensure valid and not-useless action value
         if (
             entity_state.state == STATE_ON
-            and self._wheel_action_handlers[entity_state.entity_id].counter <= -15
+            and self._wheel_action_handlers[entity_state.entity_id].counter <= -2
         ):
             action = SERVICE_TURN_OFF
         elif (
             entity_state.state == STATE_OFF
-            and self._wheel_action_handlers[entity_state.entity_id].counter >= 15
+            and self._wheel_action_handlers[entity_state.entity_id].counter >= 2
         ):
             action = SERVICE_TURN_ON
         else:
-            return
+            return None
 
-        # Wrap action call in a task as callbacks can't be async
-        self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
-            self._handle_wheel_action_task(entity_state, action)
+        return (
+            STATE_ON if entity_state.state == STATE_OFF else STATE_OFF,
+            action,
+            {},
         )
 
-    def _handle_cover_wheel_action(self, entity_state: State) -> None:
-        """Handle Cover entity wheel action callback."""
+    def _calculate_cover_wheel_action(
+        self, entity_state: State
+    ) -> tuple[str, str, dict[str, Any]] | None:
+        """Calculate Cover entity wheel value and return action variables."""
 
         # Determine service based on attributes
         if ATTR_CURRENT_POSITION in entity_state.attributes:
@@ -586,7 +589,7 @@ class HaloWebsocket(HaloBase):
             _LOGGER.debug(
                 "Unable to determine cover action for %s", entity_state.entity_id
             )
-            return
+            return None
 
         # Clamp the value. Cover entities have values from 0-100 like Halo values
         new_position = clamp_button_value(
@@ -596,18 +599,18 @@ class HaloWebsocket(HaloBase):
 
         # Avoid sending service calls if they do not change the entity state
         if int(float(entity_state.attributes[state_attribute])) == new_position:
-            _LOGGER.debug("Skipping wheel action task")
-            return
+            return None
 
-        # Wrap action call in a task as callbacks can't be async
-        self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
-            self._handle_wheel_action_task(
-                entity_state, action, {action_attribute: new_position}
-            )
+        return (
+            str(new_position),
+            action,
+            {action_attribute: new_position},
         )
 
-    def _handle_light_wheel_action(self, entity_state: State) -> None:
-        """Handle Light entity wheel action callback."""
+    def _calculate_light_wheel_action(
+        self, entity_state: State
+    ) -> tuple[str, str, dict[str, Any]] | None:
+        """Calculate Light entity wheel value and return action variables."""
 
         # Ensure valid and not-useless action value
         brightness_step = int(
@@ -616,23 +619,22 @@ class HaloWebsocket(HaloBase):
             )
         )
         if brightness_step == 0:
-            return
+            return None
 
-        # Wrap action call in a task as callbacks can't be async
-        self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
-            self._handle_wheel_action_task(
-                entity_state,
-                SERVICE_TURN_ON,
-                {ATTR_BRIGHTNESS_STEP_PCT: brightness_step},
-            )
+        return (
+            f"{brightness_step}%",
+            SERVICE_TURN_ON,
+            {ATTR_BRIGHTNESS_STEP_PCT: brightness_step},
         )
 
-    def _handle_no_wheel_action(self, entity_state: State) -> None:
+    def _calculate_no_wheel_action(self, entity_state: State) -> None:
         """Handle entity with no associated wheel action."""
         _LOGGER.debug("No wheel action available for %s", entity_state.entity_id)
 
-    def _handle_number_wheel_action(self, entity_state: State) -> None:
-        """Handle Number entity wheel action callback."""
+    def _calculate_number_wheel_value(
+        self, entity_state: State
+    ) -> tuple[str, str, dict[str, Any]] | None:
+        """Calculate Number entity wheel value and return action variables."""
 
         # Add the step value
         if "step" in entity_state.attributes:
@@ -655,14 +657,12 @@ class HaloWebsocket(HaloBase):
 
         # Avoid sending service calls if they do not change the entity state
         if int(float(entity_state.state)) == converted_state:
-            _LOGGER.debug("Skipping wheel action task")
-            return
+            return None
 
-        # Wrap action call in a task as callbacks can't be async
-        self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
-            self._handle_wheel_action_task(
-                entity_state, SERVICE_SET_VALUE, {ATTR_VALUE: converted_state}
-            )
+        return (
+            str(new_number),
+            SERVICE_SET_VALUE,
+            {ATTR_VALUE: converted_state},
         )
 
     # Button wheel action tasks
@@ -677,6 +677,22 @@ class HaloWebsocket(HaloBase):
         # Increment or decrement counter
         self._wheel_action_handlers[entity_state.entity_id].counter += counts
 
+        # Calculate new entity value
+        if (
+            data := self._entity_wheel_calculation_map[entity_state.domain](
+                entity_state
+            )
+        ) is None:
+            _LOGGER.debug("Skipping wheel action task")
+            # Reset counter
+            self._wheel_action_handlers[entity_state.entity_id].counter = 0
+            return
+
+        preview_value, action, action_data = data
+
+        # Show preview of new value
+        await self._preview_wheel_action(preview_value, button_id, entity_state)
+
         # Cancel any scheduled action calls
         if (
             timer := self._wheel_action_handlers[entity_state.entity_id].timer
@@ -688,12 +704,53 @@ class HaloWebsocket(HaloBase):
             entity_state.entity_id
         ].timer = self.hass.loop.call_later(
             HALO_WHEEL_TIMEOUT,
-            self._entity_wheel_action_map[entity_state.domain],
+            self._create_wheel_action_task,
+            button_id,
             entity_state,
+            action,
+            action_data,
+        )
+
+    async def _preview_wheel_action(
+        self,
+        preview_value: str,
+        button_id: str,
+        entity_state: State,
+    ) -> None:
+        """Show wheel action preview."""
+        # Save original content if needed
+        if (
+            self._entity_map[button_id][CONF_STATE] is False
+            and self._wheel_action_handlers[entity_state.entity_id].content is None
+        ):
+            self._wheel_action_handlers[
+                entity_state.entity_id
+            ].content = get_button_from_id(
+                self._client.configuration, button_id
+            ).content
+
+        # Show preview of value
+        _ = await self._client.update(
+            Update(UpdateButton(button_id, content=Text(preview_value))),
+        )
+
+    def _create_wheel_action_task(
+        self,
+        button_id: str,
+        entity_state: State,
+        action: str,
+        action_data: dict[str, Any] | None = None,
+    ) -> None:
+        """Create wheel action task."""
+
+        # Wrap action call in a task as callbacks can't be async
+        self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
+            self._handle_wheel_action_task(button_id, entity_state, action, action_data)
         )
 
     async def _handle_wheel_action_task(
         self,
+        button_id: str,
         entity_state: State,
         action: str,
         action_data: dict[str, Any] | None = None,
@@ -716,9 +773,24 @@ class HaloWebsocket(HaloBase):
                 {ATTR_ENTITY_ID: entity_state.entity_id, **action_data},
             )
 
-        # Reset counter and timer
+        # Reset counter, timer and content
         self._wheel_action_handlers[entity_state.entity_id].counter = 0
         self._wheel_action_handlers[entity_state.entity_id].timer = None
+        # Reset button content to original content from configuration
+        if (
+            self._entity_map[button_id][CONF_STATE] is False
+            and self._wheel_action_handlers[entity_state.entity_id].content is not None
+        ):
+            await self._client.update(
+                Update(
+                    UpdateButton(
+                        button_id,
+                        content=self._wheel_action_handlers[
+                            entity_state.entity_id
+                        ].content,
+                    )
+                )
+            )
 
     def _update_connection_status(self) -> None:
         """Update all entities of the connection status."""
