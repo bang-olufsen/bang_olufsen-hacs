@@ -38,6 +38,13 @@ def is_mozart(config_entry: ConfigEntry) -> bool:
     return False
 
 
+async def supports_battery(client: MozartClient) -> bool:
+    """Get if a Mozart device has a battery."""
+    battery_state = await client.get_battery_state()
+
+    return bool(battery_state.battery_level and battery_state.battery_level > 0)
+
+
 async def get_remotes(client: MozartClient) -> list[PairedRemote]:
     """Get remote status easier."""
     # Get if a remote control is connected and the remote

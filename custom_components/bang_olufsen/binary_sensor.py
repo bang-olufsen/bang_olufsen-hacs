@@ -17,7 +17,7 @@ from . import HaloConfigEntry, MozartConfigEntry
 from .beoremote_halo.models import PowerEvent, PowerEventState
 from .const import CONNECTION_STATUS, WebsocketNotification
 from .entity import HaloEntity, MozartEntity
-from .util import is_halo
+from .util import is_halo, supports_battery
 
 
 async def async_setup_entry(
@@ -57,10 +57,7 @@ async def _get_mozart_entities(
     """Get Mozart Sensor entities from config entry."""
     entities: list[MozartBinarySensor] = []
 
-    # Check if device has a battery
-    battery_state = await config_entry.runtime_data.client.get_battery_state()
-
-    if battery_state.battery_level and battery_state.battery_level > 0:
+    if await supports_battery(config_entry.runtime_data.client):
         entities.append(MozartBinarySensorBatteryCharging(config_entry))
 
     return entities

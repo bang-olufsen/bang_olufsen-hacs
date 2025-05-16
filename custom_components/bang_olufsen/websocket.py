@@ -770,7 +770,7 @@ class HaloWebsocket(HaloBase):
         async_dispatcher_send(
             self.hass,
             f"{self._unique_id}_{WebsocketNotification.HALO_SYSTEM}",
-            event,
+            event.state,
         )
 
     async def on_wheel_event(self, event: WheelEvent) -> None:

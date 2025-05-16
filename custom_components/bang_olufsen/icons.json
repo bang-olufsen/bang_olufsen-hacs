@@ -303,6 +303,7 @@
     "beolink_unexpand": { "service": "mdi:location-exit" },
     "halo_configuration": { "service": "mdi:cog" },
     "halo_notification": { "service": "mdi:bell" },
+    "halo_display_page": { "service": "mdi:image-filter-center-focus" },
     "reboot": { "service": "mdi:restart" }
   }
 }

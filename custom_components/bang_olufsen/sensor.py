@@ -25,7 +25,7 @@ from . import HaloConfigEntry, MozartConfigEntry
 from .beoremote_halo.models import PowerEvent
 from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import HaloEntity, MozartEntity
-from .util import get_remotes, is_halo
+from .util import get_remotes, is_halo, supports_battery
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
@@ -63,10 +63,7 @@ async def _get_mozart_entities(
     """Get Mozart Sensor entities from config entry."""
     entities: list[MozartSensor] = []
 
-    # Check if device has a battery
-    battery_state = await config_entry.runtime_data.client.get_battery_state()
-
-    if battery_state.battery_level and battery_state.battery_level > 0:
+    if await supports_battery(config_entry.runtime_data.client):
         entities.extend(
             [
                 MozartSensorBatteryChargingTime(config_entry),
@@ -202,14 +199,11 @@ class MozartSensorBatteryChargingTime(MozartSensor):
     async def _update_battery(self, data: BatteryState) -> None:
         """Update sensor value."""
 
-        self._attr_available = True
-
         charging_time = data.remaining_charging_time_minutes
 
         # The charging time is 65535 if the device is not charging.
         if charging_time == 65535:
             self._attr_native_value = 0
-
         else:
             self._attr_native_value = charging_time
 
@@ -249,14 +243,11 @@ class MozartSensorBatteryPlayingTime(MozartSensor):
 
     async def _update_battery(self, data: BatteryState) -> None:
         """Update sensor value."""
-        self._attr_available = True
-
         playing_time = cast(int, data.remaining_playing_time_minutes)
 
         # The playing time is 65535 if the device is charging
         if playing_time == 65535:
             self._attr_native_value = 0
-
         else:
             self._attr_native_value = playing_time
 

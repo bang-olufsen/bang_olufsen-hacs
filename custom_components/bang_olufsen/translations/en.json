@@ -616,7 +616,7 @@
                     }
                 }
             },
-            "halo_system": {
+            "halo_system_status": {
                 "name": "System status",
                 "state_attributes": {
                     "event_type": {
@@ -1445,15 +1445,15 @@
             "name": "Halo Configuration"
         },
         "halo_display_page": {
-            "description": "Focus on a Page and Button on a Halo",
+            "description": "Focus on a Page and Button on a Halo.",
             "fields": {
-                "page_id": {
-                    "description": "The UUID of a Page",
-                    "name": "Page ID"
-                },
-                "subtitle": {
-                    "description": "The UUID of a Button",
+                "button_id": {
+                    "description": "The UUID of a Button.",
                     "name": "Button ID"
+                },
+                "page_id": {
+                    "description": "The UUID of a Page.",
+                    "name": "Page ID"
                 }
             },
             "name": "Halo Display Page"
@@ -1462,11 +1462,11 @@
             "description": "Send a notification to the Halo.",
             "fields": {
                 "subtitle": {
-                    "description": "The subtitle of the notification. 6 lines are supported before formatting starts to break. Use | in yaml mode to construct multiline strings",
+                    "description": "The subtitle of the notification. 6 lines are supported before formatting starts to break. Use | in yaml mode to construct multiline strings.",
                     "name": "Subtitle"
                 },
                 "title": {
-                    "description": "The title of the notification",
+                    "description": "The title of the notification.",
                     "name": "Title"
                 }
             },

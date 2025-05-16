@@ -386,9 +386,12 @@ class UpdateDisplayPage(DataClassJSONMixin):
         """Mashumaro config."""
 
         omit_none = True
+        serialize_by_alias = True
 
     page_id: str = field(metadata=field_options(alias="pageid"))
-    button_id: str = field(metadata=field_options(alias="buttonid"))
+    button_id: str | None = field(
+        default=None, metadata=field_options(alias="buttonid")
+    )
     type: str = field(default="displaypage", init=False)
 
 

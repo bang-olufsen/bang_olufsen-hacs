@@ -226,25 +226,25 @@
       "fields": {
         "title": {
           "name": "Title",
-          "description": "The title of the notification"
+          "description": "The title of the notification."
         },
         "subtitle": {
           "name": "Subtitle",
-          "description": "The subtitle of the notification. 6 lines are supported before formatting starts to break. Use | in yaml mode to construct multiline strings"
+          "description": "The subtitle of the notification. 6 lines are supported before formatting starts to break. Use | in yaml mode to construct multiline strings."
         }
       }
     },
     "halo_display_page": {
       "name": "Halo Display Page",
-      "description": "Focus on a Page and Button on a Halo",
+      "description": "Focus on a Page and Button on a Halo.",
       "fields": {
         "page_id": {
           "name": "Page ID",
-          "description": "The UUID of a Page"
+          "description": "The UUID of a Page."
         },
-        "subtitle": {
+        "button_id": {
           "name": "Button ID",
-          "description": "The UUID of a Button"
+          "description": "The UUID of a Button."
         }
       }
     },
@@ -263,7 +263,7 @@
       }
     },
     "event": {
-      "halo_system": {
+      "halo_system_status": {
         "name": "System status",
         "state_attributes": {
           "event_type": {

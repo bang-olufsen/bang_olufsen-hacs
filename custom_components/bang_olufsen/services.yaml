@@ -182,3 +182,19 @@ halo_notification:
       example: "Test notification subtitle"
       selector:
         text:
+
+halo_display_page:
+  target:
+    device:
+      integration: bang_olufsen
+  fields:
+    page_id:
+      required: true
+      example: "ca1a0965-7157-9432-9d92-c040728f5ad1"
+      selector:
+        text:
+    button_id:
+      required: false
+      example: "5abf954b-0069-9df1-b557-fd72d1fc1864"
+      selector:
+        text:

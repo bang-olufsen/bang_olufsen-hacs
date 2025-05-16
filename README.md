@@ -431,11 +431,11 @@ data:
 
 _NOTE_: To easily obtain the media_content_id for a Deezer/Tidal track or B&O Radio station, you can start playing the content you wish to activate in an action call - the `media_id` attribute available on the `media_player` entity will provide the value to be used in the media_content_id field.
 
-### Custom actions
+### Custom Mozart actions
 
-The Bang & Olufsen integration additionally supports different custom actions
+The Bang & Olufsen integration supports different custom actions for Mozart-based devices
 
-### Action `bang_olufsen.beolink_join`
+#### Action `bang_olufsen.beolink_join`
 
 Join a Beolink experience.
 
@@ -444,7 +444,7 @@ Join a Beolink experience.
 | `beolink_jid`         | yes      | Manually specify Beolink JID to join.                                                                                                                                                                                                                                                                                                                  |
 | `source_id`           | yes      | Specify which source to join, behavior varies between hardware platforms. Source names prefaced by a platform name can only be used when connecting to that platform. For example \"ASE Beoradio\" can only be used when joining an ASE device, while ”ASE / Mozart Deezer” can be used with ASE or Mozart devices. A defined Beolink JID is required. |
 
-### Action `bang_olufsen.beolink_expand`
+#### Action `bang_olufsen.beolink_expand`
 
 Expand current Beolink experience.
 
@@ -452,7 +452,7 @@ Expand current Beolink experience.
 | --------------------- | -------- | ---------------------------------------------------------------- |
 | `beolink_jids`        | no       | Specify which Beolink JIDs will join current Beolink experience. |
 
-### Action `bang_olufsen.beolink_unexpand`
+#### Action `bang_olufsen.beolink_unexpand`
 
 Unexpand from current Beolink experience.
 
@@ -460,15 +460,15 @@ Unexpand from current Beolink experience.
 | --------------------- | -------- | ---------------------------------------------------------------------- |
 | `beolink_jids`        | no       | Specify which Beolink JIDs will leave from current Beolink experience. |
 
-### Action `bang_olufsen.beolink_leave`
+#### Action `bang_olufsen.beolink_leave`
 
 Leave a Beolink experience.
 
-### Action `bang_olufsen.beolink_allstandby`
+#### Action `bang_olufsen.beolink_allstandby`
 
 Set all Connected Beolink devices to standby.
 
-### Action `bang_olufsen.beolink_set_volume`
+#### Action `bang_olufsen.beolink_set_volume`
 
 Set a volume level for all connected Beolink devices.
 
@@ -476,7 +476,7 @@ Set a volume level for all connected Beolink devices.
 | --------------------- | -------- | ------------------------- |
 | `volume_level`        | no       | Specify the volume level. |
 
-### Action `bang_olufsen.beolink_leader_command`
+#### Action `bang_olufsen.beolink_leader_command`
 
 Send a media_player command to Beolink leader.
 
@@ -485,6 +485,32 @@ Send a media_player command to Beolink leader.
 | `command`             | no       | Specify the media_player command.             |
 | `parameter`           | yes      | Specify the media_player command's parameter. |
 
-### Action `bang_olufsen.reboot`
+#### Action `bang_olufsen.reboot`
 
 Reboot the device.
+
+### Custom Halo actions
+
+The Bang & Olufsen integration additionally supports different custom actions for the Beoremote Halo
+
+#### Action `bang_olufsen.halo_configuration`
+
+Get the raw Halo configuration.
+
+#### Action `bang_olufsen.halo_notification`
+
+Send a notification to the Halo.
+
+| Action data attribute | Optional | Description                                                                                    |
+| --------------------- | -------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `title`               | no       | The title of the notification.                                                                 |
+| `subtitle`            | no       | The subtitle of the notification. 6 lines are supported before formatting starts to break. Use | in yaml mode to construct multiline strings. |
+
+#### Action `bang_olufsen.halo_display_page`
+
+Focus on a Page and Button on a Halo.
+
+| Action data attribute | Optional | Description           |
+| --------------------- | -------- | --------------------- |
+| `page_id`             | no       | The UUID of a Page.   |
+| `button_id`           | no       | The UUID of a Button. |
