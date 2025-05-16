@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
@@ -322,6 +323,15 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         # This option should only be available for the Halo,
         # but this is currently not supported by Home Assistant.
         return HaloOptionsFlowHandler()
+
+
+class ExclusiveKwargs(TypedDict, total=False):
+    """kwargs for the Exclusive class."""
+
+    schema: vol.Schemable
+    group_of_exclusion: str
+    msg: str | None
+    description: str | Any
 
 
 class HaloOptionsFlowHandler(OptionsFlow):
@@ -712,6 +722,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
                             domain=[
                                 BINARY_SENSOR_DOMAIN,
                                 BUTTON_DOMAIN,
+                                COVER_DOMAIN,
                                 INPUT_BOOLEAN_DOMAIN,
                                 INPUT_BUTTON_DOMAIN,
                                 INPUT_NUMBER_DOMAIN,
@@ -736,12 +747,6 @@ class HaloOptionsFlowHandler(OptionsFlow):
         state: bool = False,
     ) -> vol.Schema:
         """Fill schema for button modification or creation."""
-
-        class ExclusiveKwargs(TypedDict, total=False):
-            schema: vol.Schemable
-            group_of_exclusion: str
-            msg: str | None
-            description: str | Any
 
         exclusive_kwargs: ExclusiveKwargs = {
             "group_of_exclusion": "content",

@@ -33,6 +33,18 @@ from voluptuous import Invalid
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    DOMAIN as COVER_DOMAIN,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_TOGGLE_COVER_TILT,
+    CoverEntityFeature,
+    CoverState,
+)
 from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
@@ -56,6 +68,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONF_ENTITY_ID,
     CONF_ID,
     CONF_STATE,
@@ -120,6 +133,17 @@ class WheelTaskHandler:
     counter: int = 0
 
 
+class UpdateButtonKwargs(TypedDict, total=False):
+    """kwargs for the UpdateButton class."""
+
+    id: str
+    state: ButtonState
+    value: int
+    title: str
+    subtitle: str
+    content: Text
+
+
 class HaloWebsocket(HaloBase):
     """WebSocket for Halo."""
 
@@ -164,7 +188,7 @@ class HaloWebsocket(HaloBase):
             async_track_state_change_event(
                 self.hass,
                 self._entity_ids,
-                self._handle_entity_state_change,
+                self._manage_entity_state_change,
             )
             # Create wheel counters
             self._wheel_action_handlers = {
@@ -177,60 +201,73 @@ class HaloWebsocket(HaloBase):
         ] = {
             BINARY_SENSOR_DOMAIN: self._handle_binary_update,
             BUTTON_DOMAIN: self._handle_no_update,
+            COVER_DOMAIN: self._handle_cover_update,
             INPUT_BOOLEAN_DOMAIN: self._handle_binary_update,
             INPUT_BUTTON_DOMAIN: self._handle_no_update,
-            INPUT_NUMBER_DOMAIN: self._handle_number_sensor_update,
+            INPUT_NUMBER_DOMAIN: self._handle_number_update,
             LIGHT_DOMAIN: self._handle_light_update,
-            NUMBER_DOMAIN: self._handle_number_sensor_update,
+            NUMBER_DOMAIN: self._handle_number_update,
             SCENE_DOMAIN: self._handle_no_update,
             SCRIPT_DOMAIN: self._handle_no_update,
-            SENSOR_DOMAIN: self._handle_number_sensor_update,
+            SENSOR_DOMAIN: self._handle_number_update,
             SWITCH_DOMAIN: self._handle_binary_update,
         }
 
         # Dict for associating platforms with button methods
-        self._entity_button_action_map: dict[
+        self._entity_action_map: dict[
             str, Callable[[State, str], Coroutine[Any, Any, None]]
         ] = {
-            BINARY_SENSOR_DOMAIN: self._handle_no_button_action,
-            BUTTON_DOMAIN: self._handle_button_button_action,
-            INPUT_BOOLEAN_DOMAIN: self._handle_binary_button_action,
-            INPUT_BUTTON_DOMAIN: self._handle_button_button_action,
-            INPUT_NUMBER_DOMAIN: self._handle_number_button_action,
-            LIGHT_DOMAIN: self._handle_light_button_action,
-            NUMBER_DOMAIN: self._handle_number_button_action,
-            SCENE_DOMAIN: self._handle_scene_button_action,
-            SCRIPT_DOMAIN: self._handle_script_button_action,
-            SENSOR_DOMAIN: self._handle_no_button_action,
-            SWITCH_DOMAIN: self._handle_binary_button_action,
+            BINARY_SENSOR_DOMAIN: self._handle_no_action,
+            BUTTON_DOMAIN: self._handle_button_action,
+            COVER_DOMAIN: self._handle_cover_action,
+            INPUT_BOOLEAN_DOMAIN: self._handle_binary_action,
+            INPUT_BUTTON_DOMAIN: self._handle_button_action,
+            INPUT_NUMBER_DOMAIN: self._handle_number_action,
+            LIGHT_DOMAIN: self._handle_binary_action,
+            NUMBER_DOMAIN: self._handle_number_action,
+            SCENE_DOMAIN: self._handle_scene_action,
+            SCRIPT_DOMAIN: self._handle_script_action,
+            SENSOR_DOMAIN: self._handle_no_action,
+            SWITCH_DOMAIN: self._handle_binary_action,
         }
 
         # Dict for associating platforms with wheel methods
-        self._entity_wheel_callback_map: dict[str, Callable[[State], None]] = {
+        self._entity_wheel_action_map: dict[str, Callable[[State], None]] = {
             BINARY_SENSOR_DOMAIN: self._handle_no_wheel_action,
             BUTTON_DOMAIN: self._handle_no_wheel_action,
-            INPUT_BOOLEAN_DOMAIN: self._handle_switch_wheel_action_callback,
+            COVER_DOMAIN: self._handle_cover_wheel_action,
+            INPUT_BOOLEAN_DOMAIN: self._handle_binary_wheel_action,
             INPUT_BUTTON_DOMAIN: self._handle_no_wheel_action,
-            INPUT_NUMBER_DOMAIN: self._handle_number_wheel_action_callback,
-            LIGHT_DOMAIN: self._handle_light_wheel_action_callback,
-            NUMBER_DOMAIN: self._handle_number_wheel_action_callback,
+            INPUT_NUMBER_DOMAIN: self._handle_number_wheel_action,
+            LIGHT_DOMAIN: self._handle_light_wheel_action,
+            NUMBER_DOMAIN: self._handle_number_wheel_action,
             SCENE_DOMAIN: self._handle_no_wheel_action,
             SCRIPT_DOMAIN: self._handle_no_wheel_action,
             SENSOR_DOMAIN: self._handle_no_wheel_action,
-            SWITCH_DOMAIN: self._handle_switch_wheel_action_callback,
+            SWITCH_DOMAIN: self._handle_binary_wheel_action,
         }
 
-    async def _handle_no_button_action(
-        self, entity_state: State, button_id: str
+    def _get_entity_state_from_id(self, button_id: str) -> State | None:
+        """Get entity state and handle invalid entities."""
+        entity_id = self._entity_map[button_id][CONF_ENTITY_ID]
+
+        entity_state = self.hass.states.get(entity_id)
+        if entity_state is None:
+            _LOGGER.error("Error retrieving state for %s", entity_id)
+            return None
+
+        return entity_state
+
+    # Button update methods
+    async def _manage_entity_state_change(
+        self,
+        event: Event[EventStateChangedData],
     ) -> None:
-        """Handle entity with no associated button action."""
-        _LOGGER.debug("No button action available for %s", entity_state.entity_id)
+        """Manage state change of an entity."""
+        # TO DO handle entity deletion
+        await self._manage_entity_updates(event.data[CONF_ENTITY_ID])
 
-    def _handle_no_wheel_action(self, entity_state: State) -> None:
-        """Handle entity with no associated wheel action."""
-        _LOGGER.debug("No wheel action available for %s", entity_state.entity_id)
-
-    async def _update_entity_button_values(self, entity_id: str) -> None:
+    async def _manage_entity_updates(self, entity_id: str) -> None:
         """Send Halo Button configuration updates of current entity states."""
         # Get the button ids
         button_ids = []
@@ -240,33 +277,10 @@ class HaloWebsocket(HaloBase):
 
         # Handle update for pages that the entity is present on
         for button_id in button_ids:
-            await self._handle_entity_update(entity_id, button_id)
+            await self._manage_entity_update(entity_id, button_id)
 
-    async def _handle_entity_state_change(
-        self,
-        event: Event[EventStateChangedData],
-    ) -> None:
-        """Handle state change of entities."""
-        entity_id = event.data[CONF_ENTITY_ID]
-
-        if entity_id not in self._entity_ids:
-            _LOGGER.error("Entity %s is not in entity map", entity_id)
-            return
-
-        await self._update_entity_button_values(entity_id)
-
-    # TO DO handle entity deletion
-
-    async def _handle_entity_update(self, entity_id: str, button_id: str) -> None:
-        """Handle state change events of entities."""
-
-        class UpdateButtonKwargs(TypedDict, total=False):
-            id: str
-            state: ButtonState
-            value: int
-            title: str
-            subtitle: str
-            content: Text
+    async def _manage_entity_update(self, entity_id: str, button_id: str) -> None:
+        """Manage state change events of entities."""
 
         # Determine if the entity state should be used as content
         use_state = self._entity_map[button_id][CONF_STATE]
@@ -276,19 +290,11 @@ class HaloWebsocket(HaloBase):
             _LOGGER.debug("Error retrieving state for %s", entity_id)
             return
 
-        try:
-            button_state, button_value = self._entity_update_map[entity_state.domain](
-                entity_state
-            )
-            # Create content that will be used if the "state" setting is enabled for the button
-            content = Text(trim_button_text(str(entity_state.state)))
-
-        except KeyError:
-            _LOGGER.error(
-                "The Halo does not handle %s platform Button state updates yet",
-                entity_state.domain,
-            )
-            return
+        button_state, button_value = self._entity_update_map[entity_state.domain](
+            entity_state
+        )
+        # Create content that will be used if the "state" setting is enabled for the button
+        content = Text(trim_button_text(str(entity_state.state)))
 
         # Get button from Halo configuration
         if (
@@ -319,82 +325,91 @@ class HaloWebsocket(HaloBase):
         # Send update to Halo
         await self._client.update(Update(update=UpdateButton(**update_kwargs)))
 
-    async def _handle_entity_button_action(self, button_id: str) -> None:
-        """Handle actions of entities."""
+    def _handle_binary_update(self, state: State) -> tuple[ButtonState, int]:
+        """Handle state change events of entities that provide a binary 'on' or 'off' as state."""
 
-        # Get entity_id
+        # Process the on/off state for a input boolean switch / binary sensor
         try:
-            entity_id = self._entity_map[button_id][CONF_ENTITY_ID]
-        except KeyError:
-            _LOGGER.error(
-                "Error associating button %s with an entity id. Entity map %s",
-                button_id,
-                self._entity_map,
+            button_state = (
+                ButtonState.ACTIVE if state.state == STATE_ON else ButtonState.INACTIVE
             )
-            return
+            button_value = 100 if state.state == STATE_ON else 0
+        except ValueError:
+            _LOGGER.debug("Error when handling switch or binary_sensor state %s", state)
 
-        entity_state = self.hass.states.get(entity_id)
-        if entity_state is None:
-            _LOGGER.error("Error retrieving state for %s", entity_id)
-            return
+            button_state = ButtonState.INACTIVE
+            button_value = 0
 
+        return (button_state, button_value)
+
+    def _handle_cover_update(self, state: State) -> tuple[ButtonState, int]:
+        """Handle state change events of Cover entities."""
+
+        # Process the state for a cover
         try:
-            await self._entity_button_action_map[entity_state.domain](
-                entity_state, button_id
+            button_state = (
+                ButtonState.ACTIVE
+                if state.state == CoverState.CLOSED
+                else ButtonState.INACTIVE
             )
-        except KeyError:
-            _LOGGER.error(
-                "The Halo does not handle %s platform Button actions yet",
-                entity_state.domain,
-            )
-            return
+            # Try to use position
+            if ATTR_CURRENT_POSITION in state.attributes:
+                button_value = state.attributes[ATTR_CURRENT_POSITION]
+            elif ATTR_CURRENT_TILT_POSITION in state.attributes:
+                button_value = state.attributes[ATTR_CURRENT_TILT_POSITION]
+            # Fallback to state value
+            else:
+                button_value = 100 if state.state == CoverState.CLOSED else 0
 
-    async def _handle_entity_wheel_action(self, button_id: str, counts: int) -> None:
-        """Handle actions of entities."""
+        except ValueError:
+            _LOGGER.debug("Error when handling cover state %s", state)
 
-        # Get entity_id
+            button_state = ButtonState.INACTIVE
+            button_value = 0
+
+        return (button_state, button_value)
+
+    def _handle_light_update(self, state: State) -> tuple[ButtonState, int]:
+        """Handle state change events of Light entities."""
         try:
-            entity_id = self._entity_map[button_id][CONF_ENTITY_ID]
-        except KeyError:
-            _LOGGER.error(
-                "Error associating button %s with an entity id. Entity map %s",
-                button_id,
-                self._entity_map,
+            # Determine value based on available attributes
+            if ATTR_BRIGHTNESS in state.attributes:
+                brightness = (
+                    state.attributes[ATTR_BRIGHTNESS]
+                    if state.attributes[ATTR_BRIGHTNESS] is not None
+                    else 0
+                )
+                converted_state = interpolate_button_value(brightness, 1, 255)
+
+            else:
+                converted_state = MAX_VALUE if state.state == STATE_ON else MIN_VALUE
+
+        except ValueError:
+            _LOGGER.debug("Error when handling light state %s", state)
+
+            button_state = ButtonState.INACTIVE
+            button_value = 0
+
+        else:
+            # Process the on/off state for a light
+            button_state = (
+                ButtonState.ACTIVE if state.state == STATE_ON else ButtonState.INACTIVE
             )
-            return
+            # Process the value state for a light
+            button_value = converted_state
 
-        entity_state = self.hass.states.get(entity_id)
-        if entity_state is None:
-            _LOGGER.error("Error retrieving state for %s", entity_id)
-            return
+        return (button_state, button_value)
 
-        try:
-            # Increment or decrement counter
-            self._wheel_action_handlers[entity_state.entity_id].counter += counts
+    def _handle_no_update(self, _: State) -> tuple[ButtonState, int]:
+        """Handle entities that provide no useful state."""
+        # Currently do nothing when a button has been pressed.
+        # Ideally there would be some indication, but it is cumbersome for now.
+        return (ButtonState.INACTIVE, 0)
 
-            # Cancel any scheduled action calls
-            if (timer := self._wheel_action_handlers[entity_id].timer) is not None:
-                timer.cancel()
-
-            # Schedule a new action call
-            self._wheel_action_handlers[entity_id].timer = self.hass.loop.call_later(
-                HALO_WHEEL_TIMEOUT,
-                self._entity_wheel_callback_map[entity_state.domain],
-                entity_state,
-            )
-
-        except KeyError:
-            _LOGGER.error(
-                "The Halo does not handle %s platform Wheel actions yet",
-                entity_state.domain,
-            )
-            return
-
-    def _handle_number_sensor_update(self, state: State) -> tuple[ButtonState, int]:
-        """Handle state change events of Number and Sensor entities."""
+    def _handle_number_update(self, state: State) -> tuple[ButtonState, int]:
+        """Handle state change events of entities that provide a number as state."""
         try:
             converted_state = int(float(state.state))
-
             if (
                 {"min", "max"}.issubset(state.attributes)
                 and state.attributes[ATTR_MIN] != 0
@@ -424,9 +439,61 @@ class HaloWebsocket(HaloBase):
 
         return (button_state, button_value)
 
-    async def _handle_number_button_action(
-        self, entity_state: State, button_id: str
-    ) -> None:
+    # Button action methods
+    async def _manage_entity_action(self, button_id: str) -> None:
+        """Manage actions of entities."""
+
+        if (entity_state := self._get_entity_state_from_id(button_id)) is None:
+            return
+
+        await self._entity_action_map[entity_state.domain](entity_state, button_id)
+
+    async def _handle_binary_action(self, entity_state: State, button_id: str) -> None:
+        """Handle binary entity actions."""
+        _LOGGER.debug("Sending %s to %s", SERVICE_TOGGLE, entity_state.entity_id)
+
+        await self.hass.services.async_call(
+            entity_state.domain,
+            SERVICE_TOGGLE,
+            {ATTR_ENTITY_ID: entity_state.entity_id},
+        )
+
+    async def _handle_button_action(self, entity_state: State, button_id: str) -> None:
+        """Handle Button entity button actions."""
+        _LOGGER.debug("Sending %s to %s", SERVICE_PRESS, entity_state.entity_id)
+
+        await self.hass.services.async_call(
+            entity_state.domain,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_state.entity_id},
+        )
+
+    async def _handle_cover_action(self, entity_state: State, button_id: str) -> None:
+        """Handle Cover entity button actions."""
+        # Covers may support either toggle, toggle tilt or both.
+        # Currently tilt is used only if toggle is not available
+        action = SERVICE_TOGGLE
+        if entity_state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.OPEN:
+            pass
+        elif (
+            entity_state.attributes[ATTR_SUPPORTED_FEATURES]
+            & CoverEntityFeature.OPEN_TILT
+        ):
+            action = SERVICE_TOGGLE_COVER_TILT
+
+        _LOGGER.debug("Sending %s to %s", action, entity_state.entity_id)
+
+        await self.hass.services.async_call(
+            entity_state.domain,
+            action,
+            {ATTR_ENTITY_ID: entity_state.entity_id},
+        )
+
+    async def _handle_no_action(self, entity_state: State, button_id: str) -> None:
+        """Handle entity with no associated button action."""
+        _LOGGER.debug("No button action available for %s", entity_state.entity_id)
+
+    async def _handle_number_action(self, entity_state: State, button_id: str) -> None:
         """Handle Number Button entity button actions."""
 
         if (
@@ -464,7 +531,107 @@ class HaloWebsocket(HaloBase):
             },
         )
 
-    def _handle_number_wheel_action_callback(self, entity_state: State) -> None:
+    async def _handle_scene_action(self, entity_state: State, button_id: str) -> None:
+        """Handle Scene entity button actions."""
+        _LOGGER.debug("Sending %s to %s", SERVICE_TURN_ON, entity_state.entity_id)
+
+        await self.hass.services.async_call(
+            entity_state.domain,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_state.entity_id},
+        )
+
+    async def _handle_script_action(self, entity_state: State, button_id: str) -> None:
+        """Handle Script entity button actions."""
+        _LOGGER.debug("Activating script: %s ", entity_state.name)
+
+        await self.hass.services.async_call(entity_state.domain, entity_state.name)
+
+    # Button wheel action methods
+    def _handle_binary_wheel_action(self, entity_state: State) -> None:
+        """Handle Switch entity wheel action callback."""
+
+        # Ensure valid and not-useless action value
+        if (
+            entity_state.state == STATE_ON
+            and self._wheel_action_handlers[entity_state.entity_id].counter <= -15
+        ):
+            action = SERVICE_TURN_OFF
+        elif (
+            entity_state.state == STATE_OFF
+            and self._wheel_action_handlers[entity_state.entity_id].counter >= 15
+        ):
+            action = SERVICE_TURN_ON
+        else:
+            return
+
+        # Wrap action call in a task as callbacks can't be async
+        self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
+            self._handle_wheel_action_task(entity_state, action)
+        )
+
+    def _handle_cover_wheel_action(self, entity_state: State) -> None:
+        """Handle Cover entity wheel action callback."""
+
+        # Determine service based on attributes
+        if ATTR_CURRENT_POSITION in entity_state.attributes:
+            state_attribute = ATTR_CURRENT_POSITION
+            action = SERVICE_SET_COVER_POSITION
+            action_attribute = ATTR_POSITION
+        elif ATTR_CURRENT_TILT_POSITION in entity_state.attributes:
+            state_attribute = ATTR_CURRENT_TILT_POSITION
+            action = SERVICE_SET_COVER_TILT_POSITION
+            action_attribute = ATTR_TILT_POSITION
+        else:
+            _LOGGER.debug(
+                "Unable to determine cover action for %s", entity_state.entity_id
+            )
+            return
+
+        # Clamp the value. Cover entities have values from 0-100 like Halo values
+        new_position = clamp_button_value(
+            entity_state.attributes[state_attribute]
+            + self._wheel_action_handlers[entity_state.entity_id].counter
+        )
+
+        # Avoid sending service calls if they do not change the entity state
+        if int(float(entity_state.attributes[state_attribute])) == new_position:
+            _LOGGER.debug("Skipping wheel action task")
+            return
+
+        # Wrap action call in a task as callbacks can't be async
+        self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
+            self._handle_wheel_action_task(
+                entity_state, action, {action_attribute: new_position}
+            )
+        )
+
+    def _handle_light_wheel_action(self, entity_state: State) -> None:
+        """Handle Light entity wheel action callback."""
+
+        # Ensure valid and not-useless action value
+        brightness_step = int(
+            np.clip(
+                self._wheel_action_handlers[entity_state.entity_id].counter, -100, 100
+            )
+        )
+        if brightness_step == 0:
+            return
+
+        # Wrap action call in a task as callbacks can't be async
+        self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
+            self._handle_wheel_action_task(
+                entity_state,
+                SERVICE_TURN_ON,
+                {ATTR_BRIGHTNESS_STEP_PCT: brightness_step},
+            )
+        )
+
+    def _handle_no_wheel_action(self, entity_state: State) -> None:
+        """Handle entity with no associated wheel action."""
+        _LOGGER.debug("No wheel action available for %s", entity_state.entity_id)
+
+    def _handle_number_wheel_action(self, entity_state: State) -> None:
         """Handle Number entity wheel action callback."""
 
         # Add the step value
@@ -486,9 +653,6 @@ class HaloWebsocket(HaloBase):
                 entity_state.attributes[ATTR_MAX],
             )
 
-        if converted_state == 0:
-            return
-
         # Avoid sending service calls if they do not change the entity state
         if int(float(entity_state.state)) == converted_state:
             _LOGGER.debug("Skipping wheel action task")
@@ -496,223 +660,65 @@ class HaloWebsocket(HaloBase):
 
         # Wrap action call in a task as callbacks can't be async
         self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
-            self._handle_number_wheel_action_task(entity_state, converted_state)
-        )
-
-    async def _handle_number_wheel_action_task(
-        self, entity_state: State, new_number: int
-    ) -> None:
-        """Execute Number wheel action call."""
-        _LOGGER.debug(
-            "Sending %s to %s with value %s",
-            SERVICE_SET_VALUE,
-            entity_state.entity_id,
-            new_number,
-        )
-        # Suppress any exceptions for now
-        with contextlib.suppress(Invalid):
-            await self.hass.services.async_call(
-                entity_state.domain,
-                SERVICE_SET_VALUE,
-                {
-                    ATTR_ENTITY_ID: entity_state.entity_id,
-                    ATTR_VALUE: new_number,
-                },
+            self._handle_wheel_action_task(
+                entity_state, SERVICE_SET_VALUE, {ATTR_VALUE: converted_state}
             )
-
-        # Reset counter and timer
-        self._wheel_action_handlers[entity_state.entity_id].counter = 0
-        self._wheel_action_handlers[entity_state.entity_id].timer = None
-
-    def _handle_binary_update(self, state: State) -> tuple[ButtonState, int]:
-        """Handle state change events of Input Boolean, Switch and Binary Sensor entities."""
-
-        # Process the on/off state for a input boolean switch / binary sensor
-        try:
-            button_state = (
-                ButtonState.ACTIVE if state.state == STATE_ON else ButtonState.INACTIVE
-            )
-            button_value = 100 if state.state == STATE_ON else 0
-        except ValueError:
-            _LOGGER.debug("Error when handling switch or binary_sensor state %s", state)
-
-            button_state = ButtonState.INACTIVE
-            button_value = 0
-
-        return (button_state, button_value)
-
-    async def _handle_binary_button_action(
-        self, entity_state: State, button_id: str
-    ) -> None:
-        """Handle Input Boolean and switch Button entity actions."""
-        _LOGGER.debug("Sending %s to %s", SERVICE_SET_VALUE, entity_state.entity_id)
-
-        await self.hass.services.async_call(
-            entity_state.domain,
-            SERVICE_TOGGLE,
-            {ATTR_ENTITY_ID: entity_state.entity_id},
         )
 
-    def _handle_switch_wheel_action_callback(self, entity_state: State) -> None:
-        """Handle Switch entity wheel action callback."""
+    # Button wheel action tasks
+    async def _manage_entity_wheel_action_tasks(
+        self, button_id: str, counts: int
+    ) -> None:
+        """Handle wheel actions of entities."""
 
-        # Ensure valid and not-useless action value
+        if (entity_state := self._get_entity_state_from_id(button_id)) is None:
+            return
+
+        # Increment or decrement counter
+        self._wheel_action_handlers[entity_state.entity_id].counter += counts
+
+        # Cancel any scheduled action calls
         if (
-            entity_state.state == STATE_ON
-            and self._wheel_action_handlers[entity_state.entity_id].counter <= -15
-        ):
-            action = SERVICE_TURN_OFF
-        elif (
-            entity_state.state == STATE_OFF
-            and self._wheel_action_handlers[entity_state.entity_id].counter >= 15
-        ):
-            action = SERVICE_TURN_ON
-        else:
-            return
+            timer := self._wheel_action_handlers[entity_state.entity_id].timer
+        ) is not None:
+            timer.cancel()
 
-        # Wrap action call in a task as callbacks can't be async
-        self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
-            self._handle_switch_wheel_action_task(entity_state, action)
+        # Schedule a new action call
+        self._wheel_action_handlers[
+            entity_state.entity_id
+        ].timer = self.hass.loop.call_later(
+            HALO_WHEEL_TIMEOUT,
+            self._entity_wheel_action_map[entity_state.domain],
+            entity_state,
         )
 
-    async def _handle_switch_wheel_action_task(
-        self, entity_state: State, action: str
+    async def _handle_wheel_action_task(
+        self,
+        entity_state: State,
+        action: str,
+        action_data: dict[str, Any] | None = None,
     ) -> None:
-        """Execute Switch wheel action call."""
-        _LOGGER.debug("Sending %s to %s", action, entity_state.entity_id)
+        """Execute wheel action call."""
+        if action_data is None:
+            action_data = {}
 
-        await self.hass.services.async_call(
-            entity_state.domain,
-            action,
-            {ATTR_ENTITY_ID: entity_state.entity_id},
-        )
-
-        # Reset counter and timer
-        self._wheel_action_handlers[entity_state.entity_id].counter = 0
-        self._wheel_action_handlers[entity_state.entity_id].timer = None
-
-    def _handle_no_update(self, _: State) -> tuple[ButtonState, int]:
-        """Handle state change events of Input Button, Button and Script entities."""
-        # Currently do nothing when a button has been pressed.
-        # Ideally there would be some indication, but it is cumbersome for now.
-        return (ButtonState.INACTIVE, 0)
-
-    async def _handle_button_button_action(
-        self, entity_state: State, button_id: str
-    ) -> None:
-        """Handle Button entity button actions."""
-        _LOGGER.debug("Sending %s to %s", SERVICE_PRESS, entity_state.entity_id)
-
-        await self.hass.services.async_call(
-            entity_state.domain,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_state.entity_id},
-        )
-
-    async def _handle_script_button_action(
-        self, entity_state: State, button_id: str
-    ) -> None:
-        """Handle Script entity button actions."""
-        _LOGGER.debug("Activating script: %s ", entity_state.name)
-
-        await self.hass.services.async_call(entity_state.domain, entity_state.name)
-
-    def _handle_light_update(self, state: State) -> tuple[ButtonState, int]:
-        """Handle state change events of Light entities."""
-        try:
-            # Determine value based on available attributes
-            if ATTR_BRIGHTNESS in state.attributes:
-                brightness = (
-                    state.attributes[ATTR_BRIGHTNESS]
-                    if state.attributes[ATTR_BRIGHTNESS] is not None
-                    else 0
-                )
-                converted_state = interpolate_button_value(brightness, 1, 255)
-
-            else:
-                converted_state = MAX_VALUE if state.state == STATE_ON else MIN_VALUE
-
-        except ValueError:
-            _LOGGER.debug("Error when handling light state %s", state)
-
-            button_state = ButtonState.INACTIVE
-            button_value = 0
-
-        else:
-            # Process the on/off state for a light
-            button_state = (
-                ButtonState.ACTIVE if state.state == STATE_ON else ButtonState.INACTIVE
-            )
-            # Process the value state for a light
-            button_value = converted_state
-
-        return (button_state, button_value)
-
-    async def _handle_light_button_action(
-        self, entity_state: State, button_id: str
-    ) -> None:
-        """Handle Light entity button actions."""
-        _LOGGER.debug("Sending %s to %s", SERVICE_TOGGLE, entity_state.entity_id)
-
-        await self.hass.services.async_call(
-            entity_state.domain,
-            SERVICE_TOGGLE,
-            {ATTR_ENTITY_ID: entity_state.entity_id},
-        )
-
-    def _handle_light_wheel_action_callback(self, entity_state: State) -> None:
-        """Handle Light entity wheel action callback."""
-
-        # Ensure valid and not-useless action value
-        brightness_step = int(
-            np.clip(
-                self._wheel_action_handlers[entity_state.entity_id].counter, -100, 100
-            )
-        )
-        if brightness_step == 0:
-            return
-
-        # Wrap action call in a task as callbacks can't be async
-        self._wheel_action_handlers[entity_state.entity_id].task = asyncio.create_task(
-            self._handle_light_wheel_action_task(entity_state, brightness_step)
-        )
-
-    async def _handle_light_wheel_action_task(
-        self, entity_state: State, brightness_step: int
-    ) -> None:
-        """Execute Light wheel action call."""
         _LOGGER.debug(
-            "Sending %s to %s with brightness_step_pct value %s",
-            SERVICE_TURN_ON,
+            "Sending %s to %s with service data: %s",
+            action,
             entity_state.entity_id,
-            brightness_step,
+            action_data,
         )
         # Suppress any exceptions for now
         with contextlib.suppress(Invalid):
             await self.hass.services.async_call(
                 entity_state.domain,
-                SERVICE_TURN_ON,
-                {
-                    ATTR_ENTITY_ID: entity_state.entity_id,
-                    ATTR_BRIGHTNESS_STEP_PCT: brightness_step,
-                },
+                action,
+                {ATTR_ENTITY_ID: entity_state.entity_id, **action_data},
             )
 
         # Reset counter and timer
         self._wheel_action_handlers[entity_state.entity_id].counter = 0
         self._wheel_action_handlers[entity_state.entity_id].timer = None
-
-    async def _handle_scene_button_action(
-        self, entity_state: State, button_id: str
-    ) -> None:
-        """Handle Scene entity button actions."""
-        _LOGGER.debug("Sending %s to %s", SERVICE_TURN_ON, entity_state.entity_id)
-
-        await self.hass.services.async_call(
-            entity_state.domain,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_state.entity_id},
-        )
 
     def _update_connection_status(self) -> None:
         """Update all entities of the connection status."""
@@ -729,7 +735,7 @@ class HaloWebsocket(HaloBase):
         if self._client.configuration:
             # Send entity states as updates
             for entity_id in self._entity_ids:
-                await self._update_entity_button_values(entity_id)
+                await self._manage_entity_updates(entity_id)
 
         else:
             _LOGGER.debug(
@@ -747,7 +753,7 @@ class HaloWebsocket(HaloBase):
     async def on_button_event(self, event: HaloButtonEvent) -> None:
         """Send halo_button dispatch."""
         if event.state == ButtonEventState.RELEASED:
-            await self._handle_entity_button_action(event.id)
+            await self._manage_entity_action(event.id)
 
     def on_power_event(self, event: PowerEvent) -> None:
         """Send halo_power dispatch."""
@@ -776,7 +782,7 @@ class HaloWebsocket(HaloBase):
     async def on_wheel_event(self, event: WheelEvent) -> None:
         """Send halo_wheel dispatch."""
 
-        await self._handle_entity_wheel_action(event.id, event.counts)
+        await self._manage_entity_wheel_action_tasks(event.id, event.counts)
 
     def on_all_events_raw(self, event: HaloBaseWebSocketResponse) -> None:
         """Receive all events."""
