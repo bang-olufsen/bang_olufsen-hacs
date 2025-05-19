@@ -591,10 +591,14 @@ class HaloWebsocket(HaloBase):
             )
             return None
 
-        # Clamp the value. Cover entities have values from 0-100 like Halo values
-        new_position = clamp_button_value(
-            entity_state.attributes[state_attribute]
-            + self._wheel_action_handlers[entity_state.entity_id].counter
+        # Clamp the value.
+        new_position = int(
+            np.clip(
+                entity_state.attributes[state_attribute]
+                + self._wheel_action_handlers[entity_state.entity_id].counter,
+                0,
+                100,
+            )
         )
 
         # Avoid sending service calls if they do not change the entity state
@@ -618,7 +622,19 @@ class HaloWebsocket(HaloBase):
                 self._wheel_action_handlers[entity_state.entity_id].counter, -100, 100
             )
         )
-        if brightness_step == 0:
+
+        if (
+            # No change in percentage
+            brightness_step == 0
+            # Negative step while state is STATE_OFF
+            or (entity_state.state == STATE_OFF and brightness_step < 0)
+            # Maximum brightness already reached
+            or (
+                ATTR_BRIGHTNESS in entity_state.attributes
+                and entity_state.attributes[ATTR_BRIGHTNESS] == 255
+                and brightness_step > 0
+            )
+        ):
             return None
 
         return (
@@ -649,20 +665,20 @@ class HaloWebsocket(HaloBase):
 
         # Clamp the value if possible
         if {"min", "max"}.issubset(entity_state.attributes):
-            converted_state = interpolate_button_value(
+            new_number = np.clip(
                 new_number,
                 entity_state.attributes[ATTR_MIN],
                 entity_state.attributes[ATTR_MAX],
             )
 
         # Avoid sending service calls if they do not change the entity state
-        if int(float(entity_state.state)) == converted_state:
+        if int(float(entity_state.state)) == new_number:
             return None
 
         return (
             str(new_number),
             SERVICE_SET_VALUE,
-            {ATTR_VALUE: converted_state},
+            {ATTR_VALUE: new_number},
         )
 
     # Button wheel action tasks
