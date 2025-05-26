@@ -50,37 +50,59 @@ Generally "wheel" events are handled by counting the number of detents in a "rot
 
 #### Current features
 
-- Add pages containing Home Assistant Entities as buttons
-  - Support for Binary Sensor entities
-  - Support for Button / Input Button entities
-  - Support for Cover entities
-  - Support for Light entities
-  - Support for Number / Input Number entities
-  - Support for Scene entities
-  - Support for Script entities
-  - Support for Sensor entities
-  - Support for Switch / Input Boolean entities
-- Modify pages
+- Add pages containing Home Assistant Entities as buttons. Currently support for:
+  - Binary Sensor
+  - Button / Input Button
+  - Cover
+  - Light
+  - Number / Input Number
+  - Scene
+  - Script
+  - Sensor
+  - Switch / Input Boolean
+- Entity state is shown as subtitle
+- "Preview" value shown in the middle of buttons for wheel actions
+- Modify pages:
   - Modify page name
-  - Add / remove buttons
-  - Modify button attributes
-- Delete pages
-- Entity state as a button's "content"
-- "Preview" value shown in the middle of buttons
-- Battery charging Binary Sensor Entity
-- Battery Level Sensor Entity
-- System status Event entity (Can be used as a proximity sensor)
+  - Add / remove button(s)
+  - Modify button
+    - Title
+    - Icon
+- Select or remove a default Halo button
+- Delete page(s)
+- Halo entities:
+  - Battery charging Binary Sensor Entity
+  - Battery Level Sensor Entity
+  - System status Event entity (Can be used as a proximity sensor)
 - Custom actions:
   - Get Halo configuration
   - Send notification to Halo
   - Display a page and button on the Halo
-- Select or remove default Halo button
 
 #### Missing features
 
 These features have to evaluated further and are in no particular order.
 
-- Support for more Entity types
+- Support for more Entity types (These are the missing ones):
+  - Calender
+  - Climate
+  - Device tracker
+  - Event
+  - Fan
+  - Humidifier
+  - Lawn mower
+  - Lock
+  - Media player
+  - Notify
+  - Remote
+  - Select
+  - Siren
+  - Text
+  - Update
+  - Vacuum
+  - Valve
+  - Water heater
+  - Weather
 - Manual setup
 - Create Event entity for button instead of selecting an existing entity
 
