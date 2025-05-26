@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ipaddress import AddressValueError, IPv4Address
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from aiohttp.client_exceptions import ClientConnectorError
 from mozart_api.exceptions import ApiException
@@ -11,13 +11,13 @@ from mozart_api.mozart_client import MozartClient
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -35,23 +35,26 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_MODEL,
     CONF_NAME,
-    CONF_STATE,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_TOGGLE,
+    SERVICE_TOGGLE_COVER_TILT,
+    SERVICE_TURN_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
-    BooleanSelector,
-    BooleanSelectorConfig,
     EntitySelector,
     EntitySelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.ssl import get_default_context
 from homeassistant.util.uuid import random_uuid_hex
 
 from .beoremote_halo.const import (
-    BUTTON_TEXT_MAX_LENGTH,
     BUTTON_TITLE_MAX_LENGTH,
     MAX_BUTTONS,
     MAX_PAGES,
@@ -79,21 +82,22 @@ from .beoremote_halo.models import (
     Page,
     Text,
 )
+from .beoremote_halo.util import trim_button_title
 from .const import (
     ATTR_FRIENDLY_NAME,
     ATTR_HALO_SERIAL_NUMBER,
     ATTR_ITEM_NUMBER,
     ATTR_MOZART_SERIAL_NUMBER,
     ATTR_TYPE_NUMBER,
+    CONF_BUTTON_ACTION,
+    CONF_BUTTON_TITLE,
     CONF_DEFAULT_BUTTON,
     CONF_ENTITY_MAP,
     CONF_HALO,
     CONF_PAGE_TITLE,
     CONF_PAGES,
     CONF_SERIAL_NUMBER,
-    CONF_SUBTITLE,
-    CONF_TEXT,
-    CONF_TITLE,
+    CONF_WHEEL_ACTION,
     DEFAULT_MODEL,
     DOMAIN,
     HALO_BUTTON_ICONS,
@@ -107,6 +111,7 @@ from .const import (
     ZEROCONF_HALO,
     ZEROCONF_MOZART,
     BangOlufsenModel,
+    EntityMapActionValues,
     EntityMapValues,
 )
 from .util import get_serial_number_from_jid
@@ -134,6 +139,92 @@ _exception_map = {
     TimeoutError: "timeout_error",
     AddressValueError: "invalid_ip",
 }
+
+# Map of Button and Wheel services available to the different entity domains
+_halo_action_map: dict[str, dict[str, list[str]]] = {
+    BINARY_SENSOR_DOMAIN: {
+        CONF_BUTTON_ACTION: [],
+        CONF_WHEEL_ACTION: [],
+    },
+    BUTTON_DOMAIN: {
+        CONF_BUTTON_ACTION: [SERVICE_PRESS],
+        CONF_WHEEL_ACTION: [],
+    },
+    COVER_DOMAIN: {
+        CONF_BUTTON_ACTION: [SERVICE_TOGGLE_COVER_TILT, SERVICE_TOGGLE],
+        CONF_WHEEL_ACTION: [
+            SERVICE_SET_COVER_POSITION,
+            SERVICE_SET_COVER_TILT_POSITION,
+        ],
+    },
+    INPUT_BOOLEAN_DOMAIN: {
+        CONF_BUTTON_ACTION: [SERVICE_TOGGLE],
+        CONF_WHEEL_ACTION: [SERVICE_TOGGLE],
+    },
+    INPUT_BUTTON_DOMAIN: {
+        CONF_BUTTON_ACTION: [SERVICE_PRESS],
+        CONF_WHEEL_ACTION: [],
+    },
+    INPUT_NUMBER_DOMAIN: {
+        CONF_BUTTON_ACTION: [SERVICE_SET_VALUE],
+        CONF_WHEEL_ACTION: [SERVICE_SET_VALUE],
+    },
+    LIGHT_DOMAIN: {
+        CONF_BUTTON_ACTION: [SERVICE_TOGGLE],
+        CONF_WHEEL_ACTION: [SERVICE_TURN_ON],
+    },
+    NUMBER_DOMAIN: {
+        CONF_BUTTON_ACTION: [SERVICE_SET_VALUE],
+        CONF_WHEEL_ACTION: [SERVICE_SET_VALUE],
+    },
+    SCENE_DOMAIN: {
+        CONF_BUTTON_ACTION: [SERVICE_TURN_ON],
+        CONF_WHEEL_ACTION: [],
+    },
+    SCRIPT_DOMAIN: {
+        CONF_BUTTON_ACTION: [],
+        CONF_WHEEL_ACTION: [],
+    },
+    SENSOR_DOMAIN: {
+        CONF_BUTTON_ACTION: [],
+        CONF_WHEEL_ACTION: [],
+    },
+    SWITCH_DOMAIN: {
+        CONF_BUTTON_ACTION: [SERVICE_TOGGLE],
+        CONF_WHEEL_ACTION: [SERVICE_TOGGLE],
+    },
+}
+
+
+def _get_domain(entity_id: str) -> str:
+    """Get domain from entity_id."""
+    return entity_id.split(".")[0]
+
+
+def _get_friendly_name(hass: HomeAssistant, entity_id: str) -> str:
+    """Get friendly name from entity_id."""
+    entity_registry = er.async_get(hass)
+    # Try to get a name from the entity
+    if (entity := entity_registry.async_get(entity_id)) is not None:
+        if entity.name is not None:
+            return entity.name
+        if entity.original_name is not None:
+            return entity.original_name
+    # Fallback to the entity_id
+    return entity_id
+
+
+def _halo_uuid() -> str:
+    """Get a properly formatted Halo UUID."""
+    # UUIDs from uuid1() are not unique when generated in Home Assistant (???)
+    # Use this function to generate and format UUIDs instead.
+    temp_uuid = random_uuid_hex()
+    return f"{temp_uuid[:8]}-{temp_uuid[8:12]}-{temp_uuid[12:16]}-{temp_uuid[16:20]}-{temp_uuid[20:32]}"
+
+
+def _get_uuid_from_string(string: str) -> str:
+    """Get Halo UUID from formatted string: * (<UUID>)."""
+    return string[-37:-1]
 
 
 class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -325,22 +416,13 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return HaloOptionsFlowHandler()
 
 
-class ExclusiveKwargs(TypedDict, total=False):
-    """kwargs for the Exclusive class."""
-
-    schema: vol.Schemable
-    group_of_exclusion: str
-    msg: str | None
-    description: str | Any
-
-
 class HaloOptionsFlowHandler(OptionsFlow):
     """HaloOptionsFlowHandler."""
 
     def __init__(self) -> None:
         """Initialize options."""
         self._configuration: BaseConfiguration = BaseConfiguration(
-            Configuration(pages=[], id=self._halo_uuid())
+            Configuration(pages=[], id=_halo_uuid())
         )
         self._entity_ids: list[str] = []
         self._entity_map: dict[str, EntityMapValues] = {}
@@ -402,7 +484,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
             # Don't create a new page if an existing page is being modified
             if not self._page_being_modified:
-                self._page = Page(user_input[CONF_PAGE_TITLE], [], id=self._halo_uuid())
+                self._page = Page(user_input[CONF_PAGE_TITLE], [], id=_halo_uuid())
             else:
                 new_buttons = self._page.buttons
 
@@ -437,37 +519,31 @@ class HaloOptionsFlowHandler(OptionsFlow):
     async def async_step_button(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Add buttons to new page."""
+        """Add buttons to a new or preexisting page."""
         if user_input is not None:
             # Create a new button when adding a new page or adding a button to an existing page
             if not self._page_being_modified or self._button is None:
                 button = Button(
-                    title=user_input[CONF_TITLE],
-                    subtitle=user_input[CONF_SUBTITLE],
-                    content=self._determine_content(user_input),
-                    id=self._halo_uuid(),
+                    title=user_input[CONF_BUTTON_TITLE],
+                    content=Icon(Icons[user_input[CONF_ICON]]),
+                    id=_halo_uuid(),
                 )
 
-                # Update entity_map
-                self._entity_map[button.id] = {
-                    CONF_ENTITY_ID: self._entity_ids[-1],
-                    CONF_STATE: user_input.get(CONF_STATE, False),
-                }
+                # Add button to entity_map and any selected actions
+                self._update_entity_map(button, user_input)
 
                 # Add to current page
                 self._page.buttons.append(button)
             else:
+                # Add any updated actions to entity_map
+                self._update_entity_map(self._button, user_input)
+
                 # Update existing button
                 update_button(
                     self._configuration,
                     self._button.id,
-                    title=user_input[CONF_TITLE],
-                    subtitle=user_input[CONF_SUBTITLE],
-                    content=self._determine_content(user_input),
-                )
-                # Check if the state should be updated in the entity_map
-                self._entity_map[self._button.id][CONF_STATE] = user_input.get(
-                    CONF_STATE, False
+                    title=user_input[CONF_BUTTON_TITLE],
+                    content=Icon(Icons[user_input[CONF_ICON]]),
                 )
 
             self._entity_ids.pop()
@@ -488,8 +564,10 @@ class HaloOptionsFlowHandler(OptionsFlow):
                     ),
                 )
 
-        # Schema without default values for new buttons
-        button_schema = self._button_schema()
+        # Schema with trimmed entity name as default title
+        button_schema = self._button_schema(
+            title=trim_button_title(_get_friendly_name(self.hass, self._entity_ids[-1]))
+        )
 
         # If a page is being modified, then default values for existing buttons should used
         if self._page_being_modified:
@@ -499,19 +577,15 @@ class HaloOptionsFlowHandler(OptionsFlow):
                     self._button = button
 
                     button_schema = self._button_schema(
-                        self._button.title,
-                        self._button.subtitle,
-                        self._button.content,
-                        self._entity_map[button.id][CONF_STATE],
+                        content=self._button.content,
+                        title=button.title,
+                        id=button.id,
                     )
 
         return self.async_show_form(
             step_id="button",
             data_schema=button_schema,
-            description_placeholders={
-                "entity": self._entity_ids[-1],
-                "page": self._page.title,
-            },
+            description_placeholders={CONF_NAME: self._entity_ids[-1]},
         )
 
     async def async_step_modify_page(
@@ -520,7 +594,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
         """Modify a page."""
 
         if user_input is not None:
-            page_id = self._get_uuid_from_string(user_input[CONF_PAGES])
+            page_id = _get_uuid_from_string(user_input[CONF_PAGES])
 
             # Get buttons from page
             self._page = get_page_from_id(self._configuration, page_id)
@@ -550,7 +624,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             for page_title in user_input[CONF_PAGES]:
-                page_id = self._get_uuid_from_string(page_title)
+                page_id = _get_uuid_from_string(page_title)
 
                 # Remove used button ids from entity_map
                 for button in self._configuration.configuration.pages[
@@ -613,7 +687,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
             # Update configuration with new default
             set_default_button(
                 self._configuration,
-                self._get_uuid_from_string(user_input[CONF_DEFAULT_BUTTON]),
+                _get_uuid_from_string(user_input[CONF_DEFAULT_BUTTON]),
                 True,
             )
 
@@ -672,30 +746,35 @@ class HaloOptionsFlowHandler(OptionsFlow):
             ),
         )
 
-    def _determine_content(self, user_input: dict[str, Any]) -> Icon | Text:
-        """Determine content based on user_input."""
-        content: Icon | Text
+    def _update_entity_map(self, button: Button, user_input: dict[str, Any]) -> None:
+        """Set button actions in entity map."""
 
-        if CONF_ICON in user_input:
-            content = Icon(Icons[user_input[CONF_ICON]])
-        elif CONF_TEXT in user_input:
-            content = Text(user_input[CONF_TEXT])
-        else:
-            # Entity state would replace this
-            content = Text("")
+        domain = _get_domain(self._entity_ids[-1])
 
-        return content
+        # Handle actions
+        action_kwargs: EntityMapActionValues = {
+            CONF_BUTTON_ACTION: None,
+            CONF_WHEEL_ACTION: None,
+        }
+        for action_type in (CONF_BUTTON_ACTION, CONF_WHEEL_ACTION):
+            # Get any user-selected actions
+            if action_type in user_input:
+                action_kwargs[action_type] = user_input[action_type]
+            # Use the first action if available
+            elif len(actions := _halo_action_map[domain][action_type]) >= 1:
+                action_kwargs[action_type] = actions[0]
 
-    def _halo_uuid(self) -> str:
-        """Get a properly formatted Halo UUID."""
-        # UUIDs from uuid1() are not unique when generated in Home Assistant (???)
-        # Use this function to generate and format UUIDs instead.
-        temp_uuid = random_uuid_hex()
-        return f"{temp_uuid[:8]}-{temp_uuid[8:12]}-{temp_uuid[12:16]}-{temp_uuid[16:20]}-{temp_uuid[20:32]}"
+        # Scripts are called as an action, so the entity name should be set as the action
+        if domain == SCRIPT_DOMAIN:
+            action_kwargs[CONF_BUTTON_ACTION] = self._entity_ids[-1].replace(
+                f"{SCRIPT_DOMAIN}.", ""
+            )
 
-    def _get_uuid_from_string(self, string: str) -> str:
-        """Get Halo UUID from formatted string: * (<UUID>)."""
-        return string[-37:-1]
+        # Update entity_map
+        self._entity_map[button.id] = {
+            CONF_ENTITY_ID: self._entity_ids[-1],
+            **action_kwargs,
+        }
 
     def _page_schema(
         self,
@@ -741,47 +820,64 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
     def _button_schema(
         self,
-        title: str | vol.Undefined = vol.UNDEFINED,
-        subtitle: str | None = "",
         content: Icon | Text | None = None,
-        state: bool = False,
+        title: str | vol.Undefined = vol.UNDEFINED,
+        id: str | None = None,
     ) -> vol.Schema:
         """Fill schema for button modification or creation."""
+        domain = _get_domain(self._entity_ids[-1])
 
-        exclusive_kwargs: ExclusiveKwargs = {
-            "group_of_exclusion": "content",
-            "msg": "Choose either an Icon, Text or entity state",
-        }
-        icon_kwargs: ExclusiveKwargs = {"schema": CONF_ICON, **exclusive_kwargs}
-        text_kwargs: ExclusiveKwargs = {"schema": CONF_TEXT, **exclusive_kwargs}
-        state_kwargs: ExclusiveKwargs = {"schema": CONF_STATE, **exclusive_kwargs}
+        if TYPE_CHECKING:
+            assert isinstance(content, Icon)
 
-        # Add suggested value to kwargs if an Icon, Text or state is available
-        if isinstance(content, Icon):
-            icon_kwargs["description"] = {"suggested_value": content.icon.name}
-        elif isinstance(content, Text):
-            text_kwargs["description"] = {"suggested_value": content.text}
-        if state is True:
-            state_kwargs["description"] = {"suggested_value": state}
+        # Add icon as default value if available
+        default_icon = {"schema": CONF_ICON}
+        if content is not None:
+            default_icon["default"] = content.icon.name
+
+        action_kwargs = {}
+        button_actions = _halo_action_map[domain][CONF_BUTTON_ACTION]
+        wheel_actions = _halo_action_map[domain][CONF_WHEEL_ACTION]
+
+        # Add button action select option if more than 1 option is available
+        if len(button_actions) > 1:
+            # Add default value if button is being modified
+            button_kwargs = {}
+            if id is not None:
+                button_kwargs["default"] = self._entity_map[id][CONF_BUTTON_ACTION]
+
+            action_kwargs[vol.Required(CONF_BUTTON_ACTION, **button_kwargs)] = (
+                SelectSelector(
+                    SelectSelectorConfig(
+                        options=button_actions, mode=SelectSelectorMode.DROPDOWN
+                    )
+                )
+            )
+
+        # Same for wheel action
+        if len(wheel_actions) > 1:
+            # Add default value if button is being modified
+            wheel_kwargs = {}
+            if id is not None:
+                wheel_kwargs["default"] = self._entity_map[id][CONF_WHEEL_ACTION]
+
+            action_kwargs[vol.Required(CONF_WHEEL_ACTION, **wheel_kwargs)] = (
+                SelectSelector(
+                    SelectSelectorConfig(
+                        options=wheel_actions, mode=SelectSelectorMode.DROPDOWN
+                    )
+                )
+            )
 
         return vol.Schema(
             {
-                vol.Required(CONF_TITLE, default=title): vol.All(
-                    str,
-                    vol.Length(max=BUTTON_TITLE_MAX_LENGTH),
+                vol.Required(CONF_BUTTON_TITLE, default=title): vol.All(
+                    str, vol.Length(max=BUTTON_TITLE_MAX_LENGTH)
                 ),
-                vol.Optional(CONF_SUBTITLE, default=subtitle): vol.All(
-                    str,
-                    vol.Length(max=BUTTON_TITLE_MAX_LENGTH),
-                ),
-                vol.Exclusive(**icon_kwargs): SelectSelector(
+                vol.Required(**default_icon): SelectSelector(
                     SelectSelectorConfig(options=HALO_BUTTON_ICONS)
                 ),
-                vol.Exclusive(**text_kwargs): vol.All(
-                    str,
-                    vol.Length(max=BUTTON_TEXT_MAX_LENGTH),
-                ),
-                vol.Exclusive(**state_kwargs): BooleanSelector(BooleanSelectorConfig()),
+                **action_kwargs,
             },
         )
 

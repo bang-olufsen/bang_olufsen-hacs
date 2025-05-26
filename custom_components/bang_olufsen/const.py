@@ -7,10 +7,20 @@ from typing import Final, TypedDict
 
 from mozart_api.models import Source, SourceTypeEnum
 
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+)
 from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+)
+from homeassistant.const import (
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION,
 )
 
 from .beoremote_halo.models import Icons, SystemEventState
@@ -138,15 +148,14 @@ CONF_SERIAL_NUMBER: Final = "serial_number"
 
 # Halo configuration
 CONF_PAGE_TITLE: Final = "page_title"
+CONF_BUTTON_TITLE: Final = "button_title"
 CONF_PAGES: Final = "pages"
-CONF_TEXT: Final = "text"
 CONF_VALUE: Final = "value"
 CONF_HALO: Final = "halo"
 CONF_ENTITY_MAP: Final = "entity_map"
-CONF_TITLE: Final = "title"
-CONF_SUBTITLE: Final = "subtitle"
 CONF_DEFAULT_BUTTON: Final = "default_button"
-CONF_CONTENT: Final = "content"
+CONF_BUTTON_ACTION: Final = "button_action"
+CONF_WHEEL_ACTION: Final = "wheel_action"
 # Menu options / step IDs
 HALO_OPTION_PAGE = "page"
 HALO_OPTION_MODIFY_PAGE = "modify_page"
@@ -162,13 +171,24 @@ HALO_BUTTON_ICONS: list[str] = [icon.name for icon in Icons]
 HALO_WHEEL_TIMEOUT: Final = 0.250
 
 
-class EntityMapValues(TypedDict):
+class EntityMapActionValues(TypedDict):
+    """Actions that a button should use."""
+
+    button_action: str | None
+    wheel_action: str | None
+
+
+class EntityMapValues(EntityMapActionValues):
     """TypedDict for Halo button information and settings."""
 
     entity_id: str
-    # Use entity value instead of Icon / Text
-    state: bool
 
+
+# Associate cover actions with their attributes
+COVER_ATTRIBUTE_MAP: Final[dict[str, tuple[str, str]]] = {
+    SERVICE_SET_COVER_POSITION: (ATTR_CURRENT_POSITION, ATTR_POSITION),
+    SERVICE_SET_COVER_TILT_POSITION: (ATTR_CURRENT_TILT_POSITION, ATTR_TILT_POSITION),
+}
 
 # Mozart models
 MOZART_MODELS: Final[list[BangOlufsenModel]] = [

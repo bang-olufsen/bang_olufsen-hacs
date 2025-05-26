@@ -1268,13 +1268,12 @@
         "step": {
             "button": {
                 "data": {
-                    "icon": "Icon for content",
-                    "state": "Use entity state for content",
-                    "subtitle": "Subtitle underneath title",
-                    "text": "Text for content",
-                    "title": "Title underneath button"
+                    "button_action": "Button action",
+                    "icon": "Icon",
+                    "title": "Title",
+                    "wheel_action": "Wheel action"
                 },
-                "description": "Select a configuration for the {entity} button in the {page} page.",
+                "description": "Select an icon to be shown in the middle of the `{name}` button and a title to be shown underneath the button.\n\nSome domains have support for selectable button and wheel actions.",
                 "title": "Configure button"
             },
             "delete_pages": {
