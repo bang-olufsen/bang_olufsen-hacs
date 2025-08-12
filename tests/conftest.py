@@ -538,9 +538,15 @@ def mock_mozart_client() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_halo_client() -> Generator[AsyncMock]:
     """Mock Halo."""
-    with patch(
-        "homeassistant.components.bang_olufsen.Halo", autospec=True
-    ) as mock_client:
+    with (
+        patch(
+            "homeassistant.components.bang_olufsen.Halo", autospec=True
+        ) as mock_client,
+        patch(
+            "homeassistant.components.bang_olufsen.config_flow.Halo",
+            new=mock_client,
+        ),
+    ):
         client = mock_client.return_value
 
         # WebSocket methods

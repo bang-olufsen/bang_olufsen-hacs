@@ -15,7 +15,11 @@
       "api_exception": "[%key:common::config_flow::error::cannot_connect%]",
       "client_connector_error": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_ip": "Invalid IPv4 address",
-      "timeout_error": "[%key:common::config_flow::error::cannot_connect%]"
+      "invalid_serial_number": "Invalid serial number",
+      "timeout_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "client_os_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "server_timeout_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "ws_message_type_error": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -29,6 +33,12 @@
           "model": "[%key:common::generic::model%]"
         },
         "description": "Manually configure your Bang & Olufsen device."
+      },
+      "halo": {
+        "data": {
+          "serial_number": "Serial Number"
+        },
+        "description": "Manually configure your Bang & Olufsen Beoremote Halo."
       },
       "zeroconf_confirm": {
         "title": "Setup Bang & Olufsen device",
@@ -119,11 +129,11 @@
   "services": {
     "beolink_allstandby": {
       "name": "Beolink all standby",
-      "description": "Set all Connected Beolink devices to standby."
+      "description": "Sets all connected Beolink devices to standby."
     },
     "beolink_expand": {
       "name": "Beolink expand",
-      "description": "Expand current Beolink experience.",
+      "description": "Adds devices to the current Beolink experience.",
       "fields": {
         "all_discovered": {
           "name": "All discovered",
@@ -143,7 +153,7 @@
     },
     "beolink_join": {
       "name": "Beolink join",
-      "description": "Join a Beolink experience.",
+      "description": "Joins a Beolink experience.",
       "fields": {
         "beolink_jid": {
           "name": "Beolink JID",
@@ -177,7 +187,7 @@
     },
     "beolink_leave": {
       "name": "Beolink leave",
-      "description": "Leave a Beolink experience."
+      "description": "Leaves a Beolink experience."
     },
     "beolink_set_relative_volume": {
       "name": "Beolink set relative volume",
@@ -201,7 +211,7 @@
     },
     "beolink_unexpand": {
       "name": "Beolink unexpand",
-      "description": "Unexpand from current Beolink experience.",
+      "description": "Removes devices from the current Beolink experience.",
       "fields": {
         "beolink_jids": {
           "name": "Beolink JIDs",
@@ -1321,7 +1331,7 @@
         }
       },
       "preset1": {
-        "name": "Favourite 1",
+        "name": "Favorite 1",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -1335,7 +1345,7 @@
         }
       },
       "preset2": {
-        "name": "Favourite 2",
+        "name": "Favorite 2",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -1349,7 +1359,7 @@
         }
       },
       "preset3": {
-        "name": "Favourite 3",
+        "name": "Favorite 3",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -1363,7 +1373,7 @@
         }
       },
       "preset4": {
-        "name": "Favourite 4",
+        "name": "Favorite 4",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -1464,7 +1474,7 @@
       "message": "Invalid parameter: {parameter} for {command} which expects a parameter of type: {parameter_type}."
     },
     "invalid_grouping_entity": {
-      "message": "Entity with id: {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
+      "message": "Entity with ID: {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
     },
     "invalid_sound_mode": {
       "message": "{invalid_sound_mode} is an invalid sound mode. Valid values are: {valid_sound_modes}."

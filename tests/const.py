@@ -38,6 +38,7 @@ from homeassistant.components.bang_olufsen.const import (
     CONF_HALO,
     CONF_PAGE_TITLE,
     CONF_PAGES,
+    CONF_SERIAL_NUMBER,
     CONF_WHEEL_ACTION,
     BangOlufsenSource,
 )
@@ -176,6 +177,11 @@ TEST_HALO_DATA_CREATE_ENTRY = {
     CONF_BEOLINK_JID: "",
     CONF_NAME: TEST_HALO_NAME,
 }
+
+# Halo config flow
+TEST_DATA_USER_HALO = {CONF_HOST: TEST_HOST, CONF_MODEL: TEST_MODEL_HALO}
+TEST_DATA_USER_HALO_INVALID_SERIAL_NUMBER = {CONF_SERIAL_NUMBER: "invalid"}
+TEST_DATA_USER_HALO_SERIAL_NUMBER = {CONF_SERIAL_NUMBER: TEST_HALO_SERIAL}
 
 # Halo config flow options
 TEST_HALO_PAGE_TITLE = "Test page"

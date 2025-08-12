@@ -3,7 +3,12 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock
 
-from aiohttp.client_exceptions import ClientConnectorError
+from aiohttp.client_exceptions import (
+    ClientConnectorError,
+    ClientOSError,
+    ServerTimeoutError,
+    WSMessageTypeError,
+)
 from mozart_api.exceptions import ApiException
 import pytest
 
@@ -24,6 +29,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from .const import (
     TEST_DATA_CREATE_ENTRY,
     TEST_DATA_USER,
+    TEST_DATA_USER_HALO,
+    TEST_DATA_USER_HALO_INVALID_SERIAL_NUMBER,
+    TEST_DATA_USER_HALO_SERIAL_NUMBER,
     TEST_DATA_USER_INVALID,
     TEST_DATA_ZEROCONF,
     TEST_DATA_ZEROCONF_IPV6,
@@ -57,13 +65,19 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 # General / Mozart tests
-
-
-async def test_config_flow_timeout_error(
-    hass: HomeAssistant, mock_mozart_client: AsyncMock
+@pytest.mark.parametrize(
+    ("error", "error_id"),
+    [
+        (ApiException(), "api_exception"),
+        (ClientConnectorError(Mock(), Mock()), "client_connector_error"),
+        (TimeoutError(), "timeout_error"),
+    ],
+)
+async def test_config_flow_error(
+    hass: HomeAssistant, mock_mozart_client: AsyncMock, error, error_id
 ) -> None:
-    """Test we handle timeout_error."""
-    mock_mozart_client.get_beolink_self.side_effect = TimeoutError()
+    """Test we handle connection errors."""
+    mock_mozart_client.get_beolink_self.side_effect = error
 
     result_user = await hass.config_entries.flow.async_init(
         handler=DOMAIN,
@@ -71,26 +85,7 @@ async def test_config_flow_timeout_error(
         data=TEST_DATA_USER,
     )
     assert result_user["type"] is FlowResultType.FORM
-    assert result_user["errors"] == {"base": "timeout_error"}
-
-    assert mock_mozart_client.get_beolink_self.call_count == 1
-
-
-async def test_config_flow_client_connector_error(
-    hass: HomeAssistant, mock_mozart_client: AsyncMock
-) -> None:
-    """Test we handle client_connector_error."""
-    mock_mozart_client.get_beolink_self.side_effect = ClientConnectorError(
-        Mock(), Mock()
-    )
-
-    result_user = await hass.config_entries.flow.async_init(
-        handler=DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-        data=TEST_DATA_USER,
-    )
-    assert result_user["type"] is FlowResultType.FORM
-    assert result_user["errors"] == {"base": "client_connector_error"}
+    assert result_user["errors"] == {"base": error_id}
 
     assert mock_mozart_client.get_beolink_self.call_count == 1
 
@@ -105,23 +100,6 @@ async def test_config_flow_invalid_ip(hass: HomeAssistant) -> None:
     )
     assert result_user["type"] is FlowResultType.FORM
     assert result_user["errors"] == {"base": "invalid_ip"}
-
-
-async def test_config_flow_api_exception(
-    hass: HomeAssistant, mock_mozart_client: AsyncMock
-) -> None:
-    """Test we handle api_exception."""
-    mock_mozart_client.get_beolink_self.side_effect = ApiException()
-
-    result_user = await hass.config_entries.flow.async_init(
-        handler=DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-        data=TEST_DATA_USER,
-    )
-    assert result_user["type"] is FlowResultType.FORM
-    assert result_user["errors"] == {"base": "api_exception"}
-
-    assert mock_mozart_client.get_beolink_self.call_count == 1
 
 
 async def test_config_flow(hass: HomeAssistant, mock_mozart_client: AsyncMock) -> None:
@@ -234,6 +212,83 @@ async def test_config_flow_options_mozart(
 
 
 # Halo related tests
+
+
+@pytest.mark.parametrize(
+    ("error", "error_id"),
+    [
+        (ClientConnectorError(Mock(), Mock()), "client_connector_error"),
+        (ClientOSError(), "client_os_error"),
+        (ServerTimeoutError(), "server_timeout_error"),
+        (WSMessageTypeError(), "ws_message_type_error"),
+    ],
+)
+async def test_halo_config_flow_error(
+    hass: HomeAssistant, mock_halo_client: AsyncMock, error, error_id
+) -> None:
+    """Test we handle Halo connection errors."""
+    mock_halo_client.check_device_connection.side_effect = error
+
+    result_user = await hass.config_entries.flow.async_init(
+        handler=DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=TEST_DATA_USER_HALO,
+    )
+    assert result_user["type"] is FlowResultType.FORM
+    assert result_user["errors"] == {"base": error_id}
+
+
+async def test_halo_config_flow_invalid_serial_number(
+    hass: HomeAssistant, mock_halo_client: AsyncMock
+) -> None:
+    """Test config flow for Halo with invalid serial number."""
+
+    result_user = await hass.config_entries.flow.async_init(
+        handler=DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=TEST_DATA_USER_HALO,
+    )
+    assert result_user["type"] is FlowResultType.FORM
+    assert result_user["step_id"] == "halo"
+
+    result_halo = await hass.config_entries.flow.async_configure(
+        flow_id=result_user["flow_id"],
+        user_input=TEST_DATA_USER_HALO_INVALID_SERIAL_NUMBER,
+    )
+
+    assert result_halo["type"] is FlowResultType.FORM
+    assert result_halo["errors"] == {"base": "invalid_serial_number"}
+
+
+async def test_halo_config_flow(
+    hass: HomeAssistant, mock_halo_client: AsyncMock
+) -> None:
+    """Test config flow."""
+
+    result_init = await hass.config_entries.flow.async_init(
+        handler=DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=None,
+    )
+
+    assert result_init["type"] is FlowResultType.FORM
+    assert result_init["step_id"] == "user"
+
+    result_user = await hass.config_entries.flow.async_configure(
+        flow_id=result_init["flow_id"],
+        user_input=TEST_DATA_USER_HALO,
+    )
+
+    assert result_user["type"] is FlowResultType.FORM
+    assert result_user["step_id"] == "halo"
+
+    result_halo = await hass.config_entries.flow.async_configure(
+        flow_id=result_user["flow_id"],
+        user_input=TEST_DATA_USER_HALO_SERIAL_NUMBER,
+    )
+
+    assert result_halo["type"] is FlowResultType.CREATE_ENTRY
+    assert result_halo["data"] == TEST_HALO_DATA_CREATE_ENTRY
 
 
 async def test_halo_config_flow_zeroconf(hass: HomeAssistant) -> None:

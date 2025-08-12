@@ -197,6 +197,13 @@ MOZART_MODELS: Final[list[BangOlufsenModel]] = [
     if model.value
     not in (BangOlufsenModel.BEOREMOTE_HALO, BangOlufsenModel.BEOREMOTE_ONE)
 ]
+# Models that can be setup manually
+SELECTABLE_MODELS: Final[list[BangOlufsenModel]] = [
+    model
+    for model in BangOlufsenModel
+    if model.value not in (BangOlufsenModel.BEOREMOTE_ONE)
+]
+
 
 MANUFACTURER: Final[str] = "Bang & Olufsen"
 

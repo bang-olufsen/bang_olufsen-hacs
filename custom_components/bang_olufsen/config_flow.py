@@ -5,7 +5,12 @@ from __future__ import annotations
 from ipaddress import AddressValueError, IPv4Address
 from typing import TYPE_CHECKING, Any, TypedDict
 
-from aiohttp.client_exceptions import ClientConnectorError
+from aiohttp.client_exceptions import (
+    ClientConnectorError,
+    ClientOSError,
+    ServerTimeoutError,
+    WSMessageTypeError,
+)
 from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 import voluptuous as vol
@@ -62,6 +67,7 @@ from .beoremote_halo.const import (
     MIN_PAGES,
     PAGE_TITLE_MAX_LENGTH,
 )
+from .beoremote_halo.halo import Halo
 from .beoremote_halo.helpers import (
     clear_default_button,
     delete_page,
@@ -107,7 +113,7 @@ from .const import (
     HALO_OPTION_PAGE,
     HALO_OPTION_REMOVE_DEFAULT,
     HALO_OPTION_SELECT_DEFAULT,
-    MOZART_MODELS,
+    SELECTABLE_MODELS,
     ZEROCONF_HALO,
     ZEROCONF_MOZART,
     BangOlufsenModel,
@@ -138,6 +144,10 @@ _exception_map = {
     ClientConnectorError: "client_connector_error",
     TimeoutError: "timeout_error",
     AddressValueError: "invalid_ip",
+    vol.MatchInvalid: "invalid_serial_number",
+    ClientOSError: "client_os_error",
+    ServerTimeoutError: "server_timeout_error",
+    WSMessageTypeError: "ws_message_type_error",
 }
 
 # Map of Button and Wheel services available to the different entity domains
@@ -227,6 +237,17 @@ def _get_uuid_from_string(string: str) -> str:
     return string[-37:-1]
 
 
+USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
+            SelectSelectorConfig(options=SELECTABLE_MODELS)
+        ),
+    }
+)
+HALO_SCHEMA = vol.Schema({vol.Required(CONF_SERIAL_NUMBER): str})
+
+
 class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -246,51 +267,103 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
-                    SelectSelectorConfig(options=MOZART_MODELS)
-                ),
-            }
-        )
 
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._model = user_input[CONF_MODEL]
 
+            # Check if the IP address is valid
             try:
                 IPv4Address(self._host)
             except AddressValueError as error:
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=data_schema,
+                    data_schema=USER_SCHEMA,
                     errors={"base": _exception_map[type(error)]},
                 )
 
-            self._mozart_client = MozartClient(
-                self._host, ssl_context=get_default_context()
+            # Setup either Halo or Mozart devices
+            if self._model == BangOlufsenModel.BEOREMOTE_HALO.value:
+                return await self._setup_halo()
+
+            return await self._setup_mozart()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=USER_SCHEMA,
+        )
+
+    async def _setup_mozart(self) -> ConfigFlowResult:
+        """Handle manual setup of Mozart devices."""
+        self._mozart_client = MozartClient(
+            self._host, ssl_context=get_default_context()
+        )
+
+        # Try to get information from Beolink self method.
+        async with self._mozart_client:
+            try:
+                beolink_self = await self._mozart_client.get_beolink_self(
+                    _request_timeout=3
+                )
+            except (
+                ApiException,
+                ClientConnectorError,
+                TimeoutError,
+            ) as error:
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=USER_SCHEMA,
+                    errors={"base": _exception_map[type(error)]},
+                )
+
+        self._beolink_jid = beolink_self.jid
+        self._serial_number = get_serial_number_from_jid(beolink_self.jid)
+
+        await self.async_set_unique_id(self._serial_number)
+        self._abort_if_unique_id_configured()
+
+        return await self._create_entry()
+
+    async def _setup_halo(self) -> ConfigFlowResult:
+        """Check Halo connection and ."""
+        client = Halo(self._host)
+
+        # Check WebSocket connection
+        try:
+            await client.check_device_connection(raise_error=True)
+        except (
+            ClientConnectorError,
+            ClientOSError,
+            ServerTimeoutError,
+            WSMessageTypeError,
+        ) as error:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=USER_SCHEMA,
+                errors={"base": _exception_map[type(error)]},
             )
 
-            # Try to get information from Beolink self method.
-            async with self._mozart_client:
-                try:
-                    beolink_self = await self._mozart_client.get_beolink_self(
-                        _request_timeout=3
-                    )
-                except (
-                    ApiException,
-                    ClientConnectorError,
-                    TimeoutError,
-                ) as error:
-                    return self.async_show_form(
-                        step_id="user",
-                        data_schema=data_schema,
-                        errors={"base": _exception_map[type(error)]},
-                    )
+        return self.async_show_form(
+            step_id="halo",
+            data_schema=HALO_SCHEMA,
+        )
 
-            self._beolink_jid = beolink_self.jid
-            self._serial_number = get_serial_number_from_jid(beolink_self.jid)
+    async def async_step_halo(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle manual setup of Halo devices."""
+        if user_input is not None:
+            self._serial_number = user_input[CONF_SERIAL_NUMBER]
+
+            # Check if serial number has the right format
+            try:
+                vol.Match(r"\d{8}")(self._serial_number)
+            except vol.MatchInvalid as error:
+                return self.async_show_form(
+                    step_id="halo",
+                    data_schema=HALO_SCHEMA,
+                    errors={"base": _exception_map[type(error)]},
+                )
 
             await self.async_set_unique_id(self._serial_number)
             self._abort_if_unique_id_configured()
@@ -298,8 +371,8 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._create_entry()
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=data_schema,
+            step_id="halo",
+            data_schema=HALO_SCHEMA,
         )
 
     async def async_step_zeroconf(
@@ -338,13 +411,10 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_zeroconf_confirm()
 
-    def _zeroconf_halo(
-        self, discovery_info: ZeroconfServiceInfo
-    ) -> ConfigFlowResult | None:
+    def _zeroconf_halo(self, discovery_info: ZeroconfServiceInfo) -> None:
         """Handle Zeroconf discovery of Halo."""
         self._serial_number = discovery_info.properties[ATTR_HALO_SERIAL_NUMBER]
         self._model = BangOlufsenModel.BEOREMOTE_HALO
-        return None
 
     async def _zeroconf_mozart(
         self, discovery_info: ZeroconfServiceInfo

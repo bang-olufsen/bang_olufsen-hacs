@@ -136,7 +136,7 @@ async def _setup_halo(hass: HomeAssistant, config_entry: HaloConfigEntry) -> boo
     else:
         client = Halo(config_entry.data[CONF_HOST])
 
-    # Check API and WebSocket connection
+    # Check WebSocket connection
     try:
         await client.check_device_connection(raise_error=True)
     except (

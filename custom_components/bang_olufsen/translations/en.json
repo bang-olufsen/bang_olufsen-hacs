@@ -18,11 +18,21 @@
         "error": {
             "api_exception": "Failed to connect",
             "client_connector_error": "Failed to connect",
+            "client_os_error": "Failed to connect",
             "invalid_ip": "Invalid IPv4 address",
-            "timeout_error": "Failed to connect"
+            "invalid_serial_number": "Invalid serial number",
+            "server_timeout_error": "Failed to connect",
+            "timeout_error": "Failed to connect",
+            "ws_message_type_error": "Failed to connect"
         },
         "flow_title": "{name}",
         "step": {
+            "halo": {
+                "data": {
+                    "serial_number": "Serial Number"
+                },
+                "description": "Manually configure your Bang & Olufsen Beoremote Halo."
+            },
             "user": {
                 "data": {
                     "host": "IP address",
@@ -1111,7 +1121,7 @@
                 }
             },
             "preset1": {
-                "name": "Favourite 1",
+                "name": "Favorite 1",
                 "state_attributes": {
                     "event_type": {
                         "state": {
@@ -1125,7 +1135,7 @@
                 }
             },
             "preset2": {
-                "name": "Favourite 2",
+                "name": "Favorite 2",
                 "state_attributes": {
                     "event_type": {
                         "state": {
@@ -1139,7 +1149,7 @@
                 }
             },
             "preset3": {
-                "name": "Favourite 3",
+                "name": "Favorite 3",
                 "state_attributes": {
                     "event_type": {
                         "state": {
@@ -1153,7 +1163,7 @@
                 }
             },
             "preset4": {
-                "name": "Favourite 4",
+                "name": "Favorite 4",
                 "state_attributes": {
                     "event_type": {
                         "state": {
@@ -1242,7 +1252,7 @@
             "message": "Invalid parameter: {parameter} for {command} which expects a parameter of type: {parameter_type}."
         },
         "invalid_grouping_entity": {
-            "message": "Entity with id: {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
+            "message": "Entity with ID: {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
         },
         "invalid_media_type": {
             "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
@@ -1342,11 +1352,11 @@
     },
     "services": {
         "beolink_allstandby": {
-            "description": "Set all Connected Beolink devices to standby.",
+            "description": "Sets all connected Beolink devices to standby.",
             "name": "Beolink all standby"
         },
         "beolink_expand": {
-            "description": "Expand current Beolink experience.",
+            "description": "Adds devices to the current Beolink experience.",
             "fields": {
                 "all_discovered": {
                     "description": "Expand Beolink experience to all discovered devices.",
@@ -1366,7 +1376,7 @@
             }
         },
         "beolink_join": {
-            "description": "Join a Beolink experience.",
+            "description": "Joins a Beolink experience.",
             "fields": {
                 "beolink_jid": {
                     "description": "Manually specify Beolink JID to join.",
@@ -1400,7 +1410,7 @@
             "name": "Beolink leader command"
         },
         "beolink_leave": {
-            "description": "Leave a Beolink experience.",
+            "description": "Leaves a Beolink experience.",
             "name": "Beolink leave"
         },
         "beolink_set_relative_volume": {
@@ -1424,7 +1434,7 @@
             "name": "Beolink set volume"
         },
         "beolink_unexpand": {
-            "description": "Unexpand from current Beolink experience.",
+            "description": "Removes devices from the current Beolink experience.",
             "fields": {
                 "beolink_jids": {
                     "description": "Specify which Beolink JIDs will leave from current Beolink experience.",
