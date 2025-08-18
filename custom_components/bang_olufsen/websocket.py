@@ -113,10 +113,10 @@ class WheelTaskHandler:
     counter: int = 0
 
 
-# Return value for button update methods
+# Return value for button update methods (subtitle, state, value)
 type UpdateTuple = tuple[str, ButtonState, int]
 
-# Return value for action methods
+# Return value for action methods (preview_value, action data)
 type WheelActionTuple = tuple[str, dict[str, Any]] | None
 
 
