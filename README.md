@@ -42,7 +42,7 @@ Do note that the Beoremote Halo can only be connected to one platform at a time,
 
 Feel free to open an [issue](https://github.com/bang-olufsen/bang_olufsen-hacs/issues) to request a feature or comment on an existing one.
 
-The Halo can currently only be added through Zeroconf discovery. Afterwards, add a configuration to the Halo by entering the options by pressing the `CONFIGURE` button.
+The Halo can be added through Zeroconf discovery, or manually by entering both the IP address and the serial number. Afterwards, add a configuration to the Halo by entering the options by pressing the `CONFIGURE` button.
 
 All actions have to be manually defined for each entity type, which is why not all entities work at this point.
 
