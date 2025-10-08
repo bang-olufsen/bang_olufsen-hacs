@@ -18,12 +18,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import get_default_context
 
 from .beoremote_halo.halo import Halo
 from .beoremote_halo.models import BaseConfiguration
 from .const import CONF_HALO, DOMAIN, MANUFACTURER
+from .services import async_setup_services
 from .util import is_halo
 from .websocket import HaloWebsocket, MozartWebsocket
 
@@ -61,6 +63,14 @@ class HaloData:
 
 type MozartConfigEntry = ConfigEntry[MozartData]
 type HaloConfigEntry = ConfigEntry[HaloData]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Bang & Olufsen integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -118,7 +128,8 @@ async def _setup_mozart(hass: HomeAssistant, config_entry: MozartConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(config_entry, MOZART_PLATFORMS)
 
-    # Start WebSocket connection when all entities have been initialized
+    # Start WebSocket connection once the platforms have been loaded.
+    # This ensures that the initial WebSocket notifications are dispatched to entities
     await client.connect_notifications(remote_control=True, reconnect=True)
 
     return True

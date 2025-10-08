@@ -5,20 +5,16 @@ from __future__ import annotations
 from typing import cast
 
 from mozart_api.models import PairedRemote
-import voluptuous as vol
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.components.homeassistant import ServiceResponse
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
-from homeassistant.core import HomeAssistant, SupportsResponse, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HaloConfigEntry, MozartConfigEntry
 from .beoremote_halo.models import Update, UpdateDisplayPage, UpdateNotification
@@ -54,43 +50,6 @@ async def async_setup_entry(
     entities: list[BangOlufsenEvent] = []
 
     if is_halo(config_entry):
-        # Register halo services
-
-        platform = async_get_current_platform()
-
-        platform.async_register_entity_service(
-            name="halo_configuration",
-            schema=None,
-            func="halo_configuration",
-            supports_response=SupportsResponse.ONLY,
-        )
-
-        platform.async_register_entity_service(
-            name="halo_notification",
-            schema={
-                vol.Required("title"): vol.All(
-                    vol.Length(min=1, max=62),
-                    cv.string,
-                ),
-                vol.Required("subtitle"): vol.All(
-                    vol.Length(min=1, max=256),
-                    cv.string,
-                ),
-            },
-            func="async_halo_notification",
-        )
-        uuid_regex = vol.Match(
-            r"^[0-9a-f]{8}[-][0-9a-f]{4}[-][0-9a-f]{4}[-][0-9a-f]{4}[-][0-9a-f]{12}$"
-        )
-        platform.async_register_entity_service(
-            name="halo_display_page",
-            schema={
-                vol.Required("page_id"): uuid_regex,
-                vol.Optional("button_id"): uuid_regex,
-            },
-            func="async_halo_display_page",
-        )
-
         entities.extend(await _get_halo_entities(config_entry))
     else:
         entities.extend(await _get_mozart_entities(hass, config_entry))
@@ -357,7 +316,7 @@ class HaloEventSystemStatus(HaloEvent):
         )
 
     # Setup custom actions
-    def halo_configuration(self) -> ServiceResponse:
+    def async_halo_configuration(self) -> ServiceResponse:
         """Get raw configuration for the Halo."""
 
         return cast(ServiceResponse, self._client.configuration.to_dict())
