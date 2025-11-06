@@ -14,7 +14,7 @@ from mozart_api.models import (
     ListeningMode,
     ListeningModeFeatures,
     ListeningModeRef,
-    ListeningModeTrigger,
+    PowerLinkTrigger,
     PairedRemote,
     PairedRemoteResponse,
     PlaybackContentMetadata,
@@ -403,19 +403,19 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 id=TEST_SOUND_MODE,
                 name=TEST_SOUND_MODE_NAME,
                 features=ListeningModeFeatures(),
-                triggers=[ListeningModeTrigger()],
+                triggers=[PowerLinkTrigger()],
             ),
             ListeningMode(
                 id=TEST_SOUND_MODE_2,
                 name=TEST_SOUND_MODE_NAME,
                 features=ListeningModeFeatures(),
-                triggers=[ListeningModeTrigger()],
+                triggers=[PowerLinkTrigger()],
             ),
             ListeningMode(
                 id=345,
                 name=f"{TEST_SOUND_MODE_NAME} 2",
                 features=ListeningModeFeatures(),
-                triggers=[ListeningModeTrigger()],
+                triggers=[PowerLinkTrigger()],
             ),
         ]
         client.get_active_listening_mode = AsyncMock()
