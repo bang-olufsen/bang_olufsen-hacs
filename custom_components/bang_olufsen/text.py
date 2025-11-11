@@ -11,7 +11,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MozartConfigEntry
-from .const import CONNECTION_STATUS, MODEL_SUPPORT_HOME_CONTROL, MODEL_SUPPORT_MAP
+from .const import (
+    CONNECTION_STATUS,
+    DOMAIN,
+    MODEL_SUPPORT_HOME_CONTROL,
+    MODEL_SUPPORT_MAP,
+)
 from .entity import MozartEntity
 
 
@@ -57,7 +62,7 @@ class MozartTextHomeControlUri(BangOlufsenText):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )

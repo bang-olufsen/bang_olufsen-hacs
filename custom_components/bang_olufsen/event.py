@@ -139,7 +139,7 @@ async def _get_mozart_entities(
     for device in devices:
         if (
             device.model == BangOlufsenModel.BEOREMOTE_ONE
-            and device.serial_number not in [remote.serial_number for remote in remotes]
+            and device.serial_number not in {remote.serial_number for remote in remotes}
         ):
             device_registry.async_update_device(
                 device.id, remove_config_entry_id=config_entry.entry_id
@@ -170,14 +170,14 @@ class MozartButtonEvent(MozartEvent):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.BUTTON}_{self._button_type}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BUTTON}_{self._button_type}",
                 self._async_handle_event,
             )
         )
@@ -200,12 +200,10 @@ class MozartRemoteKeyEvent(MozartEvent):
 
         assert remote.serial_number
 
-        self._attr_unique_id = (
-            f"{remote.serial_number}_{config_entry.unique_id}_{key_type}"
-        )
+        self._attr_unique_id = f"{remote.serial_number}_{self._unique_id}_{key_type}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{remote.serial_number}_{config_entry.unique_id}")},
-            name=f"{BangOlufsenModel.BEOREMOTE_ONE}-{remote.serial_number}-{config_entry.unique_id}",
+            identifiers={(DOMAIN, f"{remote.serial_number}_{self._unique_id}")},
+            name=f"{BangOlufsenModel.BEOREMOTE_ONE}-{remote.serial_number}-{self._unique_id}",
             model=BangOlufsenModel.BEOREMOTE_ONE,
             serial_number=remote.serial_number,
             sw_version=remote.app_version,
@@ -222,14 +220,14 @@ class MozartRemoteKeyEvent(MozartEvent):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.BEO_REMOTE_BUTTON}_{self._key_type}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BEO_REMOTE_BUTTON}_{self._key_type}",
                 self._async_handle_event,
             )
         )
@@ -253,14 +251,14 @@ class MozartEventProximity(MozartEvent):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.PROXIMITY}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PROXIMITY}",
                 self._async_handle_event,
             )
         )
@@ -303,14 +301,14 @@ class HaloEventSystemStatus(HaloEvent):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.HALO_SYSTEM}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_SYSTEM}",
                 self._async_handle_event,
             )
         )

@@ -128,7 +128,6 @@ async def test_initialization(
     mock_mozart_client: AsyncMock,
 ) -> None:
     """Test the integration is initialized properly in _initialize, async_added_to_hass and __init__."""
-
     caplog.set_level(logging.DEBUG)
 
     # Setup entity
@@ -295,7 +294,7 @@ async def test_async_update_playback_error(
     playback_error_callback(TEST_PLAYBACK_ERROR)
 
     assert (
-        "Exception in _async_update_playback_error when dispatching '11111111_playback_error': (PlaybackError(error='Test error', item=None),)"
+        "Exception in _async_update_playback_error when dispatching 'bang_olufsen_11111111_playback_error': (PlaybackError(error='Test error', item=None),)"
         in caplog.text
     )
 
@@ -846,7 +845,6 @@ async def test_async_select_sound_mode_invalid(
     integration: None,
 ) -> None:
     """Test async_select_sound_mode with an invalid sound_mode."""
-
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
@@ -868,7 +866,6 @@ async def test_async_play_media_invalid_type(
     integration: None,
 ) -> None:
     """Test async_play_media only accepts valid media types."""
-
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
@@ -915,7 +912,6 @@ async def test_async_play_media_overlay_absolute_volume_uri(
     mock_mozart_client: AsyncMock,
 ) -> None:
     """Test async_play_media overlay with Home Assistant local URI and absolute volume."""
-
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
     await hass.services.async_call(
@@ -1072,7 +1068,6 @@ async def test_async_play_media_deezer_flow(
     mock_mozart_client: AsyncMock,
 ) -> None:
     """Test async_play_media with Deezer flow."""
-
     # Send a service call
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -1144,7 +1139,6 @@ async def test_async_play_media_invalid_deezer(
     mock_mozart_client: AsyncMock,
 ) -> None:
     """Test async_play_media with an invalid/no Deezer login."""
-
     mock_mozart_client.start_deezer_flow.side_effect = TEST_DEEZER_INVALID_FLOW
 
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -1244,7 +1238,6 @@ async def test_async_browse_media(
     present: bool,
 ) -> None:
     """Test async_browse_media with audio and video source."""
-
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
     mock_mozart_client = await hass_ws_client()
@@ -1635,7 +1628,6 @@ async def test_async_set_repeat(
     repeat: RepeatMode,
 ) -> None:
     """Test async_set_repeat."""
-
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.OFF
 

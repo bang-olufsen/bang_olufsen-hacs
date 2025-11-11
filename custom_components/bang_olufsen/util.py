@@ -46,8 +46,7 @@ async def supports_battery(client: MozartClient) -> bool:
 
 
 async def get_remotes(client: MozartClient) -> list[PairedRemote]:
-    """Get remote status easier."""
-    # Get if a remote control is connected and the remote
+    """Get paired remotes."""
     bluetooth_remote_list = await client.get_bluetooth_remotes()
 
     # Remotes that been unpaired on the remote may still be available on the device,

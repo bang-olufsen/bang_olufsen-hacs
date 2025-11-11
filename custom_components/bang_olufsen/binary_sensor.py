@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HaloConfigEntry, MozartConfigEntry
 from .beoremote_halo.models import PowerEvent, PowerEventState
-from .const import CONNECTION_STATUS, WebsocketNotification
+from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import HaloEntity, MozartEntity
 from .util import is_halo, supports_battery
 
@@ -80,14 +80,14 @@ class MozartBinarySensorBatteryCharging(MozartBinarySensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.BATTERY}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BATTERY}",
                 self._update_battery_charging,
             )
         )
@@ -133,14 +133,14 @@ class HaloBinarySensorBatteryCharging(HaloBinarySensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.HALO_POWER}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_POWER}",
                 self._update_battery_charging,
             )
         )

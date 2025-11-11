@@ -100,14 +100,14 @@ class MozartSensorBatteryLevel(MozartSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.BATTERY}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BATTERY}",
                 self._update_battery,
             )
         )
@@ -133,10 +133,10 @@ class MozartSensorRemoteBatteryLevel(MozartSensor):
 
         self._attr_device_class = SensorDeviceClass.BATTERY
         self._attr_unique_id = (
-            f"{remote.serial_number}_{config_entry.unique_id}_remote_battery_level"
+            f"{remote.serial_number}_{self._unique_id}_remote_battery_level"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{remote.serial_number}_{config_entry.unique_id}")}
+            identifiers={(DOMAIN, f"{remote.serial_number}_{self._unique_id}")}
         )
         self._attr_native_value = remote.battery_level
 
@@ -145,7 +145,7 @@ class MozartSensorRemoteBatteryLevel(MozartSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
@@ -184,14 +184,14 @@ class MozartSensorBatteryChargingTime(MozartSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.BATTERY}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BATTERY}",
                 self._update_battery,
             )
         )
@@ -229,14 +229,14 @@ class MozartSensorBatteryPlayingTime(MozartSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.BATTERY}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BATTERY}",
                 self._update_battery,
             )
         )
@@ -292,14 +292,14 @@ class HaloSensorBatteryLevel(HaloSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.HALO_POWER}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_POWER}",
                 self._update_battery,
             )
         )

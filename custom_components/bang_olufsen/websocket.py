@@ -89,6 +89,7 @@ from .const import (
     CONF_WHEEL_ACTION,
     CONNECTION_STATUS,
     COVER_ATTRIBUTE_MAP,
+    DOMAIN,
     EVENT_TRANSLATION_MAP,
     HALO_WEBSOCKET_EVENT,
     HALO_WHEEL_TIMEOUT,
@@ -692,7 +693,7 @@ class HaloWebsocket(HaloBase):
         """Update all entities of the connection status."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
+            f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
             self._client.websocket_connected,
         )
 
@@ -727,7 +728,7 @@ class HaloWebsocket(HaloBase):
         """Send halo_power dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.HALO_POWER}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_POWER}",
             event,
         )
 
@@ -735,7 +736,7 @@ class HaloWebsocket(HaloBase):
         """Send halo_status dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.HALO_STATUS}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_STATUS}",
             event,
         )
 
@@ -743,7 +744,7 @@ class HaloWebsocket(HaloBase):
         """Send halo_system dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.HALO_SYSTEM}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_SYSTEM}",
             event.state,
         )
 
@@ -825,7 +826,7 @@ class MozartWebsocket(MozartBase):
         """Update all entities of the connection status."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
+            f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
             self._client.websocket_connected,
         )
 
@@ -843,7 +844,7 @@ class MozartWebsocket(MozartBase):
         """Send active_listening_mode dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.ACTIVE_LISTENING_MODE}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.ACTIVE_LISTENING_MODE}",
             notification,
         )
 
@@ -851,7 +852,7 @@ class MozartWebsocket(MozartBase):
         """Send active_speaker_group dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.ACTIVE_SPEAKER_GROUP}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.ACTIVE_SPEAKER_GROUP}",
             notification,
         )
 
@@ -859,7 +860,7 @@ class MozartWebsocket(MozartBase):
         """Send battery dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.BATTERY}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BATTERY}",
             notification,
         )
 
@@ -871,7 +872,7 @@ class MozartWebsocket(MozartBase):
         # Send to event entity
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.BEO_REMOTE_BUTTON}_{notification.key}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BEO_REMOTE_BUTTON}_{notification.key}",
             EVENT_TRANSLATION_MAP[notification.type],
         )
 
@@ -881,7 +882,7 @@ class MozartWebsocket(MozartBase):
         # Send to event entity
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.BUTTON}_{notification.button}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BUTTON}_{notification.button}",
             EVENT_TRANSLATION_MAP[notification.state],
         )
 
@@ -901,12 +902,12 @@ class MozartWebsocket(MozartBase):
         ):
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BEOLINK}",
             )
         elif notification_type is WebsocketNotification.CONFIGURATION:
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.CONFIGURATION}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.CONFIGURATION}",
             )
         elif notification_type in (
             WebsocketNotification.PROXIMITY_PRESENCE_DETECTED,
@@ -914,7 +915,7 @@ class MozartWebsocket(MozartBase):
         ):
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.PROXIMITY}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PROXIMITY}",
                 EVENT_TRANSLATION_MAP[notification.value],
             )
         # This notification is triggered by a remote pairing, unpairing and connecting to a device
@@ -945,14 +946,14 @@ class MozartWebsocket(MozartBase):
         elif notification_type is WebsocketNotification.REMOTE_MENU_CHANGED:
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
             )
 
     def on_playback_error_notification(self, notification: PlaybackError) -> None:
         """Send playback_error dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_ERROR}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_ERROR}",
             notification,
         )
 
@@ -962,7 +963,7 @@ class MozartWebsocket(MozartBase):
         """Send playback_metadata dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
             notification,
         )
 
@@ -970,7 +971,7 @@ class MozartWebsocket(MozartBase):
         """Send playback_progress dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_PROGRESS}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_PROGRESS}",
             notification,
         )
 
@@ -978,7 +979,7 @@ class MozartWebsocket(MozartBase):
         """Send playback_source dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_SOURCE}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_SOURCE}",
             notification,
         )
 
@@ -986,7 +987,7 @@ class MozartWebsocket(MozartBase):
         """Send playback_state dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_STATE}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_STATE}",
             notification,
         )
 
@@ -994,7 +995,7 @@ class MozartWebsocket(MozartBase):
         """Send source_change dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.SOURCE_CHANGE}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.SOURCE_CHANGE}",
             notification,
         )
 
@@ -1002,7 +1003,7 @@ class MozartWebsocket(MozartBase):
         """Send volume dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.VOLUME}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.VOLUME}",
             notification,
         )
 

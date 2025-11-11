@@ -209,7 +209,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
                 self.async_on_remove(
                     async_dispatcher_connect(
                         self.hass,
-                        f"{signal_prefix}_{signal}",
+                        f"{DOMAIN}_{signal_prefix}_{signal}",
                         signal_handler,
                     )
                 )
@@ -1188,7 +1188,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
                 if self._remote_leader is not None:
                     async_dispatcher_send(
                         self.hass,
-                        f"{self._remote_leader.jid}_{BEOLINK_LEADER_COMMAND}",
+                        f"{DOMAIN}_{self._remote_leader.jid}_{BEOLINK_LEADER_COMMAND}",
                         command,
                         parameter,
                     )
@@ -1209,7 +1209,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
         if self._remote_leader is not None:
             async_dispatcher_send(
                 self.hass,
-                f"{self._remote_leader.jid}_{BEOLINK_VOLUME}",
+                f"{DOMAIN}_{self._remote_leader.jid}_{BEOLINK_VOLUME}",
                 volume_level,
             )
 
@@ -1219,7 +1219,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
             for beolink_listener in self._beolink_listeners:
                 async_dispatcher_send(
                     self.hass,
-                    f"{beolink_listener.jid}_{BEOLINK_LISTENER_COMMAND}",
+                    f"{DOMAIN}_{beolink_listener.jid}_{BEOLINK_LISTENER_COMMAND}",
                     "set_volume_level",
                     volume_level,
                 )
@@ -1249,7 +1249,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
         if self._remote_leader is not None:
             async_dispatcher_send(
                 self.hass,
-                f"{self._remote_leader.jid}_{BEOLINK_RELATIVE_VOLUME}",
+                f"{DOMAIN}_{self._remote_leader.jid}_{BEOLINK_RELATIVE_VOLUME}",
                 volume_level,
             )
 
@@ -1259,7 +1259,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
             for beolink_listener in self._beolink_listeners:
                 async_dispatcher_send(
                     self.hass,
-                    f"{beolink_listener.jid}_{BEOLINK_LISTENER_COMMAND}",
+                    f"{DOMAIN}_{beolink_listener.jid}_{BEOLINK_LISTENER_COMMAND}",
                     "set_relative_volume_level",
                     volume_level,
                 )

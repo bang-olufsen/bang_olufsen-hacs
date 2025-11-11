@@ -13,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MozartConfigEntry
-from .const import CONNECTION_STATUS, WebsocketNotification
+from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import MozartEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,21 +69,21 @@ class MozartSelectListeningPosition(BangOlufsenSelect):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.ACTIVE_SPEAKER_GROUP}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.ACTIVE_SPEAKER_GROUP}",
                 self._update_listening_positions,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
                 self._update_listening_positions,
             )
         )
