@@ -302,8 +302,8 @@
     "beolink_set_volume": { "service": "mdi:volume-equal" },
     "beolink_unexpand": { "service": "mdi:location-exit" },
     "halo_configuration": { "service": "mdi:cog" },
-    "halo_notification": { "service": "mdi:bell" },
     "halo_display_page": { "service": "mdi:image-filter-center-focus" },
+    "halo_notification": { "service": "mdi:bell" },
     "reboot": { "service": "mdi:restart" }
   }
 }
