@@ -25,6 +25,7 @@ from homeassistant.components.bang_olufsen.const import (
     BANG_OLUFSEN_REPEAT_FROM_HA,
     BANG_OLUFSEN_STATES,
     DOMAIN,
+    BangOlufsenAttribute,
     BangOlufsenSource,
 )
 from homeassistant.components.media_player import (
@@ -261,6 +262,7 @@ async def test_async_update_playback_metadata(
     assert ATTR_MEDIA_ALBUM_ARTIST not in states.attributes
     assert ATTR_MEDIA_TRACK not in states.attributes
     assert ATTR_MEDIA_CHANNEL not in states.attributes
+    assert BangOlufsenAttribute.MEDIA_ID not in states.attributes
 
     # Send the WebSocket event dispatch
     playback_metadata_callback(TEST_PLAYBACK_METADATA)
@@ -277,6 +279,11 @@ async def test_async_update_playback_metadata(
     )
     assert states.attributes[ATTR_MEDIA_TRACK] == TEST_PLAYBACK_METADATA.track
     assert states.attributes[ATTR_MEDIA_CHANNEL] == TEST_PLAYBACK_METADATA.organization
+    assert states.attributes[ATTR_MEDIA_CHANNEL] == TEST_PLAYBACK_METADATA.organization
+    assert (
+        states.attributes[BangOlufsenAttribute.MEDIA_ID]
+        == TEST_PLAYBACK_METADATA.source_internal_id
+    )
 
 
 async def test_async_update_playback_error(
@@ -1041,12 +1048,12 @@ async def test_async_play_media_radio(
     )
 
 
-async def test_async_play_media_favourite(
+async def test_async_play_media_favorite(
     hass: HomeAssistant,
     integration: None,
     mock_mozart_client: AsyncMock,
 ) -> None:
-    """Test async_play_media with B&O favourite."""
+    """Test async_play_media with B&O favorite."""
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,

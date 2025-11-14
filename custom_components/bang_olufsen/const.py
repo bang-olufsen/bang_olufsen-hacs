@@ -90,6 +90,22 @@ class BangOlufsenModel(StrEnum):
     BEOREMOTE_ONE = "Beoremote One"
 
 
+class BangOlufsenAttribute(StrEnum):
+    """Enum for extra_state_attribute keys."""
+
+    BEOLINK = "beolink"
+    BEOLINK_LEADER = "leader"
+    BEOLINK_LISTENERS = "listeners"
+    BEOLINK_PEERS = "peers"
+    BEOLINK_SELF = "self"
+    FAVORITES = "favorites"
+    FAVORITES_CONTENT_ID = "content_id"
+    FAVORITES_SOURCE = "source"
+    FAVORITES_TITLE = "title"
+    INPUT_SIGNAL = "input_signal"
+    MEDIA_ID = "media_id"
+
+
 # Dispatcher events
 class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""

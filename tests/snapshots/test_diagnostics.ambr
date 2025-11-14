@@ -41,7 +41,7 @@
         }),
         'device_class': 'speaker',
         'entity_picture_local': None,
-        'favourites': dict({
+        'favorites': dict({
           '1': dict({
             'title': None,
           }),

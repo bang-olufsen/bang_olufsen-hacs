@@ -2,24 +2,24 @@
 # name: test_async_beolink_allstandby
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -55,24 +55,24 @@
 # name: test_async_beolink_expand[all_discovered-True-3-True-True]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -109,24 +109,24 @@
 # name: test_async_beolink_expand[all_discovered-True-3-expand_response1-ApiException]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -163,24 +163,24 @@
 # name: test_async_beolink_expand[beolink_jids-parameter_value2-2-True-True]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -217,24 +217,24 @@
 # name: test_async_beolink_expand[beolink_jids-parameter_value3-2-expand_response3-ApiException]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -271,24 +271,24 @@
 # name: test_async_beolink_join[service_parameters0-method_parameters0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -324,24 +324,24 @@
 # name: test_async_beolink_join[service_parameters1-method_parameters1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -377,24 +377,24 @@
 # name: test_async_beolink_join[service_parameters2-method_parameters2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -430,24 +430,24 @@
 # name: test_async_beolink_join_invalid[service_parameters0-expected_result0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -483,24 +483,24 @@
 # name: test_async_beolink_join_invalid[service_parameters1-expected_result1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -536,24 +536,24 @@
 # name: test_async_beolink_join_invalid[service_parameters2-expected_result2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -589,24 +589,24 @@
 # name: test_async_beolink_unexpand
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -642,24 +642,24 @@
 # name: test_async_join_players[group_members0-1-0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -696,24 +696,24 @@
 # name: test_async_join_players[group_members0-1-0].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -750,24 +750,24 @@
 # name: test_async_join_players[group_members1-0-1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -804,24 +804,24 @@
 # name: test_async_join_players[group_members1-0-1].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -858,24 +858,24 @@
 # name: test_async_join_players_invalid[source0-group_members0-expected_result0-invalid_source]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -913,24 +913,24 @@
 # name: test_async_join_players_invalid[source0-group_members0-expected_result0-invalid_source].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -967,24 +967,24 @@
 # name: test_async_join_players_invalid[source1-group_members1-expected_result1-invalid_grouping_entity]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -1021,24 +1021,24 @@
 # name: test_async_join_players_invalid[source1-group_members1-expected_result1-invalid_grouping_entity].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -1075,24 +1075,24 @@
 # name: test_async_unjoin_player
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -1128,23 +1128,23 @@
 # name: test_async_update_beolink_listener
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'leader': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LEADER: 'leader'>: dict({
           'Laundry room Core': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',
@@ -1179,24 +1179,24 @@
 # name: test_async_update_beolink_listener.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'beolink': dict({
-        'listeners': dict({
+      <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
+        <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'peers': dict({
+        <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
           'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
-        'self': dict({
+        <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
       }),
       'device_class': 'speaker',
       'entity_picture_local': None,
-      'favourites': dict({
+      <BangOlufsenAttribute.FAVORITES: 'favorites'>: dict({
         '1': dict({
-          'title': None,
+          <BangOlufsenAttribute.FAVORITES_TITLE: 'title'>: None,
         }),
       }),
       'friendly_name': 'Living room Balance',

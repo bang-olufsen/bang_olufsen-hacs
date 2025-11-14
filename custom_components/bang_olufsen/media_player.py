@@ -81,6 +81,7 @@ from .const import (
     CONNECTION_STATUS,
     DOMAIN,
     VALID_MEDIA_TYPES,
+    BangOlufsenAttribute,
     BangOlufsenMediaType,
     BangOlufsenSource,
     WebsocketNotification,
@@ -169,10 +170,14 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
         self._remote_leader: BeolinkLeader | None = None
         self._beolink_listeners: list[BeolinkListener] = []
 
-        # Extra state attributes
-        self._beolink_attributes: dict[str, dict[str, Any]] = {}
-        self._favourite_attribute: dict[str, dict[str, Any]] = {}
+        # Extra state attributes:
+        # Beolink: peer(s), listener(s), leader and self
+        self._beolink_attributes: dict[str, dict[str, dict[str, str]]] = {}
+        # Favorites: Overview of favorites configuration
+        self._favorite_attribute: dict[str, dict[str, Any]] = {}
+        # Input signal: Human formatted string of current audio signal (surround etc.)
         self._input_signal_attribute: str | None = None
+        # Media ID: Currently playing Deezer, Tidal and radio station IDs
         self._media_id_attribute: str | None = None
 
     async def async_added_to_hass(self) -> None:
@@ -242,8 +247,8 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
         # The WebSocket event listener is the main handler for connection state.
         # The polling updates do therefore not set the device as available or unavailable
         with contextlib.suppress(ApiException, ClientConnectorError, TimeoutError):
-            favourites = await self._client.get_presets(_request_timeout=5)
-            await self._generate_favourite_attributes(favourites)
+            favorites = await self._client.get_presets(_request_timeout=5)
+            await self._generate_favorite_attributes(favorites)
 
             queue_settings = await self._client.get_settings_queue(_request_timeout=5)
             if queue_settings.repeat is not None:
@@ -252,29 +257,27 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
             if queue_settings.shuffle is not None:
                 self._attr_shuffle = queue_settings.shuffle
 
-    async def _generate_favourite_attributes(
-        self, favourites: dict[str, Preset]
-    ) -> None:
-        """Generate extra state attributes for favourites."""
+    async def _generate_favorite_attributes(self, favorites: dict[str, Preset]) -> None:
+        """Generate extra state attributes for favorites."""
         # As this is run before sources are defined, unsorted sources are found once here
         if not self._unsorted_sources:
             sources = await get_sources(self._client)
 
-            # Store the ids and Friendly names of all sources to use in favourites attributes
+            # Store the ids and Friendly names of all sources to use in favorites attributes
             self._unsorted_sources = {
                 source.id: source.name
                 for source in sources
                 if source.id and source.name
             }
 
-        self._favourite_attribute = {"favourites": {}}
+        self._favorite_attribute = {BangOlufsenAttribute.FAVORITES: {}}
 
-        # Handle each favourite
-        for favourite_id, favourite in favourites.items():
-            favourite_attribute = {"title": favourite.title}
+        # Handle each favorite
+        for favorite_id, favorite in favorites.items():
+            favorite_attribute = {BangOlufsenAttribute.FAVORITES_TITLE: favorite.title}
 
             # Handle each action
-            for action in cast(list[Action], favourite.action_list):
+            for action in cast(list[Action], favorite.action_list):
                 # Add source
                 source = ""
 
@@ -286,7 +289,9 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
                 # Add friendly name if it has been defined
                 if source:
-                    favourite_attribute["source"] = self._unsorted_sources[source]
+                    favorite_attribute[BangOlufsenAttribute.FAVORITES_SOURCE] = (
+                        self._unsorted_sources[source]
+                    )
 
                 # Add content id if available
                 content_id = ""
@@ -305,17 +310,21 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
                 # Add content id if it has been defined
                 if content_id:
-                    favourite_attribute["content_id"] = content_id
+                    favorite_attribute[BangOlufsenAttribute.FAVORITES_CONTENT_ID] = (
+                        content_id
+                    )
 
             # Check content for source if it hasn't been defined in action list
-            if "source" not in favourite_attribute:
-                if favourite.content and favourite.content.source.value:
-                    favourite_attribute["source"] = self._unsorted_sources[
-                        favourite.content.source.value
-                    ]
+            if BangOlufsenAttribute.FAVORITES_SOURCE not in favorite_attribute:
+                if favorite.content and favorite.content.source.value:
+                    favorite_attribute[BangOlufsenAttribute.FAVORITES_SOURCE] = (
+                        self._unsorted_sources[favorite.content.source.value]
+                    )
 
-            # Add current favourite to attribute
-            self._favourite_attribute["favourites"][favourite_id] = favourite_attribute
+            # Add current favorite to attribute
+            self._favorite_attribute[BangOlufsenAttribute.FAVORITES][favorite_id] = (
+                favorite_attribute
+            )
 
     async def _async_update_sources(self, _: Source | None = None) -> None:
         """Get sources for the specific product."""
@@ -375,10 +384,6 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
         """Update _playback_metadata and related."""
         self._playback_metadata = data
 
-        # Update current artwork and remote_leader.
-        self._media_image = get_highest_resolution_artwork(self._playback_metadata)
-        await self._async_update_beolink()
-
         # Update media id attribute
         self._media_id_attribute = data.source_internal_id
 
@@ -398,6 +403,10 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
             self._input_signal_attribute = f"{encoding}{f' - {input_channel_processing}' if input_channel_processing else ''}{f' - {data.input_channels}' if data.input_channels else ''}"
         else:
             self._input_signal_attribute = None
+
+        # Update current artwork and remote_leader.
+        self._media_image = get_highest_resolution_artwork(self._playback_metadata)
+        await self._async_update_beolink()
 
     @callback
     def _async_update_playback_error(self, data: PlaybackError) -> None:
@@ -481,26 +490,36 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
         await self._async_update_beolink()
 
     async def _async_update_beolink(self) -> None:
-        """Update the current Beolink leader, listeners, peers and self."""
+        """Update the current Beolink leader, listeners, peers and self.
+
+        Updates Home Assistant state.
+        """
 
         self._beolink_attributes = {}
 
         assert self.device_entry
+        assert self.device_entry.name
 
         # Add Beolink self
         self._beolink_attributes = {
-            "beolink": {"self": {self.device_entry.name: self._beolink_jid}}
+            BangOlufsenAttribute.BEOLINK: {
+                BangOlufsenAttribute.BEOLINK_SELF: {
+                    self.device_entry.name: self._beolink_jid
+                }
+            }
         }
 
         # Add Beolink peers
         peers = await self._client.get_beolink_peers()
 
         if len(peers) > 0:
-            self._beolink_attributes["beolink"]["peers"] = {}
+            self._beolink_attributes[BangOlufsenAttribute.BEOLINK][
+                BangOlufsenAttribute.BEOLINK_PEERS
+            ] = {}
             for peer in peers:
-                self._beolink_attributes["beolink"]["peers"][peer.friendly_name] = (
-                    peer.jid
-                )
+                self._beolink_attributes[BangOlufsenAttribute.BEOLINK][
+                    BangOlufsenAttribute.BEOLINK_PEERS
+                ][peer.friendly_name] = peer.jid
 
         # Add Beolink listeners / leader
         self._remote_leader = self._playback_metadata.remote_leader
@@ -521,7 +540,9 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
             # Add self
             group_members.append(self.entity_id)
 
-            self._beolink_attributes["beolink"]["leader"] = {
+            self._beolink_attributes[BangOlufsenAttribute.BEOLINK][
+                BangOlufsenAttribute.BEOLINK_LEADER
+            ] = {
                 self._remote_leader.friendly_name: self._remote_leader.jid,
             }
 
@@ -558,9 +579,9 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
                                 beolink_listener.jid
                             )
                             break
-                self._beolink_attributes["beolink"]["listeners"] = (
-                    beolink_listeners_attribute
-                )
+                self._beolink_attributes[BangOlufsenAttribute.BEOLINK][
+                    BangOlufsenAttribute.BEOLINK_LISTENERS
+                ] = beolink_listeners_attribute
 
         self._attr_group_members = group_members
 
@@ -723,19 +744,21 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
         # Add media id attribute
         if self._media_id_attribute:
-            attributes.update({"media_id": self._media_id_attribute})
+            attributes.update({BangOlufsenAttribute.MEDIA_ID: self._media_id_attribute})
 
         # Add input signal attribute
         if self._input_signal_attribute:
-            attributes.update({"input_signal": self._input_signal_attribute})
+            attributes.update(
+                {BangOlufsenAttribute.INPUT_SIGNAL: self._input_signal_attribute}
+            )
 
         # Add Beolink attributes
         if self._beolink_attributes:
             attributes.update(self._beolink_attributes)
 
-        # Add favourite attributes
-        if self._favourite_attribute:
-            attributes.update(self._favourite_attribute)
+        # Add favorite attributes
+        if self._favorite_attribute:
+            attributes.update(self._favorite_attribute)
 
         return attributes
 
@@ -867,7 +890,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
         announce: bool | None = None,
         **kwargs: Any,
     ) -> None:
-        """Play from: netradio station id, URI, favourite or Deezer."""
+        """Play from: netradio station id, URI, favorite or Deezer."""
         # Convert audio/mpeg, audio/aac etc. to MediaType.MUSIC
         if media_type.startswith("audio/"):
             media_type = MediaType.MUSIC
