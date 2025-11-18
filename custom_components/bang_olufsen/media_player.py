@@ -177,8 +177,6 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
         self._favorite_attribute: dict[str, dict[str, Any]] = {}
         # Input signal: Human formatted string of current audio signal (surround etc.)
         self._input_signal_attribute: str | None = None
-        # Media ID: Currently playing Deezer, Tidal and radio station IDs
-        self._media_id_attribute: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -383,9 +381,6 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
     ) -> None:
         """Update _playback_metadata and related."""
         self._playback_metadata = data
-
-        # Update media id attribute
-        self._media_id_attribute = data.source_internal_id
 
         # Update input signal attribute
         if data.encoding:
@@ -680,11 +675,18 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
         return None
 
     @property
-    def media_content_type(self) -> str:
+    def media_content_type(self) -> MediaType | str | None:
         """Return the current media type."""
-        # Hard to determine content type
-        if self._source_change.id == BangOlufsenSource.URI_STREAMER.id:
-            return MediaType.URL
+        content_type = {
+            BangOlufsenSource.URI_STREAMER.id: MediaType.URL,
+            BangOlufsenSource.DEEZER.id: BangOlufsenMediaType.DEEZER,
+            BangOlufsenSource.TIDAL.id: BangOlufsenMediaType.TIDAL,
+            BangOlufsenSource.NET_RADIO.id: BangOlufsenMediaType.RADIO,
+        }
+        # Hard to determine content type.
+        if self._source_change.id in content_type:
+            return content_type[self._source_change.id]
+
         return MediaType.MUSIC
 
     @property
@@ -696,6 +698,11 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
     def media_position(self) -> int | None:
         """Return the current playback progress."""
         return self._playback_progress.progress
+
+    @property
+    def media_content_id(self) -> str | None:
+        """Return internal ID of Deezer, Tidal and radio stations."""
+        return self._playback_metadata.source_internal_id
 
     @property
     def media_image_url(self) -> str | None:
@@ -741,10 +748,6 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return information that is not returned anywhere else."""
         attributes: dict[str, Any] = {}
-
-        # Add media id attribute
-        if self._media_id_attribute:
-            attributes.update({BangOlufsenAttribute.MEDIA_ID: self._media_id_attribute})
 
         # Add input signal attribute
         if self._input_signal_attribute:

@@ -231,13 +231,21 @@ This integration adds an array of different useful entities that are generated a
 
 ## Getting Deezer URIs
 
-In order to find Deezer playlists, album URIs and user IDs for Deezer flows, the Deezer website has to be accessed. When navigating to an album, the URL will look something like: <https://www.deezer.com/en/album/ALBUM_ID>, and this simply needs to be converted to: `album:ALBUM_ID` and the same applies to playlist, which have the format: `playlist:PLAYLIST_ID`.
+To find Deezer playlist, album URIs, and user IDs for Deezer flows, the Deezer website has to be accessed. When navigating to an album, the URL will look something like: <https://www.deezer.com/en/album/ALBUM_ID>, and this needs to be converted to: `album:ALBUM_ID` and the same applies to playlists, which have the format: `playlist:PLAYLIST_ID`.
 
-Additionally a Deezer user ID can be found at <https://www.deezer.com/en/profile/USER_ID> by selecting the active user in a web browser.
+Deezer user IDs can be found at <https://www.deezer.com/en/profile/USER_ID> by selecting the active user in a web browser.
+
+Additionally Deezer IDs for a currently playing tracks can be found in the `media_content_id` attribute in the `media_player` entity.
 
 ## Getting Tidal URIs
 
-To find Tidal playlists, album URIs and track IDs, the Tidal website has to be accessed. When navigating to an album, the URL will look something like: <https://listen.tidal.com/album/ALBUM_ID/>, and this needs to be converted to: `album:ALBUM_ID` and the same applies to playlists, which have the format: `playlist:PLAYLIST_ID`. Individual tracks can also be found by sharing the track and selecting the `Copy track link` method, which should yield a link with this format: <https://tidal.com/browse/track/TRACK_ID?u>, this can be played by extracting the track id `TRACK_ID`.
+Tidal playlists, album URIs and track IDs are available via the Tidal website. When navigating to an album, the URL will look something like <https://listen.tidal.com/album/ALBUM_ID/>, and this needs to be converted to `album:ALBUM_ID`. The same applies to playlists, which have the format `playlist:PLAYLIST_ID`. Individual tracks can be found by sharing the track and selecting the `Copy track link` method, which should yield a link of the format <https://tidal.com/browse/track/TRACK_ID?u>, this can be played by extracting the track id `TRACK_ID`.
+
+Additionally Tidal IDs for currently playing tracks can be found in the `media_content_id` attribute in the `media_player` entity.
+
+### Getting B&O Radio station IDs
+
+Radio station IDs for currently playing stations can be found in the `media_content_id` attribute in the `media_player` entity.
 
 ## Automations
 
@@ -452,8 +460,6 @@ data:
   extra:
     overlay_tts_language: da-dk
 ```
-
-_NOTE_: To easily obtain the media_content_id for a Deezer/Tidal track or B&O Radio station, you can start playing the content you wish to activate in an action call - the `media_id` attribute available on the `media_player` entity will provide the value to be used in the media_content_id field.
 
 ### Custom Mozart actions
 

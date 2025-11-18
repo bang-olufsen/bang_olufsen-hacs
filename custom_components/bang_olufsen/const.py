@@ -29,8 +29,11 @@ from .beoremote_halo.models import Icons, SystemEventState
 class BangOlufsenSource:
     """Class used for associating device source ids with friendly names. May not include all sources."""
 
+    DEEZER: Final[Source] = Source(name="Deezer", id="deezer")
     LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
+    NET_RADIO: Final[Source] = Source(name="B&O Radio", id="netRadio")
     SPDIF: Final[Source] = Source(name="Optical", id="spdif")
+    TIDAL: Final[Source] = Source(name="Tidal", id="tidal")
     UNKNOWN: Final[Source] = Source(name="Unknown Source", id="unknown")
     URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
     USB_IN: Final[Source] = Source(name="USB", id="usbIn")
@@ -103,7 +106,6 @@ class BangOlufsenAttribute(StrEnum):
     FAVORITES_SOURCE = "source"
     FAVORITES_TITLE = "title"
     INPUT_SIGNAL = "input_signal"
-    MEDIA_ID = "media_id"
 
 
 # Dispatcher events
