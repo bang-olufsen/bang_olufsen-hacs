@@ -8,10 +8,12 @@ from homeassistant.components.bang_olufsen.const import (
     BEO_REMOTE_SUBMENU_CONTROL,
     BEO_REMOTE_SUBMENU_LIGHT,
     DEVICE_BUTTONS,
+    BangOlufsenButtons,
 )
 
 from .const import (
     TEST_MEDIA_PLAYER_ENTITY_ID,
+    TEST_MEDIA_PLAYER_ENTITY_ID_4,
     TEST_PROXIMITY_EVENT_ENTITY_ID,
     TEST_REMOTE_SERIAL,
     TEST_SERIAL_NUMBER,
@@ -30,6 +32,25 @@ def get_balance_entity_ids() -> list[str]:
                 "preset", "favorite_"
             )
             for button_type in DEVICE_BUTTONS
+        ]
+    )
+
+    return entity_ids
+
+
+def get_premiere_entity_ids() -> list[str]:
+    """Return a list of entity_ids that the Beosound Premiere provides."""
+    entity_ids: list[str] = [TEST_MEDIA_PLAYER_ENTITY_ID_4]
+
+    premiere_buttons = DEVICE_BUTTONS.copy()
+    premiere_buttons.remove(BangOlufsenButtons.BLUETOOTH.value)
+
+    entity_ids.extend(
+        [
+            f"event.beosound_premiere_44444444_{underscore(button_type)}".replace(
+                "preset", "favorite_"
+            )
+            for button_type in premiere_buttons
         ]
     )
 

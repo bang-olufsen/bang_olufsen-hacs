@@ -28,21 +28,23 @@ from .const import (
     TEST_HALO_SYSTEM_STATUS_EVENT_ENTITY_ID,
     TEST_PROXIMITY_EVENT_ENTITY_ID,
     TEST_REMOTE_KEY_EVENT_ENTITY_ID,
+    TEST_SERIAL_NUMBER_4,
 )
-from .util import get_balance_entity_ids, get_remote_entity_ids
+from .util import get_balance_entity_ids, get_premiere_entity_ids, get_remote_entity_ids
 
 from tests.common import MockConfigEntry
 
 # Mozart related tests
 
 
-async def test_button_and_key_event_creation(
+async def test_button_event_creation_balance(
     hass: HomeAssistant,
     integration: None,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test button and remote key event entities are created."""
+    """Test button and remote event entities are created when using a Balance (Most devices support all buttons like the Balance)."""
+
     # Add Beosound Balance and remote entity ids
     entity_ids: list[str] = [*get_balance_entity_ids(), *get_remote_entity_ids()]
 
@@ -81,6 +83,36 @@ async def test_no_button_and_remote_key_event_creation(
     assert len(entity_ids_available) == 1
 
     # Check snapshot
+    assert entity_ids_available == snapshot
+
+
+async def test_button_event_creation_beosound_premiere(
+    hass: HomeAssistant,
+    mock_config_entry_premiere: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test Bluetooth button event entity is not created when using a Beosound Premiere."""
+
+    # Load entry
+    mock_config_entry_premiere.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_premiere.entry_id)
+    await mock_websocket_connection(hass, mock_mozart_client)
+
+    entity_ids = [
+        *get_premiere_entity_ids(),
+        *get_remote_entity_ids(device_serial=TEST_SERIAL_NUMBER_4),
+    ]
+
+    # Check that the entities are available
+    for entity_id in entity_ids:
+        assert entity_registry.async_get(entity_id)
+
+    # Check created entities
+    entity_ids_available = list(entity_registry.entities.keys())
+    assert entity_ids_available == unordered(entity_ids)
+
     assert entity_ids_available == snapshot
 
 

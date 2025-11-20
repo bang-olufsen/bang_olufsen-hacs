@@ -55,6 +55,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 # Device models
 TEST_MODEL_BALANCE = "Beosound Balance"
 TEST_MODEL_CORE = "Beoconnect Core"
+TEST_MODEL_PREMIERE = "Beosound Premiere"
 TEST_MODEL_THEATRE = "Beosound Theatre"
 TEST_MODEL_LEVEL = "Beosound Level"
 TEST_MODEL_HALO = "Beoremote Halo"
@@ -90,7 +91,6 @@ TEST_SERIAL_NUMBER_3 = "33333333"
 TEST_JID_3 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_3}@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID_3 = f"media_player.beosound_level_{TEST_SERIAL_NUMBER_3}"
 TEST_NAME_3 = f"{TEST_MODEL_LEVEL}-{TEST_SERIAL_NUMBER_3}"
-
 TEST_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID = (
     f"binary_sensor.beosound_level_{TEST_SERIAL_NUMBER_3}_battery_charging"
 )
@@ -105,10 +105,13 @@ TEST_BATTERY_PLAYING_TIME_SENSOR_ENTITY_ID = (
 )
 
 # Mozart device 4
-TEST_FRIENDLY_NAME_4 = "Lounge room Balance"
-TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.44444444@products.bang-olufsen.com"
-TEST_MEDIA_PLAYER_ENTITY_ID_4 = "media_player.beosound_balance_44444444"
+TEST_FRIENDLY_NAME_4 = "Bedroom Premiere"
 TEST_HOST_4 = "192.168.0.4"
+TEST_SERIAL_NUMBER_4 = "44444444"
+TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_4}@products.bang-olufsen.com"
+TEST_MEDIA_PLAYER_ENTITY_ID_4 = f"media_player.beosound_premiere_{TEST_SERIAL_NUMBER_4}"
+TEST_NAME_4 = f"{TEST_MODEL_PREMIERE}-{TEST_SERIAL_NUMBER_4}"
+
 
 # Beoremote One
 TEST_REMOTE_SERIAL = "55555555"
@@ -169,6 +172,13 @@ TEST_DATA_CREATE_ENTRY_3 = {
     CONF_MODEL: TEST_MODEL_LEVEL,
     CONF_BEOLINK_JID: TEST_JID_3,
     CONF_NAME: TEST_NAME_3,
+}
+
+TEST_DATA_CREATE_ENTRY_4 = {
+    CONF_HOST: TEST_HOST_4,
+    CONF_MODEL: TEST_MODEL_PREMIERE,
+    CONF_BEOLINK_JID: TEST_JID_4,
+    CONF_NAME: TEST_NAME_4,
 }
 
 TEST_HALO_DATA_CREATE_ENTRY = {

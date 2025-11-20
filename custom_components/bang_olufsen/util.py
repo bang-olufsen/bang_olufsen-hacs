@@ -12,7 +12,13 @@ from mozart_api.mozart_client import MozartClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 
-from .const import FALLBACK_SOURCES, MOZART_MODELS, BangOlufsenModel
+from .const import (
+    DEVICE_BUTTONS,
+    FALLBACK_SOURCES,
+    MOZART_MODELS,
+    BangOlufsenButtons,
+    BangOlufsenModel,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,3 +77,18 @@ async def get_sources(client: MozartClient) -> list[Source]:
             MOZART_API_VERSION,
         )
         return FALLBACK_SOURCES
+
+
+def get_device_buttons(model: BangOlufsenModel) -> list[str]:
+    """Get supported buttons for a given model."""
+    buttons = DEVICE_BUTTONS.copy()
+
+    # Beosound Premiere does not have a bluetooth button
+    if model == BangOlufsenModel.BEOSOUND_PREMIERE:
+        buttons.remove(BangOlufsenButtons.BLUETOOTH)
+
+    # Beoconnect Core does not have any buttons
+    elif model == BangOlufsenModel.BEOCONNECT_CORE:
+        buttons = []
+
+    return buttons

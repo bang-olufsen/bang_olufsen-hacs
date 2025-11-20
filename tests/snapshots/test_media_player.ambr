@@ -4,12 +4,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -57,12 +57,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -111,12 +111,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -165,12 +165,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -219,12 +219,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -273,12 +273,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -326,12 +326,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -379,12 +379,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -432,12 +432,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -485,12 +485,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -538,12 +538,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -591,12 +591,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -644,12 +644,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -698,12 +698,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
@@ -752,12 +752,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -806,12 +806,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
@@ -860,12 +860,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -915,12 +915,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
@@ -969,12 +969,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -1023,12 +1023,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
@@ -1077,12 +1077,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -1133,8 +1133,8 @@
           'Laundry room Core': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
@@ -1181,12 +1181,12 @@
     'attributes': ReadOnlyDict({
       <BangOlufsenAttribute.BEOLINK: 'beolink'>: dict({
         <BangOlufsenAttribute.BEOLINK_LISTENERS: 'listeners'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_PEERS: 'peers'>: dict({
+          'Bedroom Premiere': '1111.1111111.44444444@products.bang-olufsen.com',
           'Lego room Level': '1111.1111111.33333333@products.bang-olufsen.com',
-          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
         }),
         <BangOlufsenAttribute.BEOLINK_SELF: 'self'>: dict({
           'Living room Balance': '1111.1111111.22222222@products.bang-olufsen.com',

@@ -22,6 +22,7 @@ Devices that have been tested and _should_ work without any trouble are:
 - [Beoconnect Core](https://www.bang-olufsen.com/en/dk/accessories/beoconnect-core)
 - [Beosound Emerge](https://www.bang-olufsen.com/en/dk/speakers/beosound-emerge)
 - [Beosound Level](https://www.bang-olufsen.com/en/dk/speakers/beosound-level)
+- [Beosound Premiere](https://www.bang-olufsen.com/en/dk/soundbars/beosound-premiere)
 - [Beosound Theatre](https://www.bang-olufsen.com/en/dk/soundbars/beosound-theatre)
 - [Beoremote Halo](https://www.bang-olufsen.com/en/dk/accessories/beoremote-halo)
 - [Beoremote One](https://www.bang-olufsen.com/en/dk/accessories/beoremote-one)
@@ -257,7 +258,7 @@ Event entities are created for each of the physical "buttons" on your device. Th
 
 Available buttons:
 
-- Bluetooth
+- Bluetooth (Not available on Beosound Premiere)
 - Microphone
 - Next
 - Play / Pause

@@ -26,11 +26,9 @@ from .const import (
     BEO_REMOTE_SUBMENU_LIGHT,
     CONNECTION_STATUS,
     DEVICE_BUTTON_EVENTS,
-    DEVICE_BUTTONS,
     DOMAIN,
     HALO_SYSTEM_EVENTS,
     MANUFACTURER,
-    MODEL_SUPPORT_DEVICE_BUTTONS,
     MODEL_SUPPORT_MAP,
     MODEL_SUPPORT_PROXIMITY,
     PROXIMITY_EVENTS,
@@ -38,7 +36,9 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import HaloEntity, MozartEntity
-from .util import get_remotes, is_halo
+from .util import get_device_buttons, get_remotes, is_halo
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -70,8 +70,6 @@ class BangOlufsenEvent(EventEntity):
 
 
 # Mozart entities
-
-
 class MozartEvent(MozartEntity, BangOlufsenEvent):
     """Base Mozart Event class."""
 
@@ -88,13 +86,12 @@ async def _get_mozart_entities(
     entities: list[MozartEvent] = []
 
     # Add physical "buttons"
-    if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_BUTTONS]:
-        entities.extend(
-            [
-                MozartButtonEvent(config_entry, button_type)
-                for button_type in DEVICE_BUTTONS
-            ]
-        )
+    entities.extend(
+        [
+            MozartButtonEvent(config_entry, button_type)
+            for button_type in get_device_buttons(config_entry.data[CONF_MODEL])
+        ]
+    )
 
     # Check if device supports proximity detection.
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_PROXIMITY]:
