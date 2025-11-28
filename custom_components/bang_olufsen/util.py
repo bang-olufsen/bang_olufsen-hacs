@@ -12,13 +12,7 @@ from mozart_api.mozart_client import MozartClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 
-from .const import (
-    DEVICE_BUTTONS,
-    FALLBACK_SOURCES,
-    MOZART_MODELS,
-    BangOlufsenButtons,
-    BangOlufsenModel,
-)
+from .const import DEVICE_BUTTONS, FALLBACK_SOURCES, MOZART_MODELS, BeoButtons, BeoModel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +25,7 @@ def get_serial_number_from_jid(jid: str) -> str:
 def is_halo(config_entry: ConfigEntry) -> bool:
     """Return if device is a Halo."""
 
-    if config_entry.data[CONF_MODEL] == BangOlufsenModel.BEOREMOTE_HALO:
+    if config_entry.data[CONF_MODEL] == BeoModel.BEOREMOTE_HALO:
         return True
     return False
 
@@ -79,16 +73,16 @@ async def get_sources(client: MozartClient) -> list[Source]:
         return FALLBACK_SOURCES
 
 
-def get_device_buttons(model: BangOlufsenModel) -> list[str]:
+def get_device_buttons(model: BeoModel) -> list[str]:
     """Get supported buttons for a given model."""
     buttons = DEVICE_BUTTONS.copy()
 
     # Beosound Premiere does not have a bluetooth button
-    if model == BangOlufsenModel.BEOSOUND_PREMIERE:
-        buttons.remove(BangOlufsenButtons.BLUETOOTH)
+    if model == BeoModel.BEOSOUND_PREMIERE:
+        buttons.remove(BeoButtons.BLUETOOTH)
 
     # Beoconnect Core does not have any buttons
-    elif model == BangOlufsenModel.BEOCONNECT_CORE:
+    elif model == BeoModel.BEOCONNECT_CORE:
         buttons = []
 
     return buttons

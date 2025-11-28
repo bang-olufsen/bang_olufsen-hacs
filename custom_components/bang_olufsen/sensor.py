@@ -139,6 +139,7 @@ class MozartSensorRemoteBatteryLevel(MozartSensor):
             identifiers={(DOMAIN, f"{remote.serial_number}_{self._unique_id}")}
         )
         self._attr_native_value = remote.battery_level
+        self._remote = remote
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -153,15 +154,10 @@ class MozartSensorRemoteBatteryLevel(MozartSensor):
     async def async_update(self) -> None:
         """Poll battery status."""
         with contextlib.suppress(ApiException, ClientConnectorError, TimeoutError):
-            bluetooth_remote_list = await self._client.get_bluetooth_remotes(
-                _request_timeout=5
-            )
-
-            if bool(len(cast(list[PairedRemote], bluetooth_remote_list.items))):
-                remote: PairedRemote = cast(
-                    list[PairedRemote], bluetooth_remote_list.items
-                )[0]
-                self._attr_native_value = remote.battery_level
+            for remote in await get_remotes(self._client):
+                if remote.serial_number == self._remote.serial_number:
+                    self._attr_native_value = remote.battery_level
+                    break
 
 
 class MozartSensorBatteryChargingTime(MozartSensor):

@@ -94,7 +94,7 @@ from .const import (
     HALO_WEBSOCKET_EVENT,
     HALO_WHEEL_TIMEOUT,
     MOZART_WEBSOCKET_EVENT,
-    BangOlufsenModel,
+    BeoModel,
     EntityMapValues,
     WebsocketNotification,
 )
@@ -928,7 +928,7 @@ class MozartWebsocket(MozartBase):
                     self.entry.entry_id
                 )
                 if device.serial_number is not None
-                and device.model == BangOlufsenModel.BEOREMOTE_ONE
+                and device.model == BeoModel.BEOREMOTE_ONE
             ]
             remote_serial_numbers = [
                 remote.serial_number

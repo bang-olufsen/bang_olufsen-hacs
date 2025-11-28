@@ -26,7 +26,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Text entities from config entry."""
-    entities: list[BangOlufsenText] = []
+    entities: list[BeoText] = []
 
     # Add the Home Control URI entity if the device supports it
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_HOME_CONTROL]:
@@ -35,7 +35,7 @@ async def async_setup_entry(
     async_add_entities(new_entities=entities)
 
 
-class BangOlufsenText(TextEntity, MozartEntity):
+class BeoText(TextEntity, MozartEntity):
     """Base Text class."""
 
     def __init__(self, config_entry: MozartConfigEntry) -> None:
@@ -45,7 +45,7 @@ class BangOlufsenText(TextEntity, MozartEntity):
         self._attr_entity_category = EntityCategory.CONFIG
 
 
-class MozartTextHomeControlUri(BangOlufsenText):
+class MozartTextHomeControlUri(BeoText):
     """Home Control URI Text."""
 
     _attr_entity_registry_enabled_default = False

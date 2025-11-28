@@ -32,7 +32,7 @@ from .const import (
     MODEL_SUPPORT_MAP,
     MODEL_SUPPORT_PROXIMITY,
     PROXIMITY_EVENTS,
-    BangOlufsenModel,
+    BeoModel,
     WebsocketNotification,
 )
 from .entity import HaloEntity, MozartEntity
@@ -47,7 +47,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensor entities from config entry."""
-    entities: list[BangOlufsenEvent] = []
+    entities: list[BeoEvent] = []
 
     if is_halo(config_entry):
         entities.extend(await _get_halo_entities(config_entry))
@@ -57,7 +57,7 @@ async def async_setup_entry(
     async_add_entities(new_entities=entities)
 
 
-class BangOlufsenEvent(EventEntity):
+class BeoEvent(EventEntity):
     """Base Event class."""
 
     _attr_entity_registry_enabled_default = False
@@ -70,7 +70,7 @@ class BangOlufsenEvent(EventEntity):
 
 
 # Mozart entities
-class MozartEvent(MozartEntity, BangOlufsenEvent):
+class MozartEvent(MozartEntity, BeoEvent):
     """Base Mozart Event class."""
 
     def __init__(self, config_entry: MozartConfigEntry) -> None:
@@ -134,10 +134,9 @@ async def _get_mozart_entities(
         config_entry.entry_id
     )
     for device in devices:
-        if (
-            device.model == BangOlufsenModel.BEOREMOTE_ONE
-            and device.serial_number not in {remote.serial_number for remote in remotes}
-        ):
+        if device.model == BeoModel.BEOREMOTE_ONE and device.serial_number not in {
+            remote.serial_number for remote in remotes
+        }:
             device_registry.async_update_device(
                 device.id, remove_config_entry_id=config_entry.entry_id
             )
@@ -200,8 +199,8 @@ class MozartRemoteKeyEvent(MozartEvent):
         self._attr_unique_id = f"{remote.serial_number}_{self._unique_id}_{key_type}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{remote.serial_number}_{self._unique_id}")},
-            name=f"{BangOlufsenModel.BEOREMOTE_ONE}-{remote.serial_number}-{self._unique_id}",
-            model=BangOlufsenModel.BEOREMOTE_ONE,
+            name=f"{BeoModel.BEOREMOTE_ONE}-{remote.serial_number}-{self._unique_id}",
+            model=BeoModel.BEOREMOTE_ONE,
             serial_number=remote.serial_number,
             sw_version=remote.app_version,
             manufacturer=MANUFACTURER,
@@ -264,7 +263,7 @@ class MozartEventProximity(MozartEvent):
 # Halo entities
 
 
-class HaloEvent(HaloEntity, BangOlufsenEvent):
+class HaloEvent(HaloEntity, BeoEvent):
     """Base Halo Event class."""
 
     def __init__(self, config_entry: HaloConfigEntry) -> None:

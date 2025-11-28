@@ -116,14 +116,14 @@ from .const import (
     SELECTABLE_MODELS,
     ZEROCONF_HALO,
     ZEROCONF_MOZART,
-    BangOlufsenModel,
+    BeoModel,
     EntityMapActionValues,
     EntityMapValues,
 )
 from .util import get_serial_number_from_jid
 
 
-class BangOlufsenEntryData(TypedDict, total=False):
+class BeoEntryData(TypedDict, total=False):
     """TypedDict for config_entry data."""
 
     host: str
@@ -248,7 +248,7 @@ USER_SCHEMA = vol.Schema(
 HALO_SCHEMA = vol.Schema({vol.Required(CONF_SERIAL_NUMBER): str})
 
 
-class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
+class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     _beolink_jid = ""
@@ -283,7 +283,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
 
             # Setup either Halo or Mozart devices
-            if self._model == BangOlufsenModel.BEOREMOTE_HALO.value:
+            if self._model == BeoModel.BEOREMOTE_HALO.value:
                 return await self._setup_halo()
 
             return await self._setup_mozart()
@@ -414,7 +414,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     def _zeroconf_halo(self, discovery_info: ZeroconfServiceInfo) -> None:
         """Handle Zeroconf discovery of Halo."""
         self._serial_number = discovery_info.properties[ATTR_HALO_SERIAL_NUMBER]
-        self._model = BangOlufsenModel.BEOREMOTE_HALO
+        self._model = BeoModel.BEOREMOTE_HALO
 
     async def _zeroconf_mozart(
         self, discovery_info: ZeroconfServiceInfo
@@ -448,7 +448,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=self._name,
-            data=BangOlufsenEntryData(
+            data=BeoEntryData(
                 host=self._host,
                 jid=self._beolink_jid,
                 model=self._model,
@@ -508,7 +508,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         # Reject options for any non-Halo device
-        if self.config_entry.data[CONF_MODEL] != BangOlufsenModel.BEOREMOTE_HALO:
+        if self.config_entry.data[CONF_MODEL] != BeoModel.BEOREMOTE_HALO:
             return self.async_abort(
                 reason="invalid_model",
                 description_placeholders={"model": self.config_entry.data[CONF_MODEL]},
@@ -625,7 +625,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
                 return self.async_create_entry(
                     title=f"Page {self._page.title} added to configuration",
-                    data=BangOlufsenEntryData(
+                    data=BeoEntryData(
                         host=self.config_entry.data[CONF_HOST],
                         model=self.config_entry.data[CONF_MODEL],
                         name=self.config_entry.title,
@@ -707,7 +707,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
             return self.async_create_entry(
                 title="Updated configuration",
-                data=BangOlufsenEntryData(
+                data=BeoEntryData(
                     host=self.config_entry.data[CONF_HOST],
                     model=self.config_entry.data[CONF_MODEL],
                     name=self.config_entry.title,
@@ -763,7 +763,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
             return self.async_create_entry(
                 title="Updated configuration",
-                data=BangOlufsenEntryData(
+                data=BeoEntryData(
                     host=self.config_entry.data[CONF_HOST],
                     model=self.config_entry.data[CONF_MODEL],
                     name=self.config_entry.title,
@@ -807,7 +807,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
         return self.async_create_entry(
             title="Updated configuration",
-            data=BangOlufsenEntryData(
+            data=BeoEntryData(
                 host=self.config_entry.data[CONF_HOST],
                 model=self.config_entry.data[CONF_MODEL],
                 name=self.config_entry.title,

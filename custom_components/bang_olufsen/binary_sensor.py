@@ -26,7 +26,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Binary Sensor entities from config entry."""
-    entities: list[BangOlufsenBinarySensor] = []
+    entities: list[BeoBinarySensor] = []
 
     if is_halo(config_entry):
         entities.extend(await _get_halo_entities(config_entry))
@@ -36,14 +36,14 @@ async def async_setup_entry(
     async_add_entities(new_entities=entities)
 
 
-class BangOlufsenBinarySensor(BinarySensorEntity):
+class BeoBinarySensor(BinarySensorEntity):
     """Base Binary Sensor class."""
 
     _attr_is_on = False
 
 
 # Mozart entities
-class MozartBinarySensor(MozartEntity, BangOlufsenBinarySensor):
+class MozartBinarySensor(MozartEntity, BeoBinarySensor):
     """Base Mozart Sensor class."""
 
     def __init__(self, config_entry: MozartConfigEntry) -> None:
@@ -101,7 +101,7 @@ class MozartBinarySensorBatteryCharging(MozartBinarySensor):
 # Halo entities
 
 
-class HaloBinarySensor(HaloEntity, BangOlufsenBinarySensor):
+class HaloBinarySensor(HaloEntity, BeoBinarySensor):
     """Base Halo Binary Sensor class."""
 
     def __init__(self, config_entry: HaloConfigEntry) -> None:

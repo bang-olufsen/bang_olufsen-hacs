@@ -43,7 +43,7 @@ async def test_button_event_creation_balance(
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test button and remote event entities are created when using a Balance (Most devices support all buttons like the Balance)."""
+    """Test button event entities are created when using a Balance (Most devices support all buttons like the Balance)."""
 
     # Add Beosound Balance and remote entity ids
     entity_ids: list[str] = [*get_balance_entity_ids(), *get_remote_entity_ids()]

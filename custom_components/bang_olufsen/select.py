@@ -25,7 +25,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Select entities from config entry."""
-    entities: list[BangOlufsenSelect] = []
+    entities: list[BeoSelect] = []
 
     # Create the listening position entity if supported
     scenes = await config_entry.runtime_data.client.get_all_scenes()
@@ -38,7 +38,7 @@ async def async_setup_entry(
     async_add_entities(new_entities=entities)
 
 
-class BangOlufsenSelect(MozartEntity, SelectEntity):
+class BeoSelect(MozartEntity, SelectEntity):
     """Select for Mozart settings."""
 
     def __init__(self, config_entry: MozartConfigEntry) -> None:
@@ -50,7 +50,7 @@ class BangOlufsenSelect(MozartEntity, SelectEntity):
         self._attr_options = []
 
 
-class MozartSelectListeningPosition(BangOlufsenSelect):
+class MozartSelectListeningPosition(BeoSelect):
     """Listening position Select."""
 
     _attr_translation_key = "listening_position"

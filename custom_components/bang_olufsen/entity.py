@@ -36,7 +36,7 @@ from .beoremote_halo.halo import Halo
 from .const import DOMAIN
 
 
-class BangOlufsenBase:
+class BeoBase:
     """Base class for Bang & Olufsen Home Assistant objects."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
@@ -59,7 +59,7 @@ class BangOlufsenBase:
         return device
 
 
-class MozartBase(BangOlufsenBase):
+class MozartBase(BeoBase):
     """Base class for Mozart."""
 
     def __init__(
@@ -118,7 +118,7 @@ class MozartEntity(Entity, MozartBase):
         self.async_write_ha_state()
 
 
-class HaloBase(BangOlufsenBase):
+class HaloBase(BeoBase):
     """Base class for Halo."""
 
     def __init__(self, config_entry: ConfigEntry, client: Halo | None = None) -> None:

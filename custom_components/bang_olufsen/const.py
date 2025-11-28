@@ -26,7 +26,7 @@ from homeassistant.const import (
 from .beoremote_halo.models import Icons, SystemEventState
 
 
-class BangOlufsenSource:
+class BeoSource:
     """Class used for associating device source ids with friendly names. May not include all sources."""
 
     DEEZER: Final[Source] = Source(name="Deezer", id="deezer")
@@ -39,7 +39,7 @@ class BangOlufsenSource:
     USB_IN: Final[Source] = Source(name="USB", id="usbIn")
 
 
-BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
+BEO_STATES: dict[str, MediaPlayerState] = {
     # Dict used for translating device states to Home Assistant states.
     "started": MediaPlayerState.PLAYING,
     "buffering": MediaPlayerState.PLAYING,
@@ -53,19 +53,19 @@ BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
 }
 
 # Dict used for translating Home Assistant settings to device repeat settings.
-BANG_OLUFSEN_REPEAT_FROM_HA: dict[RepeatMode, str] = {
+BEO_REPEAT_FROM_HA: dict[RepeatMode, str] = {
     RepeatMode.ALL: "all",
     RepeatMode.ONE: "track",
     RepeatMode.OFF: "none",
 }
 # Dict used for translating device repeat settings to Home Assistant settings.
-BANG_OLUFSEN_REPEAT_TO_HA: dict[str, RepeatMode] = {
-    value: key for key, value in BANG_OLUFSEN_REPEAT_FROM_HA.items()
+BEO_REPEAT_TO_HA: dict[str, RepeatMode] = {
+    value: key for key, value in BEO_REPEAT_FROM_HA.items()
 }
 
 
 # Media types for play_media
-class BangOlufsenMediaType(StrEnum):
+class BeoMediaType(StrEnum):
     """Bang & Olufsen specific media types."""
 
     DEEZER = "deezer"
@@ -76,7 +76,7 @@ class BangOlufsenMediaType(StrEnum):
     TTS = "provider"
 
 
-class BangOlufsenModel(StrEnum):
+class BeoModel(StrEnum):
     """Enum for compatible model names."""
 
     BEOCONNECT_CORE = "Beoconnect Core"
@@ -94,7 +94,7 @@ class BangOlufsenModel(StrEnum):
     BEOREMOTE_ONE = "Beoremote One"
 
 
-class BangOlufsenAttribute(StrEnum):
+class BeoAttribute(StrEnum):
     """Enum for extra_state_attribute keys."""
 
     BEOLINK = "beolink"
@@ -110,7 +110,7 @@ class BangOlufsenAttribute(StrEnum):
 
 
 # Physical "buttons" on devices
-class BangOlufsenButtons(StrEnum):
+class BeoButtons(StrEnum):
     """Enum for device buttons."""
 
     BLUETOOTH = "Bluetooth"
@@ -175,7 +175,7 @@ class WebsocketNotification(StrEnum):
 DOMAIN: Final[str] = "bang_olufsen"
 
 # Default values for configuration.
-DEFAULT_MODEL: Final[str] = BangOlufsenModel.BEOSOUND_BALANCE
+DEFAULT_MODEL: Final[str] = BeoModel.BEOSOUND_BALANCE
 
 # Configuration.
 CONF_BEOLINK_JID: Final = "jid"
@@ -226,17 +226,14 @@ COVER_ATTRIBUTE_MAP: Final[dict[str, tuple[str, str]]] = {
 }
 
 # Mozart models
-MOZART_MODELS: Final[list[BangOlufsenModel]] = [
+MOZART_MODELS: Final[list[BeoModel]] = [
     model
-    for model in BangOlufsenModel
-    if model.value
-    not in (BangOlufsenModel.BEOREMOTE_HALO, BangOlufsenModel.BEOREMOTE_ONE)
+    for model in BeoModel
+    if model.value not in (BeoModel.BEOREMOTE_HALO, BeoModel.BEOREMOTE_ONE)
 ]
 # Models that can be setup manually
-SELECTABLE_MODELS: Final[list[BangOlufsenModel]] = [
-    model
-    for model in BangOlufsenModel
-    if model.value not in (BangOlufsenModel.BEOREMOTE_ONE)
+SELECTABLE_MODELS: Final[list[BeoModel]] = [
+    model for model in BeoModel if model.value not in (BeoModel.BEOREMOTE_ONE)
 ]
 
 
@@ -253,15 +250,15 @@ ATTR_ITEM_NUMBER: Final[str] = "in"
 ATTR_FRIENDLY_NAME: Final[str] = "fn"
 
 # Power states.
-BANG_OLUFSEN_ON: Final[str] = "on"
+BEO_ON: Final[str] = "on"
 
 VALID_MEDIA_TYPES: Final[tuple[str, ...]] = (
-    BangOlufsenMediaType.DEEZER,
-    BangOlufsenMediaType.FAVOURITE,
-    BangOlufsenMediaType.OVERLAY_TTS,
-    BangOlufsenMediaType.RADIO,
-    BangOlufsenMediaType.TIDAL,
-    BangOlufsenMediaType.TTS,
+    BeoMediaType.DEEZER,
+    BeoMediaType.FAVOURITE,
+    BeoMediaType.OVERLAY_TTS,
+    BeoMediaType.RADIO,
+    BeoMediaType.TIDAL,
+    BeoMediaType.TTS,
     MediaType.MUSIC,
     MediaType.URL,
     MediaType.CHANNEL,
@@ -343,14 +340,14 @@ MODEL_SUPPORT_HOME_CONTROL: Final[str] = "home_control"
 
 MODEL_SUPPORT_MAP = {
     MODEL_SUPPORT_PROXIMITY: (
-        BangOlufsenModel.BEOLAB_8,
-        BangOlufsenModel.BEOLAB_28,
-        BangOlufsenModel.BEOSOUND_2,
-        BangOlufsenModel.BEOSOUND_BALANCE,
-        BangOlufsenModel.BEOSOUND_LEVEL,
-        BangOlufsenModel.BEOSOUND_THEATRE,
+        BeoModel.BEOLAB_8,
+        BeoModel.BEOLAB_28,
+        BeoModel.BEOSOUND_2,
+        BeoModel.BEOSOUND_BALANCE,
+        BeoModel.BEOSOUND_LEVEL,
+        BeoModel.BEOSOUND_THEATRE,
     ),
-    MODEL_SUPPORT_HOME_CONTROL: (BangOlufsenModel.BEOSOUND_THEATRE,),
+    MODEL_SUPPORT_HOME_CONTROL: (BeoModel.BEOSOUND_THEATRE,),
 }
 
 
@@ -376,7 +373,7 @@ EVENT_TRANSLATION_MAP: dict[str, str] = {
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
 
-DEVICE_BUTTONS: Final[list[str]] = [x.value for x in BangOlufsenButtons]
+DEVICE_BUTTONS: Final[list[str]] = [x.value for x in BeoButtons]
 
 
 DEVICE_BUTTON_EVENTS: Final[list[str]] = [

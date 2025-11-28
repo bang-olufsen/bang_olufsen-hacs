@@ -8,7 +8,7 @@ from homeassistant.components.bang_olufsen.const import (
     BEO_REMOTE_SUBMENU_CONTROL,
     BEO_REMOTE_SUBMENU_LIGHT,
     DEVICE_BUTTONS,
-    BangOlufsenButtons,
+    BeoButtons,
 )
 
 from .const import (
@@ -43,7 +43,7 @@ def get_premiere_entity_ids() -> list[str]:
     entity_ids: list[str] = [TEST_MEDIA_PLAYER_ENTITY_ID_4]
 
     premiere_buttons = DEVICE_BUTTONS.copy()
-    premiere_buttons.remove(BangOlufsenButtons.BLUETOOTH.value)
+    premiere_buttons.remove(BeoButtons.BLUETOOTH.value)
 
     entity_ids.extend(
         [

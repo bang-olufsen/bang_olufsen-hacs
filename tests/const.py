@@ -40,7 +40,7 @@ from homeassistant.components.bang_olufsen.const import (
     CONF_PAGES,
     CONF_SERIAL_NUMBER,
     CONF_WHEEL_ACTION,
-    BangOlufsenSource,
+    BeoSource,
 )
 from homeassistant.const import (
     CONF_ENTITIES,
@@ -401,6 +401,7 @@ TEST_HALO_DATA_PAGE_2_BUTTONS = {
 TEST_HALO_BUTTON = f"{TEST_HALO_PAGE_TITLE}-{TEST_HALO_DATA_BUTTON[CONF_BUTTON_TITLE]} ({TEST_HALO_BUTTON_ID})"
 TEST_HALO_DATA_SELECT_DEFAULT = {CONF_DEFAULT_BUTTON: TEST_HALO_BUTTON}
 
+
 TEST_DATA_ZEROCONF = ZeroconfServiceInfo(
     ip_address=IPv4Address(TEST_HOST),
     ip_addresses=[IPv4Address(TEST_HOST)],
@@ -457,7 +458,7 @@ TEST_HALO_DATA_ZEROCONF = ZeroconfServiceInfo(
 TEST_SOURCE = Source(
     name="Tidal", id="tidal", is_seekable=True, is_enabled=True, is_playable=True
 )
-TEST_AUDIO_SOURCES = [TEST_SOURCE.name, BangOlufsenSource.LINE_IN.name]
+TEST_AUDIO_SOURCES = [TEST_SOURCE.name, BeoSource.LINE_IN.name]
 TEST_VIDEO_SOURCES = ["HDMI A"]
 TEST_SOURCES = TEST_AUDIO_SOURCES + TEST_VIDEO_SOURCES
 TEST_FALLBACK_SOURCES = [

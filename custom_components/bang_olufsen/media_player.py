@@ -69,9 +69,9 @@ from homeassistant.util.json import JsonObjectType
 from . import MANUFACTURER, MozartConfigEntry
 from .const import (
     ACCEPTED_COMMANDS_LISTS,
-    BANG_OLUFSEN_REPEAT_FROM_HA,
-    BANG_OLUFSEN_REPEAT_TO_HA,
-    BANG_OLUFSEN_STATES,
+    BEO_REPEAT_FROM_HA,
+    BEO_REPEAT_TO_HA,
+    BEO_STATES,
     BEOLINK_JOIN_SOURCES_TO_UPPER,
     BEOLINK_LEADER_COMMAND,
     BEOLINK_LISTENER_COMMAND,
@@ -81,9 +81,9 @@ from .const import (
     CONNECTION_STATUS,
     DOMAIN,
     VALID_MEDIA_TYPES,
-    BangOlufsenAttribute,
-    BangOlufsenMediaType,
-    BangOlufsenSource,
+    BeoAttribute,
+    BeoMediaType,
+    BeoSource,
     WebsocketNotification,
 )
 from .entity import MozartEntity
@@ -95,7 +95,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
-BANG_OLUFSEN_FEATURES = (
+BEO_FEATURES = (
     MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.CLEAR_PLAYLIST
     | MediaPlayerEntityFeature.GROUPING
@@ -250,7 +250,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
             queue_settings = await self._client.get_settings_queue(_request_timeout=5)
             if queue_settings.repeat is not None:
-                self._attr_repeat = BANG_OLUFSEN_REPEAT_TO_HA[queue_settings.repeat]
+                self._attr_repeat = BEO_REPEAT_TO_HA[queue_settings.repeat]
 
             if queue_settings.shuffle is not None:
                 self._attr_shuffle = queue_settings.shuffle
@@ -268,11 +268,11 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
                 if source.id and source.name
             }
 
-        self._favorite_attribute = {BangOlufsenAttribute.FAVORITES: {}}
+        self._favorite_attribute = {BeoAttribute.FAVORITES: {}}
 
         # Handle each favorite
         for favorite_id, favorite in favorites.items():
-            favorite_attribute = {BangOlufsenAttribute.FAVORITES_TITLE: favorite.title}
+            favorite_attribute = {BeoAttribute.FAVORITES_TITLE: favorite.title}
 
             # Handle each action
             for action in cast(list[Action], favorite.action_list):
@@ -287,7 +287,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
                 # Add friendly name if it has been defined
                 if source:
-                    favorite_attribute[BangOlufsenAttribute.FAVORITES_SOURCE] = (
+                    favorite_attribute[BeoAttribute.FAVORITES_SOURCE] = (
                         self._unsorted_sources[source]
                     )
 
@@ -308,19 +308,17 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
                 # Add content id if it has been defined
                 if content_id:
-                    favorite_attribute[BangOlufsenAttribute.FAVORITES_CONTENT_ID] = (
-                        content_id
-                    )
+                    favorite_attribute[BeoAttribute.FAVORITES_CONTENT_ID] = content_id
 
             # Check content for source if it hasn't been defined in action list
-            if BangOlufsenAttribute.FAVORITES_SOURCE not in favorite_attribute:
+            if BeoAttribute.FAVORITES_SOURCE not in favorite_attribute:
                 if favorite.content and favorite.content.source.value:
-                    favorite_attribute[BangOlufsenAttribute.FAVORITES_SOURCE] = (
+                    favorite_attribute[BeoAttribute.FAVORITES_SOURCE] = (
                         self._unsorted_sources[favorite.content.source.value]
                     )
 
             # Add current favorite to attribute
-            self._favorite_attribute[BangOlufsenAttribute.FAVORITES][favorite_id] = (
+            self._favorite_attribute[BeoAttribute.FAVORITES][favorite_id] = (
                 favorite_attribute
             )
 
@@ -433,13 +431,13 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
         # Check if source is line-in or optical and progress should be updated
         if self._source_change.id in (
-            BangOlufsenSource.LINE_IN.id,
-            BangOlufsenSource.SPDIF.id,
+            BeoSource.LINE_IN.id,
+            BeoSource.SPDIF.id,
         ):
             self._playback_progress = PlaybackProgress(progress=0)
 
         # Try to ensure that a source is active (not unknown).
-        elif self._source_change.id == BangOlufsenSource.UNKNOWN.id:
+        elif self._source_change.id == BeoSource.UNKNOWN.id:
             sources = await get_sources(self._client)
 
             default_source = None
@@ -447,8 +445,8 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
             # Get USB or Line-in, depending on which one of them is enabled
             for source in sources:
                 if source.is_enabled and source.id in (
-                    BangOlufsenSource.LINE_IN.id,
-                    BangOlufsenSource.USB_IN.id,
+                    BeoSource.LINE_IN.id,
+                    BeoSource.USB_IN.id,
                 ):
                     default_source = source.id
                     break
@@ -497,10 +495,8 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
         # Add Beolink self
         self._beolink_attributes = {
-            BangOlufsenAttribute.BEOLINK: {
-                BangOlufsenAttribute.BEOLINK_SELF: {
-                    self.device_entry.name: self._beolink_jid
-                }
+            BeoAttribute.BEOLINK: {
+                BeoAttribute.BEOLINK_SELF: {self.device_entry.name: self._beolink_jid}
             }
         }
 
@@ -508,12 +504,12 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
         peers = await self._client.get_beolink_peers()
 
         if len(peers) > 0:
-            self._beolink_attributes[BangOlufsenAttribute.BEOLINK][
-                BangOlufsenAttribute.BEOLINK_PEERS
+            self._beolink_attributes[BeoAttribute.BEOLINK][
+                BeoAttribute.BEOLINK_PEERS
             ] = {}
             for peer in peers:
-                self._beolink_attributes[BangOlufsenAttribute.BEOLINK][
-                    BangOlufsenAttribute.BEOLINK_PEERS
+                self._beolink_attributes[BeoAttribute.BEOLINK][
+                    BeoAttribute.BEOLINK_PEERS
                 ][peer.friendly_name] = peer.jid
 
         # Add Beolink listeners / leader
@@ -535,8 +531,8 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
             # Add self
             group_members.append(self.entity_id)
 
-            self._beolink_attributes[BangOlufsenAttribute.BEOLINK][
-                BangOlufsenAttribute.BEOLINK_LEADER
+            self._beolink_attributes[BeoAttribute.BEOLINK][
+                BeoAttribute.BEOLINK_LEADER
             ] = {
                 self._remote_leader.friendly_name: self._remote_leader.jid,
             }
@@ -574,8 +570,8 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
                                 beolink_listener.jid
                             )
                             break
-                self._beolink_attributes[BangOlufsenAttribute.BEOLINK][
-                    BangOlufsenAttribute.BEOLINK_LISTENERS
+                self._beolink_attributes[BeoAttribute.BEOLINK][
+                    BeoAttribute.BEOLINK_LISTENERS
                 ] = beolink_listeners_attribute
 
         self._attr_group_members = group_members
@@ -647,7 +643,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        features = BANG_OLUFSEN_FEATURES
+        features = BEO_FEATURES
 
         # Add seeking if supported by the current source
         if self._source_change.is_seekable is True:
@@ -658,7 +654,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
     @property
     def state(self) -> MediaPlayerState:
         """Return the current state of the media player."""
-        return BANG_OLUFSEN_STATES[self._state]
+        return BEO_STATES[self._state]
 
     @property
     def volume_level(self) -> float | None:
@@ -678,10 +674,10 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
     def media_content_type(self) -> MediaType | str | None:
         """Return the current media type."""
         content_type = {
-            BangOlufsenSource.URI_STREAMER.id: MediaType.URL,
-            BangOlufsenSource.DEEZER.id: BangOlufsenMediaType.DEEZER,
-            BangOlufsenSource.TIDAL.id: BangOlufsenMediaType.TIDAL,
-            BangOlufsenSource.NET_RADIO.id: BangOlufsenMediaType.RADIO,
+            BeoSource.URI_STREAMER.id: MediaType.URL,
+            BeoSource.DEEZER.id: BeoMediaType.DEEZER,
+            BeoSource.TIDAL.id: BeoMediaType.TIDAL,
+            BeoSource.NET_RADIO.id: BeoMediaType.RADIO,
         }
         # Hard to determine content type.
         if self._source_change.id in content_type:
@@ -751,9 +747,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
         # Add input signal attribute
         if self._input_signal_attribute:
-            attributes.update(
-                {BangOlufsenAttribute.INPUT_SIGNAL: self._input_signal_attribute}
-            )
+            attributes.update({BeoAttribute.INPUT_SIGNAL: self._input_signal_attribute})
 
         # Add Beolink attributes
         if self._beolink_attributes:
@@ -844,9 +838,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set playback queues to repeat."""
         await self._client.set_settings_queue(
-            play_queue_settings=PlayQueueSettings(
-                repeat=BANG_OLUFSEN_REPEAT_FROM_HA[repeat]
-            )
+            play_queue_settings=PlayQueueSettings(repeat=BEO_REPEAT_FROM_HA[repeat])
         )
 
     async def async_select_source(self, source: str) -> None:
@@ -944,7 +936,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
                         self._volume.level.level + offset_volume, 100
                     )
 
-            if media_type == BangOlufsenMediaType.OVERLAY_TTS:
+            if media_type == BeoMediaType.OVERLAY_TTS:
                 # Bang & Olufsen cloud TTS
                 overlay_play_request.text_to_speech = (
                     OverlayPlayRequestTextToSpeechTextToSpeech(
@@ -961,14 +953,14 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
         # The "provider" media_type may not be suitable for overlay all the time.
         # Use it for now.
-        elif media_type == BangOlufsenMediaType.TTS:
+        elif media_type == BeoMediaType.TTS:
             await self._client.post_overlay_play(
                 overlay_play_request=OverlayPlayRequest(
                     uri=Uri(location=media_id),
                 )
             )
 
-        elif media_type == BangOlufsenMediaType.RADIO:
+        elif media_type == BeoMediaType.RADIO:
             await self._client.run_provided_scene(
                 scene_properties=SceneProperties(
                     action_list=[
@@ -980,13 +972,13 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
                 )
             )
 
-        elif media_type == BangOlufsenMediaType.FAVOURITE:
+        elif media_type == BeoMediaType.FAVOURITE:
             await self._client.activate_preset(id=int(media_id))
 
-        elif media_type in (BangOlufsenMediaType.DEEZER, BangOlufsenMediaType.TIDAL):
+        elif media_type in (BeoMediaType.DEEZER, BeoMediaType.TIDAL):
             try:
                 # Play Deezer flow.
-                if media_id == "flow" and media_type == BangOlufsenMediaType.DEEZER:
+                if media_id == "flow" and media_type == BeoMediaType.DEEZER:
                     deezer_id = None
 
                     if "id" in kwargs[ATTR_MEDIA_EXTRA]:
