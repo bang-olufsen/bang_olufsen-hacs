@@ -36,7 +36,7 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import HaloEntity, MozartEntity
-from .util import get_device_buttons, get_remotes, is_halo
+from .util import get_device_buttons, get_remotes, is_halo, is_mozart
 
 PARALLEL_UPDATES = 0
 
@@ -51,7 +51,7 @@ async def async_setup_entry(
 
     if is_halo(config_entry):
         entities.extend(await _get_halo_entities(config_entry))
-    else:
+    elif is_mozart(config_entry):
         entities.extend(await _get_mozart_entities(hass, config_entry))
 
     async_add_entities(new_entities=entities)

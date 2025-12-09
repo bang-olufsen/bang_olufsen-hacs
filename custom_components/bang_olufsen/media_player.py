@@ -53,6 +53,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -87,7 +88,7 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import MozartEntity
-from .util import get_serial_number_from_jid, get_sources
+from .util import get_serial_number_from_jid, get_sources, is_halo, is_mozart
 
 PARALLEL_UPDATES = 0
 
@@ -118,22 +119,39 @@ BEO_FEATURES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: MozartConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Media Player entity from config entry."""
-    # Add MediaPlayer entity
-    async_add_entities(
-        new_entities=[MozartMediaPlayer(config_entry)],
-        update_before_add=True,
-    )
+    entities: list[BeoMediaPlayer] = []
+
+    if is_halo(config_entry):
+        pass
+    elif is_mozart(config_entry):
+        entities.extend(await _get_mozart_entities(config_entry))
+
+    async_add_entities(new_entities=entities, update_before_add=True)
 
 
-class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
-    """Representation of a media player."""
+class BeoMediaPlayer(MediaPlayerEntity):
+    """Base Media Player class."""
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_name: None | str = None
+
+
+# Mozart entities
+async def _get_mozart_entities(
+    config_entry: MozartConfigEntry,
+) -> list[MozartMediaPlayer]:
+    """Get Mozart Media Player entities from config entry."""
+    entities: list[MozartMediaPlayer] = [MozartMediaPlayer(config_entry)]
+
+    return entities
+
+
+class MozartMediaPlayer(BeoMediaPlayer, MozartEntity):
+    """Representation of a Mozart media player."""
 
     def __init__(self, config_entry: MozartConfigEntry) -> None:
         """Initialize the media player."""
@@ -162,6 +180,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
         self._sources: dict[str, str] = {}
         self._state: str = MediaPlayerState.IDLE
         self._video_sources: dict[str, str] = {}
+        self._video_source_id_map: dict[str, str] = {}
         self._sound_modes: dict[str, int] = {}
         self._unsorted_sources: dict[str, str] = {}
 
@@ -366,6 +385,9 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
                 and menu_item.label != "TV"
             ):
                 self._video_sources[key] = menu_item.label
+                self._video_source_id_map[
+                    menu_item.content.content_uri.removeprefix("tv://")
+                ] = menu_item.label
 
         # Combine the source dicts
         self._sources = self._audio_sources | self._video_sources
@@ -630,7 +652,7 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
         for sound_mode in sound_modes:
             label = f"{sound_mode.name} ({sound_mode.id})"
 
-            self._sound_modes[label] = sound_mode.id
+            self._sound_modes[label] = cast(int, sound_mode.id)
 
             if sound_mode.id == active_sound_mode.id:
                 self._attr_sound_mode = label
@@ -674,10 +696,11 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
     def media_content_type(self) -> MediaType | str | None:
         """Return the current media type."""
         content_type = {
-            BeoSource.URI_STREAMER.id: MediaType.URL,
             BeoSource.DEEZER.id: BeoMediaType.DEEZER,
-            BeoSource.TIDAL.id: BeoMediaType.TIDAL,
             BeoSource.NET_RADIO.id: BeoMediaType.RADIO,
+            BeoSource.TIDAL.id: BeoMediaType.TIDAL,
+            BeoSource.TV.id: BeoMediaType.TIDAL,
+            BeoSource.URI_STREAMER.id: MediaType.URL,
         }
         # Hard to determine content type.
         if self._source_change.id in content_type:
@@ -737,7 +760,11 @@ class MozartMediaPlayer(MediaPlayerEntity, MozartEntity):
 
     @property
     def source(self) -> str | None:
-        """Return the current audio source."""
+        """Return the current audio/video source."""
+        # Associate TV content ID with a video source
+        if self.media_content_id in self._video_source_id_map:
+            return self._video_source_id_map[self.media_content_id]
+
         return self._source_change.name
 
     @property

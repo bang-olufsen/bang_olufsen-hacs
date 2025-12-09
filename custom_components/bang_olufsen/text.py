@@ -5,6 +5,7 @@ from __future__ import annotations
 from mozart_api.models import HomeControlUri
 
 from homeassistant.components.text import TextEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -18,34 +19,54 @@ from .const import (
     MODEL_SUPPORT_MAP,
 )
 from .entity import MozartEntity
+from .util import is_halo, is_mozart
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: MozartConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Text entities from config entry."""
     entities: list[BeoText] = []
 
-    # Add the Home Control URI entity if the device supports it
-    if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_HOME_CONTROL]:
-        entities.append(MozartTextHomeControlUri(config_entry))
+    if is_halo(config_entry):
+        pass
+    elif is_mozart(config_entry):
+        entities.extend(await _get_mozart_entities(config_entry))
 
     async_add_entities(new_entities=entities)
 
 
-class BeoText(TextEntity, MozartEntity):
+class BeoText(TextEntity):
     """Base Text class."""
 
+    _attr_entity_category = EntityCategory.CONFIG
+
+
+# Mozart entities
+class MozartText(BeoText, MozartEntity):
+    """Base Mozart Text class."""
+
     def __init__(self, config_entry: MozartConfigEntry) -> None:
-        """Init the Text."""
+        """Init the Text entity."""
         super().__init__(config_entry)
 
-        self._attr_entity_category = EntityCategory.CONFIG
+
+async def _get_mozart_entities(config_entry: MozartConfigEntry) -> list[MozartText]:
+    """Get Mozart Sensor entities from config entry."""
+    entities: list[MozartText] = []
+
+    # Add the Home Control URI entity if the device supports it
+    if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_HOME_CONTROL]:
+        entities.append(MozartTextHomeControlUri(config_entry))
+
+    return entities
 
 
-class MozartTextHomeControlUri(BeoText):
+class MozartTextHomeControlUri(MozartText):
     """Home Control URI Text."""
 
     _attr_entity_registry_enabled_default = False

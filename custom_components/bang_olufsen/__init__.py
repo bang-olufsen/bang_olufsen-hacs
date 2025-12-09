@@ -26,7 +26,7 @@ from .beoremote_halo.halo import Halo
 from .beoremote_halo.models import BaseConfiguration
 from .const import CONF_HALO, DOMAIN, MANUFACTURER
 from .services import async_setup_services
-from .util import is_halo
+from .util import is_halo, is_mozart
 from .websocket import HaloWebsocket, MozartWebsocket
 
 MOZART_PLATFORMS = [
@@ -94,8 +94,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if is_halo(config_entry):
         return await _setup_halo(hass, config_entry)
 
-    # Mozart based products
-    return await _setup_mozart(hass, config_entry)
+    if is_mozart(config_entry):
+        return await _setup_mozart(hass, config_entry)
+
+    return False
 
 
 async def _setup_mozart(hass: HomeAssistant, config_entry: MozartConfigEntry) -> bool:
@@ -191,7 +193,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
         await config_entry.runtime_data.client.disconnect()
         platforms = HALO_PLATFORMS
-    else:
+    elif is_mozart(config_entry):
         if TYPE_CHECKING:
             assert isinstance(config_entry.runtime_data, MozartData)
 

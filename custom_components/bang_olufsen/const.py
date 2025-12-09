@@ -34,6 +34,7 @@ class BeoSource:
     NET_RADIO: Final[Source] = Source(name="B&O Radio", id="netRadio")
     SPDIF: Final[Source] = Source(name="Optical", id="spdif")
     TIDAL: Final[Source] = Source(name="Tidal", id="tidal")
+    TV: Final[Source] = Source(name="TV", id="tv")
     UNKNOWN: Final[Source] = Source(name="Unknown Source", id="unknown")
     URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
     USB_IN: Final[Source] = Source(name="USB", id="usbIn")
@@ -74,6 +75,7 @@ class BeoMediaType(StrEnum):
     RADIO = "radio"
     TIDAL = "tidal"
     TTS = "provider"
+    TV = "tv"
 
 
 class BeoModel(StrEnum):

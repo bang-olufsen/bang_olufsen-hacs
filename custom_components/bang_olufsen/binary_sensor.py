@@ -17,7 +17,7 @@ from . import HaloConfigEntry, MozartConfigEntry
 from .beoremote_halo.models import PowerEvent, PowerEventState
 from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import HaloEntity, MozartEntity
-from .util import is_halo, supports_battery
+from .util import is_halo, is_mozart, supports_battery
 
 
 async def async_setup_entry(
@@ -30,7 +30,7 @@ async def async_setup_entry(
 
     if is_halo(config_entry):
         entities.extend(await _get_halo_entities(config_entry))
-    else:
+    elif is_mozart(config_entry):
         entities.extend(await _get_mozart_entities(config_entry))
 
     async_add_entities(new_entities=entities)

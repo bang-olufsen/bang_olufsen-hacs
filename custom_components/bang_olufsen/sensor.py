@@ -25,7 +25,7 @@ from . import HaloConfigEntry, MozartConfigEntry
 from .beoremote_halo.models import PowerEvent
 from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import HaloEntity, MozartEntity
-from .util import get_remotes, is_halo, supports_battery
+from .util import get_remotes, is_halo, is_mozart, supports_battery
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
@@ -38,18 +38,22 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensor entities from config entry."""
-    entities: list[MozartSensor | HaloSensor] = []
+    entities: list[BeoSensor] = []
 
     if is_halo(config_entry):
         entities.extend(await _get_halo_entities(config_entry))
-    else:
+    elif is_mozart(config_entry):
         entities.extend(await _get_mozart_entities(config_entry))
 
     async_add_entities(new_entities=entities, update_before_add=True)
 
 
+class BeoSensor(SensorEntity):
+    """Base Sensor class."""
+
+
 # Mozart entities
-class MozartSensor(MozartEntity, SensorEntity):
+class MozartSensor(MozartEntity, BeoSensor):
     """Base Mozart Sensor class."""
 
     def __init__(self, config_entry: MozartConfigEntry) -> None:
@@ -261,7 +265,7 @@ async def _get_halo_entities(
     return entities
 
 
-class HaloSensor(HaloEntity, SensorEntity):
+class HaloSensor(HaloEntity, BeoSensor):
     """Base Halo Sensor class."""
 
     def __init__(self, config_entry: HaloConfigEntry) -> None:
