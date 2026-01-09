@@ -699,7 +699,7 @@ class MozartMediaPlayer(BeoMediaPlayer, MozartEntity):
             BeoSource.DEEZER.id: BeoMediaType.DEEZER,
             BeoSource.NET_RADIO.id: BeoMediaType.RADIO,
             BeoSource.TIDAL.id: BeoMediaType.TIDAL,
-            BeoSource.TV.id: BeoMediaType.TIDAL,
+            BeoSource.TV.id: BeoMediaType.TV,
             BeoSource.URI_STREAMER.id: MediaType.URL,
         }
         # Hard to determine content type.
