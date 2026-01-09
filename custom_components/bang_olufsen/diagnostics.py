@@ -2,25 +2,39 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import DOMAIN
-from .util import get_device_buttons
+from . import BeoConfigEntry
+from .const import BEO_MODEL_PLATFORM_MAP, DOMAIN, BeoPlatform
+from .util import get_device_buttons, get_remote_keys, get_remotes
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: BeoConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    data: dict[str, dict[str, Any] | bool] = {
+    match BEO_MODEL_PLATFORM_MAP[config_entry.data[CONF_MODEL]]:
+        case BeoPlatform.MOZART.value:
+            pass
+        case BeoPlatform.BEOREMOTE_HALO.value:
+            _LOGGER.warning(
+                "No diagnostics are available for Beoremote Halo devices at this point"
+            )
+            return {}
+
+    data: dict = {
         "config_entry": config_entry.as_dict(),
         "websocket_connected": config_entry.runtime_data.client.websocket_connected,
     }
@@ -28,8 +42,9 @@ async def async_get_config_entry_diagnostics(
     if TYPE_CHECKING:
         assert config_entry.unique_id
 
-    # Add media_player entity's state
     entity_registry = er.async_get(hass)
+
+    # Add media_player entity's state
     if entity_id := entity_registry.async_get_entity_id(
         MEDIA_PLAYER_DOMAIN, DOMAIN, config_entry.unique_id
     ):
@@ -51,5 +66,59 @@ async def async_get_config_entry_diagnostics(
                 # Remove context as it is not relevant
                 state_dict.pop("context")
                 data[f"{device_button}_event"] = state_dict
+
+    # Get remotes
+    for remote in await get_remotes(config_entry.runtime_data.client):
+        # Get Battery Sensor states
+        if entity_id := entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            f"{remote.serial_number}_{config_entry.unique_id}_remote_battery_level",
+        ):
+            if state := hass.states.get(entity_id):
+                state_dict = dict(state.as_dict())
+
+                # Remove context as it is not relevant
+                state_dict.pop("context")
+                data[f"remote_{remote.serial_number}_battery_level"] = state_dict
+
+        # Get key Event entity states (if enabled)
+        for key_type in get_remote_keys():
+            if entity_id := entity_registry.async_get_entity_id(
+                EVENT_DOMAIN,
+                DOMAIN,
+                f"{remote.serial_number}_{config_entry.unique_id}_{key_type}",
+            ):
+                if state := hass.states.get(entity_id):
+                    state_dict = dict(state.as_dict())
+
+                    # Remove context as it is not relevant
+                    state_dict.pop("context")
+                    data[f"remote_{remote.serial_number}_{key_type}_event"] = state_dict
+
+        # Add remote Mozart model
+        data[f"remote_{remote.serial_number}"] = dict(remote)
+
+    # Get Mozart battery entity
+    if entity_id := entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{config_entry.unique_id}_battery_level"
+    ):
+        if state := hass.states.get(entity_id):
+            state_dict = dict(state.as_dict())
+
+            # Remove context as it is not relevant
+            state_dict.pop("context")
+            data["battery_level"] = state_dict
+
+    # Get Mozart battery charging entity
+    if entity_id := entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{config_entry.unique_id}_charging"
+    ):
+        if state := hass.states.get(entity_id):
+            state_dict = dict(state.as_dict())
+
+            # Remove context as it is not relevant
+            state_dict.pop("context")
+            data["charging"] = state_dict
 
     return data

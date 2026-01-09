@@ -39,7 +39,7 @@ from mozart_api.models import (
     VolumeMute,
     VolumeState,
 )
-from mozart_api.mozart_client import get_highest_resolution_artwork
+from mozart_api.mozart_client import MozartClient, get_highest_resolution_artwork
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -67,9 +67,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 from homeassistant.util.json import JsonObjectType
 
-from . import MANUFACTURER, MozartConfigEntry
+from . import MANUFACTURER, BeoConfigEntry
 from .const import (
     ACCEPTED_COMMANDS_LISTS,
+    BEO_MODEL_PLATFORM_MAP,
     BEO_REPEAT_FROM_HA,
     BEO_REPEAT_TO_HA,
     BEO_STATES,
@@ -84,11 +85,12 @@ from .const import (
     VALID_MEDIA_TYPES,
     BeoAttribute,
     BeoMediaType,
+    BeoPlatform,
     BeoSource,
     WebsocketNotification,
 )
-from .entity import MozartEntity
-from .util import get_serial_number_from_jid, get_sources, is_halo, is_mozart
+from .entity import BeoEntity
+from .util import get_serial_number_from_jid, get_sources
 
 PARALLEL_UPDATES = 0
 
@@ -125,15 +127,16 @@ async def async_setup_entry(
     """Set up a Media Player entity from config entry."""
     entities: list[BeoMediaPlayer] = []
 
-    if is_halo(config_entry):
-        pass
-    elif is_mozart(config_entry):
-        entities.extend(await _get_mozart_entities(config_entry))
+    match BEO_MODEL_PLATFORM_MAP[config_entry.data[CONF_MODEL]]:
+        case BeoPlatform.MOZART.value:
+            entities.append(BeoMozartMediaPlayer(config_entry))
+        case BeoPlatform.BEOREMOTE_HALO.value:
+            pass
 
     async_add_entities(new_entities=entities, update_before_add=True)
 
 
-class BeoMediaPlayer(MediaPlayerEntity):
+class BeoMediaPlayer(MediaPlayerEntity, BeoEntity):
     """Base Media Player class."""
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
@@ -141,21 +144,15 @@ class BeoMediaPlayer(MediaPlayerEntity):
 
 
 # Mozart entities
-async def _get_mozart_entities(
-    config_entry: MozartConfigEntry,
-) -> list[MozartMediaPlayer]:
-    """Get Mozart Media Player entities from config entry."""
-    entities: list[MozartMediaPlayer] = [MozartMediaPlayer(config_entry)]
-
-    return entities
 
 
-class MozartMediaPlayer(BeoMediaPlayer, MozartEntity):
+class BeoMozartMediaPlayer(BeoMediaPlayer):
     """Representation of a Mozart media player."""
 
-    def __init__(self, config_entry: MozartConfigEntry) -> None:
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Initialize the media player."""
         super().__init__(config_entry)
+        self._client: MozartClient
 
         self._beolink_jid: str = self.entry.data[CONF_BEOLINK_JID]
         self._model: str = self.entry.data[CONF_MODEL]
@@ -183,6 +180,15 @@ class MozartMediaPlayer(BeoMediaPlayer, MozartEntity):
         self._video_source_id_map: dict[str, str] = {}
         self._sound_modes: dict[str, int] = {}
         self._unsorted_sources: dict[str, str] = {}
+
+        # Objects that get directly updated by notifications.
+        self._playback_metadata: PlaybackContentMetadata = PlaybackContentMetadata()
+        self._playback_progress: PlaybackProgress = PlaybackProgress(total_duration=0)
+        self._playback_state: RenderingState = RenderingState()
+        self._source_change: Source = Source()
+        self._volume: VolumeState = VolumeState(
+            level=VolumeLevel(level=0), muted=VolumeMute(muted=False)
+        )
 
         # Beolink
         self._beolink_sources: dict[str, bool] = {}

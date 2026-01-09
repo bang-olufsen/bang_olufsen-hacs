@@ -16,16 +16,23 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODEL, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HaloConfigEntry, MozartConfigEntry
+from . import BeoConfigEntry
 from .beoremote_halo.models import PowerEvent
-from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
-from .entity import HaloEntity, MozartEntity
-from .util import get_remotes, is_halo, is_mozart, supports_battery
+from .const import (
+    BEO_MODEL_PLATFORM_MAP,
+    CONNECTION_STATUS,
+    DOMAIN,
+    BeoPlatform,
+    WebsocketNotification,
+)
+from .entity import BeoEntity
+from .util import get_remotes, supports_battery
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
@@ -40,63 +47,50 @@ async def async_setup_entry(
     """Set up Sensor entities from config entry."""
     entities: list[BeoSensor] = []
 
-    if is_halo(config_entry):
-        entities.extend(await _get_halo_entities(config_entry))
-    elif is_mozart(config_entry):
-        entities.extend(await _get_mozart_entities(config_entry))
+    match BEO_MODEL_PLATFORM_MAP[config_entry.data[CONF_MODEL]]:
+        case BeoPlatform.MOZART.value:
+            if await supports_battery(config_entry.runtime_data.client):
+                entities.extend(
+                    [
+                        BeoMozartBatteryChargingTime(config_entry),
+                        BeoMozartBatteryLevel(config_entry),
+                        BeoMozartBatteryPlayingTime(config_entry),
+                    ]
+                )
+
+            # Check for connected Beoremote One
+            if remotes := await get_remotes(config_entry.runtime_data.client):
+                entities.extend(
+                    [
+                        BeoMozartRemoteBatteryLevel(config_entry, remote)
+                        for remote in remotes
+                    ]
+                )
+        case BeoPlatform.BEOREMOTE_HALO.value:
+            entities.append(BeoHaloBatteryLevel(config_entry))
 
     async_add_entities(new_entities=entities, update_before_add=True)
 
 
-class BeoSensor(SensorEntity):
-    """Base Sensor class."""
+class BeoSensor(SensorEntity, BeoEntity):
+    """Base Bang & Olufsen Sensor."""
 
-
-# Mozart entities
-class MozartSensor(MozartEntity, BeoSensor):
-    """Base Mozart Sensor class."""
-
-    def __init__(self, config_entry: MozartConfigEntry) -> None:
-        """Init the Sensor."""
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
+        """Initialize Sensor."""
         super().__init__(config_entry)
 
 
-async def _get_mozart_entities(
-    config_entry: MozartConfigEntry,
-) -> list[MozartSensor]:
-    """Get Mozart Sensor entities from config entry."""
-    entities: list[MozartSensor] = []
-
-    if await supports_battery(config_entry.runtime_data.client):
-        entities.extend(
-            [
-                MozartSensorBatteryChargingTime(config_entry),
-                MozartSensorBatteryLevel(config_entry),
-                MozartSensorBatteryPlayingTime(config_entry),
-            ]
-        )
-
-    # Check for connected Beoremote One
-    if remotes := await get_remotes(config_entry.runtime_data.client):
-        entities.extend(
-            [MozartSensorRemoteBatteryLevel(config_entry, remote) for remote in remotes]
-        )
-
-    return entities
-
-
-class MozartSensorBatteryLevel(MozartSensor):
+class BeoMozartBatteryLevel(BeoSensor):
     """Battery level Sensor."""
 
-    _attr_native_unit_of_measurement = "%"
-    _attr_translation_key = "battery_level"
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, config_entry: MozartConfigEntry) -> None:
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the battery level Sensor."""
         super().__init__(config_entry)
 
-        self._attr_device_class = SensorDeviceClass.BATTERY
         self._attr_unique_id = f"{self._unique_id}_battery_level"
 
     async def async_added_to_hass(self) -> None:
@@ -122,20 +116,20 @@ class MozartSensorBatteryLevel(MozartSensor):
         self.async_write_ha_state()
 
 
-class MozartSensorRemoteBatteryLevel(MozartSensor):
+class BeoMozartRemoteBatteryLevel(BeoSensor):
     """Battery level Sensor for the Beoremote One."""
 
-    _attr_native_unit_of_measurement = "%"
-    _attr_translation_key = "remote_battery_level"
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
     _attr_should_poll = True
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, config_entry: MozartConfigEntry, remote: PairedRemote) -> None:
+    def __init__(self, config_entry: BeoConfigEntry, remote: PairedRemote) -> None:
         """Init the battery level Sensor."""
         super().__init__(config_entry)
+        # Serial number is not None, as the remote object is provided by get_remotes
         assert remote.serial_number
 
-        self._attr_device_class = SensorDeviceClass.BATTERY
         self._attr_unique_id = (
             f"{remote.serial_number}_{self._unique_id}_remote_battery_level"
         )
@@ -164,7 +158,7 @@ class MozartSensorRemoteBatteryLevel(MozartSensor):
                     break
 
 
-class MozartSensorBatteryChargingTime(MozartSensor):
+class BeoMozartBatteryChargingTime(BeoSensor):
     """Battery charging time Sensor."""
 
     _attr_entity_registry_enabled_default = False
@@ -172,7 +166,7 @@ class MozartSensorBatteryChargingTime(MozartSensor):
     _attr_translation_key = "battery_charging_time"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, config_entry: MozartConfigEntry) -> None:
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the battery charging time Sensor."""
         super().__init__(config_entry)
 
@@ -210,7 +204,7 @@ class MozartSensorBatteryChargingTime(MozartSensor):
         self.async_write_ha_state()
 
 
-class MozartSensorBatteryPlayingTime(MozartSensor):
+class BeoMozartBatteryPlayingTime(BeoSensor):
     """Battery playing time Sensor."""
 
     _attr_entity_registry_enabled_default = False
@@ -218,7 +212,7 @@ class MozartSensorBatteryPlayingTime(MozartSensor):
     _attr_translation_key = "battery_playing_time"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, config_entry: MozartConfigEntry) -> None:
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the battery playing time Sensor."""
         super().__init__(config_entry)
 
@@ -257,34 +251,17 @@ class MozartSensorBatteryPlayingTime(MozartSensor):
 # Halo entities
 
 
-async def _get_halo_entities(
-    config_entry: HaloConfigEntry,
-) -> list[HaloSensor]:
-    """Get Halo Sensor entities from config entry."""
-    entities: list[HaloSensor] = [HaloSensorBatteryLevel(config_entry)]
-    return entities
-
-
-class HaloSensor(HaloEntity, BeoSensor):
-    """Base Halo Sensor class."""
-
-    def __init__(self, config_entry: HaloConfigEntry) -> None:
-        """Init the Sensor."""
-        super().__init__(config_entry)
-
-
-class HaloSensorBatteryLevel(HaloSensor):
+class BeoHaloBatteryLevel(BeoSensor):
     """Halo battery level Sensor."""
 
-    _attr_native_unit_of_measurement = "%"
-    _attr_translation_key = "halo_battery_level"
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, config_entry: HaloConfigEntry) -> None:
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the battery level Sensor."""
         super().__init__(config_entry)
 
-        self._attr_device_class = SensorDeviceClass.BATTERY
         self._attr_unique_id = f"{self._unique_id}_battery_level"
 
     async def async_added_to_hass(self) -> None:

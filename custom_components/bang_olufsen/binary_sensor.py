@@ -8,67 +8,55 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HaloConfigEntry, MozartConfigEntry
+from . import BeoConfigEntry
 from .beoremote_halo.models import PowerEvent, PowerEventState
-from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
-from .entity import HaloEntity, MozartEntity
-from .util import is_halo, is_mozart, supports_battery
+from .const import (
+    BEO_MODEL_PLATFORM_MAP,
+    CONNECTION_STATUS,
+    DOMAIN,
+    WebsocketNotification,
+)
+from .entity import BeoEntity, BeoPlatform
+from .util import supports_battery
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BeoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Binary Sensor entities from config entry."""
     entities: list[BeoBinarySensor] = []
 
-    if is_halo(config_entry):
-        entities.extend(await _get_halo_entities(config_entry))
-    elif is_mozart(config_entry):
-        entities.extend(await _get_mozart_entities(config_entry))
+    match BEO_MODEL_PLATFORM_MAP[config_entry.data[CONF_MODEL]]:
+        case BeoPlatform.MOZART.value:
+            if await supports_battery(config_entry.runtime_data.client):
+                entities.append(BeoMozartBatteryCharging(config_entry))
+        case BeoPlatform.BEOREMOTE_HALO.value:
+            entities.append(BeoHaloBatteryCharging(config_entry))
 
     async_add_entities(new_entities=entities)
 
 
-class BeoBinarySensor(BinarySensorEntity):
+class BeoBinarySensor(BinarySensorEntity, BeoEntity):
     """Base Binary Sensor class."""
 
     _attr_is_on = False
 
-
-# Mozart entities
-class MozartBinarySensor(MozartEntity, BeoBinarySensor):
-    """Base Mozart Sensor class."""
-
-    def __init__(self, config_entry: MozartConfigEntry) -> None:
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the Binary Sensor."""
         super().__init__(config_entry)
 
 
-async def _get_mozart_entities(
-    config_entry: MozartConfigEntry,
-) -> list[MozartBinarySensor]:
-    """Get Mozart Sensor entities from config entry."""
-    entities: list[MozartBinarySensor] = []
-
-    if await supports_battery(config_entry.runtime_data.client):
-        entities.append(MozartBinarySensorBatteryCharging(config_entry))
-
-    return entities
-
-
-class MozartBinarySensorBatteryCharging(MozartBinarySensor):
+class BeoMozartBatteryCharging(BeoBinarySensor):
     """Battery charging Binary Sensor."""
 
-    _attr_translation_key = "battery_charging"
-
-    def __init__(self, config_entry: MozartConfigEntry) -> None:
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the battery charging Binary Sensor."""
         super().__init__(config_entry)
 
@@ -98,30 +86,12 @@ class MozartBinarySensorBatteryCharging(MozartBinarySensor):
         self.async_write_ha_state()
 
 
-# Halo entities
-
-
-class HaloBinarySensor(HaloEntity, BeoBinarySensor):
-    """Base Halo Binary Sensor class."""
-
-    def __init__(self, config_entry: HaloConfigEntry) -> None:
-        """Init the Sensor."""
-        super().__init__(config_entry)
-
-
-async def _get_halo_entities(
-    config_entry: HaloConfigEntry,
-) -> list[HaloBinarySensor]:
-    """Get Halo Binary Sensor entities from config entry."""
-    return [HaloBinarySensorBatteryCharging(config_entry)]
-
-
-class HaloBinarySensorBatteryCharging(HaloBinarySensor):
+class BeoHaloBatteryCharging(BeoBinarySensor):
     """Battery charging Binary Sensor."""
 
     _attr_translation_key = "halo_battery_charging"
 
-    def __init__(self, config_entry: HaloConfigEntry) -> None:
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the battery charging Binary Sensor."""
         super().__init__(config_entry)
 

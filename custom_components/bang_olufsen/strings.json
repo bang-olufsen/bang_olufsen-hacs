@@ -1225,17 +1225,8 @@
       "battery_charging_time": {
         "name": "Battery charging time"
       },
-      "battery_level": {
-        "name": "Battery level"
-      },
       "battery_playing_time": {
         "name": "Battery playing time"
-      },
-      "halo_battery_level": {
-        "name": "Battery level"
-      },
-      "remote_battery_level": {
-        "name": "Battery level"
       }
     },
     "text": {

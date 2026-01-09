@@ -78,6 +78,13 @@ class BeoMediaType(StrEnum):
     TV = "tv"
 
 
+class BeoPlatform(StrEnum):
+    """Enum for compatible product platforms."""
+
+    MOZART = "mozart"
+    BEOREMOTE_HALO = "beoremote_halo"
+
+
 class BeoModel(StrEnum):
     """Enum for compatible model names."""
 
@@ -94,6 +101,23 @@ class BeoModel(StrEnum):
     BEOSOUND_THEATRE = "Beosound Theatre"
     BEOREMOTE_HALO = "Beoremote Halo"
     BEOREMOTE_ONE = "Beoremote One"
+
+
+# Dict used to determine device platform from model name
+BEO_MODEL_PLATFORM_MAP: dict[str, BeoPlatform] = {
+    BeoModel.BEOCONNECT_CORE: BeoPlatform.MOZART,
+    BeoModel.BEOLAB_8: BeoPlatform.MOZART,
+    BeoModel.BEOLAB_28: BeoPlatform.MOZART,
+    BeoModel.BEOSOUND_2: BeoPlatform.MOZART,
+    BeoModel.BEOSOUND_A5: BeoPlatform.MOZART,
+    BeoModel.BEOSOUND_A9: BeoPlatform.MOZART,
+    BeoModel.BEOSOUND_BALANCE: BeoPlatform.MOZART,
+    BeoModel.BEOSOUND_EMERGE: BeoPlatform.MOZART,
+    BeoModel.BEOSOUND_LEVEL: BeoPlatform.MOZART,
+    BeoModel.BEOSOUND_PREMIERE: BeoPlatform.MOZART,
+    BeoModel.BEOSOUND_THEATRE: BeoPlatform.MOZART,
+    BeoModel.BEOREMOTE_HALO: BeoPlatform.BEOREMOTE_HALO,
+}
 
 
 class BeoAttribute(StrEnum):
@@ -227,12 +251,6 @@ COVER_ATTRIBUTE_MAP: Final[dict[str, tuple[str, str]]] = {
     SERVICE_SET_COVER_TILT_POSITION: (ATTR_CURRENT_TILT_POSITION, ATTR_TILT_POSITION),
 }
 
-# Mozart models
-MOZART_MODELS: Final[list[BeoModel]] = [
-    model
-    for model in BeoModel
-    if model.value not in (BeoModel.BEOREMOTE_HALO, BeoModel.BEOREMOTE_ONE)
-]
 # Models that can be setup manually
 SELECTABLE_MODELS: Final[list[BeoModel]] = [
     model for model in BeoModel if model.value not in (BeoModel.BEOREMOTE_ONE)

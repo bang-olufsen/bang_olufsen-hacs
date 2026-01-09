@@ -3,20 +3,27 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from mozart_api.models import SpeakerGroupOverview
+from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MozartConfigEntry
-from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
-from .entity import MozartEntity
-from .util import is_halo, is_mozart
+from . import BeoConfigEntry
+from .const import (
+    BEO_MODEL_PLATFORM_MAP,
+    CONNECTION_STATUS,
+    DOMAIN,
+    BeoPlatform,
+    WebsocketNotification,
+)
+from .entity import BeoEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,55 +38,47 @@ async def async_setup_entry(
     """Set up Select entities from config entry."""
     entities: list[BeoSelect] = []
 
-    if is_halo(config_entry):
-        pass
-    elif is_mozart(config_entry):
-        entities.extend(await _get_mozart_entities(config_entry))
+    match BEO_MODEL_PLATFORM_MAP[config_entry.data[CONF_MODEL]]:
+        case BeoPlatform.MOZART.value:
+            # Create the listening position entity if supported
+            scenes = await cast(
+                MozartClient, config_entry.runtime_data.client
+            ).get_all_scenes()
+
+            for scene in scenes.values():
+                if scene.tags is not None and "listeningposition" in scene.tags:
+                    entities.append(BeoMozartListeningPosition(config_entry))
+                    break
+
+        case BeoPlatform.BEOREMOTE_HALO.value:
+            pass
 
     async_add_entities(new_entities=entities)
 
 
-class BeoSelect(SelectEntity):
+class BeoSelect(SelectEntity, BeoEntity):
     """Base Select entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_options = []
 
-
-# Mozart entities
-class MozartSelect(MozartEntity, BeoSelect):
-    """Base Mozart Select class."""
-
-    def __init__(self, config_entry: MozartConfigEntry) -> None:
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the Select entity."""
         super().__init__(config_entry)
 
 
-async def _get_mozart_entities(
-    config_entry: MozartConfigEntry,
-) -> list[MozartSelect]:
-    """Get Mozart Select entities from config entry."""
-    entities: list[MozartSelect] = []
-
-    # Create the listening position entity if supported
-    scenes = await config_entry.runtime_data.client.get_all_scenes()
-
-    for scene in scenes.values():
-        if scene.tags is not None and "listeningposition" in scene.tags:
-            entities.append(MozartSelectListeningPosition(config_entry))
-            break
-
-    return entities
+# Mozart entities
 
 
-class MozartSelectListeningPosition(MozartSelect):
+class BeoMozartListeningPosition(BeoSelect):
     """Listening position Select."""
 
     _attr_translation_key = "listening_position"
 
-    def __init__(self, config_entry: MozartConfigEntry) -> None:
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the listening position select."""
         super().__init__(config_entry)
+        self._client: MozartClient
 
         self._attr_unique_id = f"{self._unique_id}_listening_position"
         self._attr_current_option = None

@@ -104,8 +104,8 @@ These features have to evaluated further and are in no particular order.
   - Valve
   - Water heater
   - Weather
-- Manual setup
 - Create Event entity for button instead of selecting an existing entity
+- Home Assistant diagnostics
 
 ## Configuration
 

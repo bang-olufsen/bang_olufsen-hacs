@@ -8,6 +8,6 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/bang-olufsen/bang_olufsen-hacs/issues",
   "requirements": ["mozart-api==5.3.1.108.0"],
-  "version": "4.1.3",
+  "version": "4.2.0",
   "zeroconf": ["_bangolufsen._tcp.local.", "_zenith._tcp.local."]
 }

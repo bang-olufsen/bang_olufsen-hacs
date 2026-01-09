@@ -24,9 +24,8 @@ from homeassistant.util.ssl import get_default_context
 
 from .beoremote_halo.halo import Halo
 from .beoremote_halo.models import BaseConfiguration
-from .const import CONF_HALO, DOMAIN, MANUFACTURER
+from .const import BEO_MODEL_PLATFORM_MAP, CONF_HALO, DOMAIN, MANUFACTURER, BeoPlatform
 from .services import async_setup_services
-from .util import is_halo, is_mozart
 from .websocket import HaloWebsocket, MozartWebsocket
 
 MOZART_PLATFORMS = [
@@ -46,23 +45,14 @@ HALO_PLATFORMS = [
 
 
 @dataclass
-class MozartData:
+class BeoData:
     """Dataclass for Mozart API client, WebSocket listener and WebSocket initialization variables."""
 
-    websocket: MozartWebsocket
-    client: MozartClient
+    websocket: MozartWebsocket | HaloWebsocket
+    client: MozartClient | Halo
 
 
-@dataclass
-class HaloData:
-    """Dataclass for API client, WebSocket listener and WebSocket initialization variables."""
-
-    websocket: HaloWebsocket
-    client: Halo
-
-
-type MozartConfigEntry = ConfigEntry[MozartData]
-type HaloConfigEntry = ConfigEntry[HaloData]
+type BeoConfigEntry = ConfigEntry[BeoData]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -91,16 +81,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         manufacturer=MANUFACTURER,
     )
 
-    if is_halo(config_entry):
-        return await _setup_halo(hass, config_entry)
-
-    if is_mozart(config_entry):
-        return await _setup_mozart(hass, config_entry)
+    match BEO_MODEL_PLATFORM_MAP[config_entry.data[CONF_MODEL]]:
+        case BeoPlatform.MOZART.value:
+            return await _setup_mozart(hass, config_entry)
+        case BeoPlatform.BEOREMOTE_HALO.value:
+            return await _setup_halo(hass, config_entry)
 
     return False
 
 
-async def _setup_mozart(hass: HomeAssistant, config_entry: MozartConfigEntry) -> bool:
+async def _setup_mozart(hass: HomeAssistant, config_entry: BeoConfigEntry) -> bool:
     """Set up a Mozart based product."""
     client = MozartClient(
         host=config_entry.data[CONF_HOST], ssl_context=get_default_context()
@@ -126,7 +116,7 @@ async def _setup_mozart(hass: HomeAssistant, config_entry: MozartConfigEntry) ->
     websocket = MozartWebsocket(hass, config_entry, client)
 
     # Add the websocket and API client
-    config_entry.runtime_data = MozartData(websocket, client)
+    config_entry.runtime_data = BeoData(websocket, client)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, MOZART_PLATFORMS)
 
@@ -137,7 +127,7 @@ async def _setup_mozart(hass: HomeAssistant, config_entry: MozartConfigEntry) ->
     return True
 
 
-async def _setup_halo(hass: HomeAssistant, config_entry: HaloConfigEntry) -> bool:
+async def _setup_halo(hass: HomeAssistant, config_entry: BeoConfigEntry) -> bool:
     """Set up a Halo."""
 
     # Get/set configuration
@@ -166,7 +156,7 @@ async def _setup_halo(hass: HomeAssistant, config_entry: HaloConfigEntry) -> boo
     websocket = HaloWebsocket(hass, config_entry, client)
 
     # Add the websocket and API client
-    config_entry.runtime_data = HaloData(websocket, client)
+    config_entry.runtime_data = BeoData(websocket, client)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, HALO_PLATFORMS)
 
@@ -185,20 +175,25 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    if TYPE_CHECKING:
+        assert isinstance(config_entry.runtime_data, BeoData)
+
+    match BEO_MODEL_PLATFORM_MAP[config_entry.data[CONF_MODEL]]:
+        case BeoPlatform.MOZART.value:
+            if TYPE_CHECKING:
+                assert isinstance(config_entry.runtime_data.client, MozartClient)
+
+            config_entry.runtime_data.client.disconnect_notifications()
+            await config_entry.runtime_data.client.close_api_client()
+            platforms = MOZART_PLATFORMS
+
+        case BeoPlatform.BEOREMOTE_HALO.value:
+            if TYPE_CHECKING:
+                assert isinstance(config_entry.runtime_data.client, Halo)
+
+            await config_entry.runtime_data.client.disconnect()
+            platforms = HALO_PLATFORMS
 
     # Close the API client and WebSocket notification listener
-    if is_halo(config_entry):
-        if TYPE_CHECKING:
-            assert isinstance(config_entry.runtime_data, HaloData)
-
-        await config_entry.runtime_data.client.disconnect()
-        platforms = HALO_PLATFORMS
-    elif is_mozart(config_entry):
-        if TYPE_CHECKING:
-            assert isinstance(config_entry.runtime_data, MozartData)
-
-        config_entry.runtime_data.client.disconnect_notifications()
-        await config_entry.runtime_data.client.close_api_client()
-        platforms = MOZART_PLATFORMS
 
     return await hass.config_entries.async_unload_platforms(config_entry, platforms)

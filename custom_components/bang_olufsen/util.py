@@ -9,10 +9,17 @@ from mozart_api import __version__ as MOZART_API_VERSION
 from mozart_api.models import PairedRemote, Source
 from mozart_api.mozart_client import MozartClient
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL
-
-from .const import DEVICE_BUTTONS, FALLBACK_SOURCES, MOZART_MODELS, BeoButtons, BeoModel
+from .beoremote_halo import Halo
+from .const import (
+    BEO_REMOTE_CONTROL_KEYS,
+    BEO_REMOTE_KEYS,
+    BEO_REMOTE_SUBMENU_CONTROL,
+    BEO_REMOTE_SUBMENU_LIGHT,
+    DEVICE_BUTTONS,
+    FALLBACK_SOURCES,
+    BeoButtons,
+    BeoModel,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,32 +29,9 @@ def get_serial_number_from_jid(jid: str) -> str:
     return jid.split(".")[2].split("@")[0]
 
 
-def is_halo(config_entry: ConfigEntry) -> bool:
-    """Return if device is a Halo."""
-
-    if config_entry.data[CONF_MODEL] == BeoModel.BEOREMOTE_HALO:
-        return True
-    return False
-
-
-def is_mozart(config_entry: ConfigEntry) -> bool:
-    """Return if device is Mozart based."""
-
-    if config_entry.data[CONF_MODEL] in MOZART_MODELS:
-        return True
-    return False
-
-
-async def supports_battery(client: MozartClient) -> bool:
-    """Get if a Mozart device has a battery."""
-    battery_state = await client.get_battery_state()
-
-    return bool(battery_state.battery_level and battery_state.battery_level > 0)
-
-
-async def get_remotes(client: MozartClient) -> list[PairedRemote]:
+async def get_remotes(client: MozartClient | Halo) -> list[PairedRemote]:
     """Get paired remotes."""
-    bluetooth_remote_list = await client.get_bluetooth_remotes()
+    bluetooth_remote_list = await cast(MozartClient, client).get_bluetooth_remotes()
 
     # Remotes that been unpaired on the remote may still be available on the device,
     # But should not be treated as available.
@@ -58,12 +42,16 @@ async def get_remotes(client: MozartClient) -> list[PairedRemote]:
     ]
 
 
-async def get_sources(client: MozartClient) -> list[Source]:
+async def get_sources(client: MozartClient | Halo) -> list[Source]:
     """Ensure sources received, even when the API client is outdated."""
     try:
         return cast(
             list[Source],
-            (await client.get_available_sources(target_remote=False)).items,
+            (
+                await cast(MozartClient, client).get_available_sources(
+                    target_remote=False
+                )
+            ).items,
         )
     except ValueError:
         _LOGGER.warning(
@@ -97,3 +85,21 @@ def get_device_buttons(model: BeoModel) -> list[str]:
         buttons.remove(BeoButtons.BLUETOOTH)
 
     return buttons
+
+
+def get_remote_keys() -> list[str]:
+    """Get remote keys for the Beoremote One. Formatted for Home Assistant use."""
+    return [
+        *[f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}" for key_type in BEO_REMOTE_KEYS],
+        *[
+            f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}"
+            for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
+        ],
+    ]
+
+
+async def supports_battery(client: MozartClient | Halo) -> bool:
+    """Get if a Mozart device has a battery."""
+    battery_state = await cast(MozartClient, client).get_battery_state()
+
+    return bool(battery_state.battery_level and battery_state.battery_level > 0)

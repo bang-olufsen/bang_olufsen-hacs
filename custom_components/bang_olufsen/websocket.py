@@ -98,7 +98,7 @@ from .const import (
     EntityMapValues,
     WebsocketNotification,
 )
-from .entity import HaloBase, MozartBase
+from .entity import BeoBase
 from .util import get_remotes
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ type UpdateTuple = tuple[str, ButtonState, int]
 type WheelActionTuple = tuple[str, dict[str, Any]] | None
 
 
-class HaloWebsocket(HaloBase):
+class HaloWebsocket(BeoBase):
     """WebSocket for Halo."""
 
     _entity_map: dict[str, EntityMapValues] = {}
@@ -136,6 +136,7 @@ class HaloWebsocket(HaloBase):
     ) -> None:
         """Initialize the entity coordinator."""
         super().__init__(config_entry, client)
+        self._client: Halo
 
         self.hass = hass
         self._device = self.get_device(hass, self._unique_id)
@@ -765,7 +766,7 @@ class HaloWebsocket(HaloBase):
         self.hass.bus.async_fire(HALO_WEBSOCKET_EVENT, debug_event)
 
 
-class MozartWebsocket(MozartBase):
+class MozartWebsocket(BeoBase):
     """The WebSocket listener(s)."""
 
     def __init__(
@@ -776,6 +777,7 @@ class MozartWebsocket(MozartBase):
     ) -> None:
         """Initialize the entity coordinator."""
         super().__init__(config_entry, client)
+        self._client: MozartClient
 
         self.hass = hass
         self._device = self.get_device(hass, self._unique_id)

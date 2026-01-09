@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from mozart_api.models import PairedRemote
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.components.homeassistant import ServiceResponse
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -16,14 +15,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HaloConfigEntry, MozartConfigEntry
+from . import BeoConfigEntry
+from .beoremote_halo.halo import Halo
 from .beoremote_halo.models import Update, UpdateDisplayPage, UpdateNotification
 from .const import (
-    BEO_REMOTE_CONTROL_KEYS,
+    BEO_MODEL_PLATFORM_MAP,
     BEO_REMOTE_KEY_EVENTS,
-    BEO_REMOTE_KEYS,
-    BEO_REMOTE_SUBMENU_CONTROL,
-    BEO_REMOTE_SUBMENU_LIGHT,
     CONNECTION_STATUS,
     DEVICE_BUTTON_EVENTS,
     DOMAIN,
@@ -33,34 +30,83 @@ from .const import (
     MODEL_SUPPORT_PROXIMITY,
     PROXIMITY_EVENTS,
     BeoModel,
+    BeoPlatform,
     WebsocketNotification,
 )
-from .entity import HaloEntity, MozartEntity
-from .util import get_device_buttons, get_remotes, is_halo, is_mozart
+from .entity import BeoEntity
+from .util import get_device_buttons, get_remote_keys, get_remotes
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BeoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Sensor entities from config entry."""
+    """Set up Event entities from config entry."""
     entities: list[BeoEvent] = []
 
-    if is_halo(config_entry):
-        entities.extend(await _get_halo_entities(config_entry))
-    elif is_mozart(config_entry):
-        entities.extend(await _get_mozart_entities(hass, config_entry))
+    match BEO_MODEL_PLATFORM_MAP[config_entry.data[CONF_MODEL]]:
+        case BeoPlatform.MOZART.value:
+            # Add physical "buttons"
+            entities.extend(
+                [
+                    BeoMozartButton(config_entry, button_type)
+                    for button_type in get_device_buttons(config_entry.data[CONF_MODEL])
+                ]
+            )
+
+            # Check if device supports proximity detection.
+            if (
+                config_entry.data[CONF_MODEL]
+                in MODEL_SUPPORT_MAP[MODEL_SUPPORT_PROXIMITY]
+            ):
+                entities.append(BeoMozartProximity(config_entry))
+
+            # Check for connected Beoremote One
+            remotes = await get_remotes(config_entry.runtime_data.client)
+
+            for remote in remotes:
+                entities.extend(
+                    [
+                        BeoMozartRemoteKey(config_entry, remote, key_type)
+                        for key_type in get_remote_keys()
+                    ]
+                )
+
+            # If the remote is no longer available, then delete the device.
+            # The remote may appear as being available to the device after it has been unpaired on the remote
+            # As it has to be removed from the device on the app.
+
+            device_registry = dr.async_get(hass)
+            devices = device_registry.devices.get_devices_for_config_entry_id(
+                config_entry.entry_id
+            )
+            for device in devices:
+                if (
+                    device.model == BeoModel.BEOREMOTE_ONE
+                    and device.serial_number
+                    not in {remote.serial_number for remote in remotes}
+                ):
+                    device_registry.async_update_device(
+                        device.id, remove_config_entry_id=config_entry.entry_id
+                    )
+
+        case BeoPlatform.BEOREMOTE_HALO.value:
+            entities.append(BeoHaloSystemStatus(config_entry))
 
     async_add_entities(new_entities=entities)
 
 
-class BeoEvent(EventEntity):
+class BeoEvent(EventEntity, BeoEntity):
     """Base Event class."""
 
     _attr_entity_registry_enabled_default = False
+
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
+        """Initialize Event."""
+        super().__init__(config_entry)
 
     @callback
     def _async_handle_event(self, event: str) -> None:
@@ -70,87 +116,15 @@ class BeoEvent(EventEntity):
 
 
 # Mozart entities
-class MozartEvent(MozartEntity, BeoEvent):
-    """Base Mozart Event class."""
-
-    def __init__(self, config_entry: MozartConfigEntry) -> None:
-        """Init the Event."""
-        super().__init__(config_entry)
 
 
-async def _get_mozart_entities(
-    hass: HomeAssistant,
-    config_entry: MozartConfigEntry,
-) -> list[MozartEvent]:
-    """Get Mozart Event entities from config entry."""
-    entities: list[MozartEvent] = []
-
-    # Add physical "buttons"
-    entities.extend(
-        [
-            MozartButtonEvent(config_entry, button_type)
-            for button_type in get_device_buttons(config_entry.data[CONF_MODEL])
-        ]
-    )
-
-    # Check if device supports proximity detection.
-    if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_PROXIMITY]:
-        entities.append(MozartEventProximity(config_entry))
-
-    # Check for connected Beoremote One
-    remotes = await get_remotes(config_entry.runtime_data.client)
-
-    for remote in remotes:
-        # Add Light keys
-        entities.extend(
-            [
-                MozartRemoteKeyEvent(
-                    config_entry,
-                    remote,
-                    f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}",
-                )
-                for key_type in BEO_REMOTE_KEYS
-            ]
-        )
-
-        # Add Control keys
-        entities.extend(
-            [
-                MozartRemoteKeyEvent(
-                    config_entry,
-                    remote,
-                    f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}",
-                )
-                for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
-            ]
-        )
-
-    # If the remote is no longer available, then delete the device.
-    # The remote may appear as being available to the device after it has been unpaired on the remote
-    # As it has to be removed from the device on the app.
-
-    device_registry = dr.async_get(hass)
-    devices = device_registry.devices.get_devices_for_config_entry_id(
-        config_entry.entry_id
-    )
-    for device in devices:
-        if device.model == BeoModel.BEOREMOTE_ONE and device.serial_number not in {
-            remote.serial_number for remote in remotes
-        }:
-            device_registry.async_update_device(
-                device.id, remove_config_entry_id=config_entry.entry_id
-            )
-
-    return entities
-
-
-class MozartButtonEvent(MozartEvent):
+class BeoMozartButton(BeoEvent):
     """Event class for Button events."""
 
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_event_types = DEVICE_BUTTON_EVENTS
 
-    def __init__(self, config_entry: MozartConfigEntry, button_type: str) -> None:
+    def __init__(self, config_entry: BeoConfigEntry, button_type: str) -> None:
         """Initialize Button."""
         super().__init__(config_entry)
 
@@ -179,7 +153,7 @@ class MozartButtonEvent(MozartEvent):
         )
 
 
-class MozartRemoteKeyEvent(MozartEvent):
+class BeoMozartRemoteKey(BeoEvent):
     """Event class for Beoremote One key events."""
 
     _attr_device_class = EventDeviceClass.BUTTON
@@ -187,14 +161,15 @@ class MozartRemoteKeyEvent(MozartEvent):
 
     def __init__(
         self,
-        config_entry: MozartConfigEntry,
+        config_entry: BeoConfigEntry,
         remote: PairedRemote,
         key_type: str,
     ) -> None:
         """Initialize Beoremote One key."""
         super().__init__(config_entry)
 
-        assert remote.serial_number
+        if TYPE_CHECKING:
+            assert remote.serial_number
 
         self._attr_unique_id = f"{remote.serial_number}_{self._unique_id}_{key_type}"
         self._attr_device_info = DeviceInfo(
@@ -206,6 +181,7 @@ class MozartRemoteKeyEvent(MozartEvent):
             manufacturer=MANUFACTURER,
             via_device=(DOMAIN, self._unique_id),
         )
+
         # Make the native key name Home Assistant compatible
         self._attr_translation_key = key_type.lower().replace("/", "_")
 
@@ -229,14 +205,14 @@ class MozartRemoteKeyEvent(MozartEvent):
         )
 
 
-class MozartEventProximity(MozartEvent):
+class BeoMozartProximity(BeoEvent):
     """Event class for proximity sensor events."""
 
     _attr_device_class = EventDeviceClass.MOTION
     _attr_event_types = PROXIMITY_EVENTS
     _attr_translation_key = "proximity"
 
-    def __init__(self, config_entry: MozartConfigEntry) -> None:
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the proximity event."""
         super().__init__(config_entry)
 
@@ -263,32 +239,17 @@ class MozartEventProximity(MozartEvent):
 # Halo entities
 
 
-class HaloEvent(HaloEntity, BeoEvent):
-    """Base Halo Event class."""
-
-    def __init__(self, config_entry: HaloConfigEntry) -> None:
-        """Init the Event."""
-        super().__init__(config_entry)
-
-
-async def _get_halo_entities(
-    config_entry: HaloConfigEntry,
-) -> list[HaloEvent]:
-    """Get Halo Event entities from config entry."""
-    entities: list[HaloEvent] = [HaloEventSystemStatus(config_entry)]
-    return entities
-
-
-class HaloEventSystemStatus(HaloEvent):
+class BeoHaloSystemStatus(BeoEvent):
     """Event class for Halo system status events."""
 
     _attr_entity_registry_enabled_default = True
     _attr_event_types = HALO_SYSTEM_EVENTS
     _attr_translation_key = "halo_system_status"
 
-    def __init__(self, config_entry: HaloConfigEntry) -> None:
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the system status event."""
         super().__init__(config_entry)
+        self._client: Halo
 
         self._attr_unique_id = f"{self._unique_id}_system_status"
 
