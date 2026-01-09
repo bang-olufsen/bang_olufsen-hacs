@@ -56,11 +56,12 @@ class BeoBinarySensor(BinarySensorEntity, BeoEntity):
 class BeoMozartBatteryCharging(BeoBinarySensor):
     """Battery charging Binary Sensor."""
 
+    _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
+
     def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the battery charging Binary Sensor."""
         super().__init__(config_entry)
 
-        self._attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
         self._attr_unique_id = f"{self._unique_id}_battery_charging"
 
     async def async_added_to_hass(self) -> None:
@@ -89,13 +90,12 @@ class BeoMozartBatteryCharging(BeoBinarySensor):
 class BeoHaloBatteryCharging(BeoBinarySensor):
     """Battery charging Binary Sensor."""
 
-    _attr_translation_key = "halo_battery_charging"
+    _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
     def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the battery charging Binary Sensor."""
         super().__init__(config_entry)
 
-        self._attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
         self._attr_unique_id = f"{self._unique_id}_battery_charging"
 
     async def async_added_to_hass(self) -> None:

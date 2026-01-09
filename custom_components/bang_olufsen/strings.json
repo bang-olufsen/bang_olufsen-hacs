@@ -53,14 +53,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "battery_charging": {
-        "name": "Battery charging"
-      },
-      "halo_battery_charging": {
-        "name": "Battery charging"
-      }
-    },
     "event": {
       "bluetooth": {
         "name": "Bluetooth",
