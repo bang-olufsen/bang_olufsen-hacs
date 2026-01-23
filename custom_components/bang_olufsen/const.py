@@ -127,6 +127,7 @@ class BeoAttribute(StrEnum):
     BEOLINK_LEADER = "leader"
     BEOLINK_LISTENERS = "listeners"
     BEOLINK_PEERS = "peers"
+    BEOLINK_REMOTE_SOURCE = "remote_source"
     BEOLINK_SELF = "self"
     FAVORITES = "favorites"
     FAVORITES_CONTENT_ID = "content_id"

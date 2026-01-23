@@ -8,6 +8,7 @@ from datetime import timedelta
 import json
 import logging
 from typing import TYPE_CHECKING, Any, cast
+from uuid import UUID
 
 from aiohttp import ClientConnectorError
 from inflection import titleize, underscore
@@ -197,7 +198,7 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
 
         # Extra state attributes:
         # Beolink: peer(s), listener(s), leader and self
-        self._beolink_attributes: dict[str, dict[str, dict[str, str]]] = {}
+        self._beolink_attributes: dict[str, dict[str, Any]] = {}
         # Favorites: Overview of favorites configuration
         self._favorite_attribute: dict[str, dict[str, Any]] = {}
         # Input signal: Human formatted string of current audio signal (surround etc.)
@@ -565,6 +566,12 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
                 self._remote_leader.friendly_name: self._remote_leader.jid,
             }
 
+            # Add remote source
+            if self._playback_metadata.remote_source:
+                self._beolink_attributes[BeoAttribute.BEOLINK][
+                    BeoAttribute.BEOLINK_REMOTE_SOURCE
+                ] = self._playback_metadata.remote_source
+
         # If not listener, check if leader.
         else:
             self._beolink_listeners = await self._client.get_beolink_listeners()
@@ -894,7 +901,7 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
             await self._client.set_active_source(source_id=key)
         else:
             # Video
-            await self._client.post_remote_trigger(id=key)
+            await self._client.post_remote_trigger(id=UUID(key))
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a sound mode."""
@@ -1053,7 +1060,7 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
                     translation_key="play_media_error",
                     translation_placeholders={
                         "media_type": media_type,
-                        "error_message": json.loads(error.body)["message"],
+                        "error_message": json.loads(cast(str, error.body))["message"],
                     },
                 ) from error
 
@@ -1113,9 +1120,9 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
             response.request_id
         )
         return (
-            retrieved_response.dict()
+            retrieved_response.model_dump()
             if retrieved_response is not None
-            else response.dict()
+            else response.model_dump()
         )
 
     async def async_beolink_expand(

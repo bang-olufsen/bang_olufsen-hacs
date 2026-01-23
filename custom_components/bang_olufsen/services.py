@@ -1,4 +1,4 @@
-"""Services for Bang & Olufsen."""
+"""Services for the Bang & Olufsen integration."""
 
 from __future__ import annotations
 

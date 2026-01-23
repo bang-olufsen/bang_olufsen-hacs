@@ -159,6 +159,7 @@ This integration adds an array of different useful entities that are generated a
     - Beolink leader (if available)
     - Beolink listeners (if available)
     - Beolink peers (if available)
+    - Beolink remote source (if available)
   - Favourites:
     - Source name (if available)
     - Title (if available)
