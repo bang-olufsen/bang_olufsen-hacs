@@ -533,10 +533,10 @@ Get the raw Halo configuration.
 
 Send a notification to the Halo.
 
-| Action data attribute | Optional | Description                                                                                    |
-| --------------------- | -------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Action data attribute | Optional | Description |
+| --------------------- | -------- | ---------------------------------------------------------------------------------------------- | 
 | `title`               | no       | The title of the notification.                                                                 |
-| `subtitle`            | no       | The subtitle of the notification. 6 lines are supported before formatting starts to break. Use | in yaml mode to construct multiline strings. |
+| `subtitle`            | no       | The subtitle of the notification. 6 lines are supported before formatting starts to break. Use in yaml mode to construct multiline strings. |
 
 #### Action `bang_olufsen.halo_display_page`
 
