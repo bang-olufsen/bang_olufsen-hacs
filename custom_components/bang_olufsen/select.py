@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from typing import cast
+from uuid import UUID
 
 from mozart_api.models import SpeakerGroupOverview
 from mozart_api.mozart_client import MozartClient
@@ -83,7 +84,7 @@ class BeoMozartListeningPosition(BeoSelect):
         self._attr_unique_id = f"{self._unique_id}_listening_position"
         self._attr_current_option = None
 
-        self._listening_positions: dict[str, str] = {}
+        self._listening_positions: dict[str, UUID] = {}
         self._scenes: dict[str, str] = {}
 
     async def async_added_to_hass(self) -> None:
@@ -129,6 +130,7 @@ class BeoMozartListeningPosition(BeoSelect):
 
         # Listening positions
         for scene_key in scenes:
+            scene_key_uuid = UUID(scene_key)
             scene = scenes[scene_key]
 
             if (
@@ -141,11 +143,11 @@ class BeoMozartListeningPosition(BeoSelect):
                     _LOGGER.warning(
                         "Ignoring listening position with duplicate name: %s and ID: %s",
                         scene.label,
-                        scene_key,
+                        scene_key_uuid,
                     )
                     continue
 
-                self._listening_positions[scene.label] = scene_key
+                self._listening_positions[scene.label] = scene_key_uuid
 
                 # Currently guess the current active listening position by the speakergroup ID
                 if active_speaker_group.id == scene.action_list[0].speaker_group_id:

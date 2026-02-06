@@ -49,16 +49,20 @@ beolink_join:
             select:
               translation_key: "source_ids"
               options:
+                - aux_a
                 - beoradio
+                - cd
                 - deezer
+                - linein
+                - line_in
+                - ph
+                - radio
+                - spdif
                 - spotify
                 - tidal
-                - radio
+                - toslink
                 - tp1
                 - tp2
-                - cd
-                - aux_a
-                - ph
 
 beolink_leader_command:
   target:

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
 from aiohttp import ClientConnectorError
-from inflection import titleize, underscore
+from inflection import camelize, titleize, underscore
 from mozart_api.exceptions import ApiException
 from mozart_api.models import (
     Action,
@@ -75,6 +75,7 @@ from .const import (
     BEO_REPEAT_FROM_HA,
     BEO_REPEAT_TO_HA,
     BEO_STATES,
+    BEOLINK_JOIN_SOURCES_TO_CAMELIZE,
     BEOLINK_JOIN_SOURCES_TO_UPPER,
     BEOLINK_LEADER_COMMAND,
     BEOLINK_LISTENER_COMMAND,
@@ -1112,6 +1113,9 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
             if source_id in BEOLINK_JOIN_SOURCES_TO_UPPER:
                 source_id = source_id.upper()
 
+            # Mozart sources need to be camelCase
+            if source_id in BEOLINK_JOIN_SOURCES_TO_CAMELIZE:
+                source_id = camelize(source_id, False)
             response = await self._client.join_beolink_peer(
                 jid=beolink_jid, source=source_id
             )

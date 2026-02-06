@@ -1,1472 +1,1476 @@
 {
-  "common": {
-    "jid_options_description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
-    "jid_options_name": "JID options",
-    "key_press": "Press",
-    "key_release": "Release",
-    "long_press_release": "Release of long press",
-    "long_press_timeout": "Long press",
-    "short_press_release": "Release of short press",
-    "very_long_press_release": "Release of very long press",
-    "very_long_press_timeout": "Very long press"
-  },
-  "config": {
-    "abort": {
-      "already_configured": "Device is already configured",
-      "already_in_progress": "Configuration flow is already in progress"
+    "common": {
+        "jid_options_description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+        "jid_options_name": "JID options",
+        "key_press": "Press",
+        "key_release": "Release",
+        "long_press_release": "Release of long press",
+        "long_press_timeout": "Long press",
+        "short_press_release": "Release of short press",
+        "very_long_press_release": "Release of very long press",
+        "very_long_press_timeout": "Very long press"
     },
-    "error": {
-      "api_exception": "Failed to connect",
-      "client_connector_error": "Failed to connect",
-      "client_os_error": "Failed to connect",
-      "invalid_ip": "Invalid IPv4 address",
-      "invalid_serial_number": "Invalid serial number",
-      "server_timeout_error": "Failed to connect",
-      "timeout_error": "Failed to connect",
-      "ws_message_type_error": "Failed to connect"
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress"
+        },
+        "error": {
+            "api_exception": "Failed to connect",
+            "client_connector_error": "Failed to connect",
+            "client_os_error": "Failed to connect",
+            "invalid_ip": "Invalid IPv4 address",
+            "invalid_serial_number": "Invalid serial number",
+            "server_timeout_error": "Failed to connect",
+            "timeout_error": "Failed to connect",
+            "ws_message_type_error": "Failed to connect"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "halo": {
+                "data": {
+                    "serial_number": "Serial Number"
+                },
+                "description": "Manually configure your Bang & Olufsen Beoremote Halo."
+            },
+            "user": {
+                "data": {
+                    "host": "IP address",
+                    "model": "Model"
+                },
+                "description": "Manually configure your Bang & Olufsen device."
+            },
+            "zeroconf_confirm": {
+                "description": "Confirm the configuration of the {model}-{serial_number} @ {host}.",
+                "title": "Setup Bang & Olufsen device"
+            }
+        }
     },
-    "flow_title": "{name}",
-    "step": {
-      "halo": {
-        "data": {
-          "serial_number": "Serial Number"
+    "device_automation": {
+        "action_type": {
+            "turn_off": "Turn off {entity_name}",
+            "turn_on": "Turn on {entity_name}"
+        }
+    },
+    "entity": {
+        "event": {
+            "bluetooth": {
+                "name": "Bluetooth",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "control_blue": {
+                "name": "Control - Blue",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit0": {
+                "name": "Control - Digit 0",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit1": {
+                "name": "Control - Digit 1",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit2": {
+                "name": "Control - Digit 2",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit3": {
+                "name": "Control - Digit 3",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit4": {
+                "name": "Control - Digit 4",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit5": {
+                "name": "Control - Digit 5",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit6": {
+                "name": "Control - Digit 6",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit7": {
+                "name": "Control - Digit 7",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit8": {
+                "name": "Control - Digit 8",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_digit9": {
+                "name": "Control - Digit 9",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_down": {
+                "name": "Control - Down",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func1": {
+                "name": "Control - Function 1",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func10": {
+                "name": "Control - Function 10",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func11": {
+                "name": "Control - Function 11",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func12": {
+                "name": "Control - Function 12",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func13": {
+                "name": "Control - Function 13",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func14": {
+                "name": "Control - Function 14",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func15": {
+                "name": "Control - Function 15",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func16": {
+                "name": "Control - Function 16",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func17": {
+                "name": "Control - Function 17",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func18": {
+                "name": "Control - Function 18",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func19": {
+                "name": "Control - Function 19",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func2": {
+                "name": "Control - Function 2",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func20": {
+                "name": "Control - Function 20",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func21": {
+                "name": "Control - Function 21",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func22": {
+                "name": "Control - Function 22",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func23": {
+                "name": "Control - Function 23",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func24": {
+                "name": "Control - Function 24",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func25": {
+                "name": "Control - Function 25",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func26": {
+                "name": "Control - Function 26",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func27": {
+                "name": "Control - Function 27",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func3": {
+                "name": "Control - Function 3",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func4": {
+                "name": "Control - Function 4",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func5": {
+                "name": "Control - Function 5",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func6": {
+                "name": "Control - Function 6",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func7": {
+                "name": "Control - Function 7",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func8": {
+                "name": "Control - Function 8",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_func9": {
+                "name": "Control - Function 9",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_green": {
+                "name": "Control - Green",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_left": {
+                "name": "Control - Left",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_play": {
+                "name": "Control - Play",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_red": {
+                "name": "Control - Red",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_rewind": {
+                "name": "Control - Rewind",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_right": {
+                "name": "Control - Right",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_select": {
+                "name": "Control - Select",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_stop": {
+                "name": "Control - Stop",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_up": {
+                "name": "Control - Up",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_wind": {
+                "name": "Control - Wind",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "control_yellow": {
+                "name": "Control - Yellow",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "halo_system_status": {
+                "name": "System status",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "active": "Active",
+                            "sleep": "Sleeping",
+                            "standby": "Standby"
+                        }
+                    }
+                }
+            },
+            "light_blue": {
+                "name": "Light - Blue",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit0": {
+                "name": "Light - Digit 0",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit1": {
+                "name": "Light - Digit 1",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit2": {
+                "name": "Light - Digit 2",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit3": {
+                "name": "Light - Digit 3",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit4": {
+                "name": "Light - Digit 4",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit5": {
+                "name": "Light - Digit 5",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit6": {
+                "name": "Light - Digit 6",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit7": {
+                "name": "Light - Digit 7",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit8": {
+                "name": "Light - Digit 8",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_digit9": {
+                "name": "Light - Digit 9",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_down": {
+                "name": "Light - Down",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func1": {
+                "name": "Light - Function 1",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func10": {
+                "name": "Light - Function 10",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func11": {
+                "name": "Light - Function 11",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func12": {
+                "name": "Light - Function 12",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func13": {
+                "name": "Light - Function 13",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func14": {
+                "name": "Light - Function 14",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func15": {
+                "name": "Light - Function 15",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func16": {
+                "name": "Light - Function 16",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func17": {
+                "name": "Light- Function 17",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func2": {
+                "name": "Light - Function 2",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func3": {
+                "name": "Light - Function 3",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func4": {
+                "name": "Light - Function 4",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func5": {
+                "name": "Light - Function 5",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func6": {
+                "name": "Light - Function 6",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func7": {
+                "name": "Light - Function 7",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func8": {
+                "name": "Light - Function 8",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_func9": {
+                "name": "Light - Function 9",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_green": {
+                "name": "Light - Green",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_left": {
+                "name": "Light - Left",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_play": {
+                "name": "Light - Play",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_red": {
+                "name": "Light - Red",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_rewind": {
+                "name": "Light - Rewind",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_right": {
+                "name": "Light - Right",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_select": {
+                "name": "Light - Select",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_stop": {
+                "name": "Light - Stop",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_up": {
+                "name": "Light - Up",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_wind": {
+                "name": "Light - Wind",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "light_yellow": {
+                "name": "Light - Yellow",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "key_press": "Press",
+                            "key_release": "Release"
+                        }
+                    }
+                }
+            },
+            "microphone": {
+                "name": "Microphone",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "next": {
+                "name": "Next",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "playpause": {
+                "name": "Play / Pause",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "preset1": {
+                "name": "Favorite 1",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "preset2": {
+                "name": "Favorite 2",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "preset3": {
+                "name": "Favorite 3",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "preset4": {
+                "name": "Favorite 4",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "previous": {
+                "name": "Previous",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            },
+            "proximity": {
+                "name": "Proximity",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "proximity_presence_detected": "Presence detected",
+                            "proximity_presence_not_detected": "No presence detected"
+                        }
+                    }
+                }
+            },
+            "volume": {
+                "name": "Volume",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press_release": "Release of long press",
+                            "long_press_timeout": "Long press",
+                            "short_press_release": "Release of short press",
+                            "very_long_press_release": "Release of very long press",
+                            "very_long_press_timeout": "Very long press"
+                        }
+                    }
+                }
+            }
         },
-        "description": "Manually configure your Bang & Olufsen Beoremote Halo."
-      },
-      "user": {
-        "data": {
-          "host": "IP address",
-          "model": "Model"
+        "select": {
+            "listening_position": {
+                "name": "Listening position"
+            }
         },
-        "description": "Manually configure your Bang & Olufsen device."
-      },
-      "zeroconf_confirm": {
-        "description": "Confirm the configuration of the {model}-{serial_number} @ {host}.",
-        "title": "Setup Bang & Olufsen device"
-      }
+        "sensor": {
+            "battery_charging_time": {
+                "name": "Battery charging time"
+            },
+            "battery_playing_time": {
+                "name": "Battery playing time"
+            }
+        },
+        "text": {
+            "home_control_uri": {
+                "name": "Home Control URI"
+            }
+        }
+    },
+    "exceptions": {
+        "beolink_not_playing": {
+            "message": "Can't Beolink expand from a non-playing device."
+        },
+        "invalid_beolink_parameter": {
+            "message": "Invalid parameter: {parameter} for {command} which expects a parameter of type: {parameter_type}."
+        },
+        "invalid_grouping_entity": {
+            "message": "Entity with ID: {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
+        },
+        "invalid_media_type": {
+            "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
+        },
+        "invalid_sound_mode": {
+            "message": "{invalid_sound_mode} is an invalid sound mode. Valid values are: {valid_sound_modes}."
+        },
+        "invalid_source": {
+            "message": "Invalid source: {invalid_source}. Valid sources are: {valid_sources}"
+        },
+        "m3u_invalid_format": {
+            "message": "Media sources with the .m3u extension are not supported."
+        },
+        "play_media_error": {
+            "message": "An error occurred while attempting to play {media_type}: {error_message}."
+        }
+    },
+    "options": {
+        "abort": {
+            "invalid_model": "The {model} does not support configuration.",
+            "too_many_buttons": "Can't add {num_buttons} buttons as only 8 are supported per page."
+        },
+        "step": {
+            "button": {
+                "data": {
+                    "button_action": "Button action",
+                    "icon": "Icon",
+                    "title": "Title",
+                    "wheel_action": "Wheel action"
+                },
+                "description": "Select an icon to be shown in the middle of the `{name}` button and a title to be shown underneath the button.\n\nSome domains have support for selectable button and wheel actions.",
+                "title": "Configure button"
+            },
+            "delete_pages": {
+                "data": {
+                    "pages": "Pages"
+                },
+                "description": "Delete selected pages",
+                "title": "Delete pages"
+            },
+            "init": {
+                "description": "Configure Beoremote Halo for Home Assistant.",
+                "menu_options": {
+                    "delete_pages": "Delete existing pages",
+                    "modify_default": "Modify default button",
+                    "modify_page": "Modify an existing page",
+                    "page": "Create a new page"
+                }
+            },
+            "modify_default": {
+                "description": "Select or remove a default button for the Beoremote Halo.\n\nDefault buttons are selected as the active button on the Beoremote Halo after a small timeout.",
+                "menu_options": {
+                    "remove_default": "Remove the default attribute from button: {button}",
+                    "select_default": "Select the default button"
+                },
+                "title": "Modify default"
+            },
+            "modify_page": {
+                "data": {
+                    "pages": "Pages"
+                },
+                "description": "Modify the title and buttons of an existing page",
+                "title": "Modify page"
+            },
+            "page": {
+                "data": {
+                    "entities": "Entities",
+                    "page_title": "Page title"
+                },
+                "description": "Create or modify a page with selected entities as buttons.",
+                "title": "Page"
+            },
+            "select_default": {
+                "data": {
+                    "default_button": "Default button"
+                },
+                "description": "Select the default button",
+                "title": "Select default"
+            }
+        }
+    },
+    "selector": {
+        "source_ids": {
+            "options": {
+                "aux_a": "Beolink Converter NL/ML AUX_A",
+                "beoradio": "ASE Beoradio",
+                "cd": "Beolink Converter NL/ML CD",
+                "deezer": "ASE / Mozart Deezer",
+                "line_in": "Mozart Line in (non GVA only)",
+                "linein": "ASE Line in (non GVA only)",
+                "ph": "Beolink Converter NL/ML PH",
+                "radio": "Beolink Converter NL/ML RADIO",
+                "spdif": "Mozart Optical in (non GVA only)",
+                "spotify": "ASE / Mozart Spotify",
+                "tidal": "Mozart Tidal",
+                "toslink": "ASE Optical in (non GVA only)",
+                "tp1": "Beolink Converter NL/ML TP1",
+                "tp2": "Beolink Converter NL/ML TP2"
+            }
+        }
+    },
+    "services": {
+        "beolink_allstandby": {
+            "description": "Sets all connected Beolink devices to standby.",
+            "name": "Beolink all standby"
+        },
+        "beolink_expand": {
+            "description": "Adds devices to the current Beolink experience.",
+            "fields": {
+                "all_discovered": {
+                    "description": "Expand Beolink experience to all discovered devices.",
+                    "name": "All discovered"
+                },
+                "beolink_jids": {
+                    "description": "Specify which Beolink JIDs will join current Beolink experience.",
+                    "name": "Beolink JIDs"
+                }
+            },
+            "name": "Beolink expand",
+            "sections": {
+                "jid_options": {
+                    "description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+                    "name": "JID options"
+                }
+            }
+        },
+        "beolink_join": {
+            "description": "Joins a Beolink experience.",
+            "fields": {
+                "beolink_jid": {
+                    "description": "Manually specify Beolink JID to join.",
+                    "name": "Beolink JID"
+                },
+                "source_id": {
+                    "description": "Specify which source to join, behavior varies between hardware platforms. Source names prefaced by a platform name can only be used when connecting to that platform. For example \"ASE Beoradio\" can only be used when joining an ASE device, while \u201dASE / Mozart Deezer\u201d can be used with ASE or Mozart devices. A defined Beolink JID is required.",
+                    "name": "Source"
+                }
+            },
+            "name": "Beolink join",
+            "sections": {
+                "jid_options": {
+                    "description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+                    "name": "JID options"
+                }
+            }
+        },
+        "beolink_leader_command": {
+            "description": "Send a media_player command to Beolink leader.",
+            "fields": {
+                "command": {
+                    "description": "Specify the media_player command.",
+                    "name": "Command"
+                },
+                "parameter": {
+                    "description": "Specify the media_player command's parameter.",
+                    "name": "Parameter"
+                }
+            },
+            "name": "Beolink leader command"
+        },
+        "beolink_leave": {
+            "description": "Leaves a Beolink experience.",
+            "name": "Beolink leave"
+        },
+        "beolink_set_relative_volume": {
+            "description": "Set a volume level relative to the current level of all connected Beolink devices.",
+            "fields": {
+                "volume_level": {
+                    "description": "Specify the volume level.",
+                    "name": "Volume level"
+                }
+            },
+            "name": "Beolink set relative volume"
+        },
+        "beolink_set_volume": {
+            "description": "Set a volume level for all connected Beolink devices.",
+            "fields": {
+                "volume_level": {
+                    "description": "Specify the volume level.",
+                    "name": "Volume level"
+                }
+            },
+            "name": "Beolink set volume"
+        },
+        "beolink_unexpand": {
+            "description": "Removes devices from the current Beolink experience.",
+            "fields": {
+                "beolink_jids": {
+                    "description": "Specify which Beolink JIDs will leave from current Beolink experience.",
+                    "name": "Beolink JIDs"
+                }
+            },
+            "name": "Beolink unexpand",
+            "sections": {
+                "jid_options": {
+                    "description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+                    "name": "JID options"
+                }
+            }
+        },
+        "halo_configuration": {
+            "description": "Get the raw Halo configuration.",
+            "name": "Halo Configuration"
+        },
+        "halo_display_page": {
+            "description": "Focus on a Page and Button on a Halo.",
+            "fields": {
+                "button_id": {
+                    "description": "The UUID of a Button.",
+                    "name": "Button ID"
+                },
+                "page_id": {
+                    "description": "The UUID of a Page.",
+                    "name": "Page ID"
+                }
+            },
+            "name": "Halo Display Page"
+        },
+        "halo_notification": {
+            "description": "Send a notification to the Halo.",
+            "fields": {
+                "subtitle": {
+                    "description": "The subtitle of the notification. 6 lines are supported before formatting starts to break. Use | in yaml mode to construct multiline strings.",
+                    "name": "Subtitle"
+                },
+                "title": {
+                    "description": "The title of the notification.",
+                    "name": "Title"
+                }
+            },
+            "name": "Halo Notification"
+        },
+        "reboot": {
+            "description": "Reboot the device.",
+            "name": "Reboot"
+        }
     }
-  },
-  "device_automation": {
-    "action_type": {
-      "turn_off": "Turn off {entity_name}",
-      "turn_on": "Turn on {entity_name}"
-    }
-  },
-  "entity": {
-    "event": {
-      "bluetooth": {
-        "name": "Bluetooth",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "long_press_release": "Release of long press",
-              "long_press_timeout": "Long press",
-              "short_press_release": "Release of short press",
-              "very_long_press_release": "Release of very long press",
-              "very_long_press_timeout": "Very long press"
-            }
-          }
-        }
-      },
-      "control_blue": {
-        "name": "Control - Blue",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_digit0": {
-        "name": "Control - Digit 0",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_digit1": {
-        "name": "Control - Digit 1",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_digit2": {
-        "name": "Control - Digit 2",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_digit3": {
-        "name": "Control - Digit 3",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_digit4": {
-        "name": "Control - Digit 4",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_digit5": {
-        "name": "Control - Digit 5",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_digit6": {
-        "name": "Control - Digit 6",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_digit7": {
-        "name": "Control - Digit 7",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_digit8": {
-        "name": "Control - Digit 8",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_digit9": {
-        "name": "Control - Digit 9",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_down": {
-        "name": "Control - Down",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func1": {
-        "name": "Control - Function 1",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func10": {
-        "name": "Control - Function 10",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func11": {
-        "name": "Control - Function 11",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func12": {
-        "name": "Control - Function 12",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func13": {
-        "name": "Control - Function 13",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func14": {
-        "name": "Control - Function 14",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func15": {
-        "name": "Control - Function 15",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func16": {
-        "name": "Control - Function 16",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func17": {
-        "name": "Control - Function 17",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func18": {
-        "name": "Control - Function 18",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func19": {
-        "name": "Control - Function 19",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func2": {
-        "name": "Control - Function 2",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func20": {
-        "name": "Control - Function 20",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func21": {
-        "name": "Control - Function 21",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func22": {
-        "name": "Control - Function 22",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func23": {
-        "name": "Control - Function 23",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func24": {
-        "name": "Control - Function 24",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func25": {
-        "name": "Control - Function 25",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func26": {
-        "name": "Control - Function 26",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func27": {
-        "name": "Control - Function 27",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func3": {
-        "name": "Control - Function 3",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func4": {
-        "name": "Control - Function 4",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func5": {
-        "name": "Control - Function 5",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func6": {
-        "name": "Control - Function 6",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func7": {
-        "name": "Control - Function 7",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func8": {
-        "name": "Control - Function 8",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_func9": {
-        "name": "Control - Function 9",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_green": {
-        "name": "Control - Green",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_left": {
-        "name": "Control - Left",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_play": {
-        "name": "Control - Play",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_red": {
-        "name": "Control - Red",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_rewind": {
-        "name": "Control - Rewind",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_right": {
-        "name": "Control - Right",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_select": {
-        "name": "Control - Select",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_stop": {
-        "name": "Control - Stop",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_up": {
-        "name": "Control - Up",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_wind": {
-        "name": "Control - Wind",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "control_yellow": {
-        "name": "Control - Yellow",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "halo_system_status": {
-        "name": "System status",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "active": "Active",
-              "sleep": "Sleeping",
-              "standby": "Standby"
-            }
-          }
-        }
-      },
-      "light_blue": {
-        "name": "Light - Blue",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_digit0": {
-        "name": "Light - Digit 0",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_digit1": {
-        "name": "Light - Digit 1",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_digit2": {
-        "name": "Light - Digit 2",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_digit3": {
-        "name": "Light - Digit 3",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_digit4": {
-        "name": "Light - Digit 4",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_digit5": {
-        "name": "Light - Digit 5",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_digit6": {
-        "name": "Light - Digit 6",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_digit7": {
-        "name": "Light - Digit 7",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_digit8": {
-        "name": "Light - Digit 8",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_digit9": {
-        "name": "Light - Digit 9",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_down": {
-        "name": "Light - Down",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func1": {
-        "name": "Light - Function 1",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func10": {
-        "name": "Light - Function 10",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func11": {
-        "name": "Light - Function 11",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func12": {
-        "name": "Light - Function 12",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func13": {
-        "name": "Light - Function 13",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func14": {
-        "name": "Light - Function 14",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func15": {
-        "name": "Light - Function 15",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func16": {
-        "name": "Light - Function 16",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func17": {
-        "name": "Light- Function 17",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func2": {
-        "name": "Light - Function 2",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func3": {
-        "name": "Light - Function 3",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func4": {
-        "name": "Light - Function 4",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func5": {
-        "name": "Light - Function 5",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func6": {
-        "name": "Light - Function 6",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func7": {
-        "name": "Light - Function 7",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func8": {
-        "name": "Light - Function 8",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_func9": {
-        "name": "Light - Function 9",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_green": {
-        "name": "Light - Green",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_left": {
-        "name": "Light - Left",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_play": {
-        "name": "Light - Play",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_red": {
-        "name": "Light - Red",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_rewind": {
-        "name": "Light - Rewind",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_right": {
-        "name": "Light - Right",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_select": {
-        "name": "Light - Select",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_stop": {
-        "name": "Light - Stop",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_up": {
-        "name": "Light - Up",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_wind": {
-        "name": "Light - Wind",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "light_yellow": {
-        "name": "Light - Yellow",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "Press",
-              "key_release": "Release"
-            }
-          }
-        }
-      },
-      "microphone": {
-        "name": "Microphone",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "long_press_release": "Release of long press",
-              "long_press_timeout": "Long press",
-              "short_press_release": "Release of short press",
-              "very_long_press_release": "Release of very long press",
-              "very_long_press_timeout": "Very long press"
-            }
-          }
-        }
-      },
-      "next": {
-        "name": "Next",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "long_press_release": "Release of long press",
-              "long_press_timeout": "Long press",
-              "short_press_release": "Release of short press",
-              "very_long_press_release": "Release of very long press",
-              "very_long_press_timeout": "Very long press"
-            }
-          }
-        }
-      },
-      "playpause": {
-        "name": "Play / Pause",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "long_press_release": "Release of long press",
-              "long_press_timeout": "Long press",
-              "short_press_release": "Release of short press",
-              "very_long_press_release": "Release of very long press",
-              "very_long_press_timeout": "Very long press"
-            }
-          }
-        }
-      },
-      "preset1": {
-        "name": "Favorite 1",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "long_press_release": "Release of long press",
-              "long_press_timeout": "Long press",
-              "short_press_release": "Release of short press",
-              "very_long_press_release": "Release of very long press",
-              "very_long_press_timeout": "Very long press"
-            }
-          }
-        }
-      },
-      "preset2": {
-        "name": "Favorite 2",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "long_press_release": "Release of long press",
-              "long_press_timeout": "Long press",
-              "short_press_release": "Release of short press",
-              "very_long_press_release": "Release of very long press",
-              "very_long_press_timeout": "Very long press"
-            }
-          }
-        }
-      },
-      "preset3": {
-        "name": "Favorite 3",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "long_press_release": "Release of long press",
-              "long_press_timeout": "Long press",
-              "short_press_release": "Release of short press",
-              "very_long_press_release": "Release of very long press",
-              "very_long_press_timeout": "Very long press"
-            }
-          }
-        }
-      },
-      "preset4": {
-        "name": "Favorite 4",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "long_press_release": "Release of long press",
-              "long_press_timeout": "Long press",
-              "short_press_release": "Release of short press",
-              "very_long_press_release": "Release of very long press",
-              "very_long_press_timeout": "Very long press"
-            }
-          }
-        }
-      },
-      "previous": {
-        "name": "Previous",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "long_press_release": "Release of long press",
-              "long_press_timeout": "Long press",
-              "short_press_release": "Release of short press",
-              "very_long_press_release": "Release of very long press",
-              "very_long_press_timeout": "Very long press"
-            }
-          }
-        }
-      },
-      "proximity": {
-        "name": "Proximity",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "proximity_presence_detected": "Presence detected",
-              "proximity_presence_not_detected": "No presence detected"
-            }
-          }
-        }
-      },
-      "volume": {
-        "name": "Volume",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "long_press_release": "Release of long press",
-              "long_press_timeout": "Long press",
-              "short_press_release": "Release of short press",
-              "very_long_press_release": "Release of very long press",
-              "very_long_press_timeout": "Very long press"
-            }
-          }
-        }
-      }
-    },
-    "select": {
-      "listening_position": {
-        "name": "Listening position"
-      }
-    },
-    "sensor": {
-      "battery_charging_time": {
-        "name": "Battery charging time"
-      },
-      "battery_playing_time": {
-        "name": "Battery playing time"
-      }
-    },
-    "text": {
-      "home_control_uri": {
-        "name": "Home Control URI"
-      }
-    }
-  },
-  "exceptions": {
-    "beolink_not_playing": {
-      "message": "Can't Beolink expand from a non-playing device."
-    },
-    "invalid_beolink_parameter": {
-      "message": "Invalid parameter: {parameter} for {command} which expects a parameter of type: {parameter_type}."
-    },
-    "invalid_grouping_entity": {
-      "message": "Entity with ID: {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
-    },
-    "invalid_media_type": {
-      "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
-    },
-    "invalid_sound_mode": {
-      "message": "{invalid_sound_mode} is an invalid sound mode. Valid values are: {valid_sound_modes}."
-    },
-    "invalid_source": {
-      "message": "Invalid source: {invalid_source}. Valid sources are: {valid_sources}"
-    },
-    "m3u_invalid_format": {
-      "message": "Media sources with the .m3u extension are not supported."
-    },
-    "play_media_error": {
-      "message": "An error occurred while attempting to play {media_type}: {error_message}."
-    }
-  },
-  "options": {
-    "abort": {
-      "invalid_model": "The {model} does not support configuration.",
-      "too_many_buttons": "Can't add {num_buttons} buttons as only 8 are supported per page."
-    },
-    "step": {
-      "button": {
-        "data": {
-          "button_action": "Button action",
-          "icon": "Icon",
-          "title": "Title",
-          "wheel_action": "Wheel action"
-        },
-        "description": "Select an icon to be shown in the middle of the `{name}` button and a title to be shown underneath the button.\n\nSome domains have support for selectable button and wheel actions.",
-        "title": "Configure button"
-      },
-      "delete_pages": {
-        "data": {
-          "pages": "Pages"
-        },
-        "description": "Delete selected pages",
-        "title": "Delete pages"
-      },
-      "init": {
-        "description": "Configure Beoremote Halo for Home Assistant.",
-        "menu_options": {
-          "delete_pages": "Delete existing pages",
-          "modify_default": "Modify default button",
-          "modify_page": "Modify an existing page",
-          "page": "Create a new page"
-        }
-      },
-      "modify_default": {
-        "description": "Select or remove a default button for the Beoremote Halo.\n\nDefault buttons are selected as the active button on the Beoremote Halo after a small timeout.",
-        "menu_options": {
-          "remove_default": "Remove the default attribute from button: {button}",
-          "select_default": "Select the default button"
-        },
-        "title": "Modify default"
-      },
-      "modify_page": {
-        "data": {
-          "pages": "Pages"
-        },
-        "description": "Modify the title and buttons of an existing page",
-        "title": "Modify page"
-      },
-      "page": {
-        "data": {
-          "entities": "Entities",
-          "page_title": "Page title"
-        },
-        "description": "Create or modify a page with selected entities as buttons.",
-        "title": "Page"
-      },
-      "select_default": {
-        "data": {
-          "default_button": "Default button"
-        },
-        "description": "Select the default button",
-        "title": "Select default"
-      }
-    }
-  },
-  "selector": {
-    "source_ids": {
-      "options": {
-        "aux_a": "Beolink Converter NL/ML AUX_A",
-        "beoradio": "ASE Beoradio",
-        "cd": "Beolink Converter NL/ML CD",
-        "deezer": "ASE / Mozart Deezer",
-        "ph": "Beolink Converter NL/ML PH",
-        "radio": "Beolink Converter NL/ML RADIO",
-        "spotify": "ASE / Mozart Spotify",
-        "tidal": "Mozart Tidal",
-        "tp1": "Beolink Converter NL/ML TP1",
-        "tp2": "Beolink Converter NL/ML TP2"
-      }
-    }
-  },
-  "services": {
-    "beolink_allstandby": {
-      "description": "Sets all connected Beolink devices to standby.",
-      "name": "Beolink all standby"
-    },
-    "beolink_expand": {
-      "description": "Adds devices to the current Beolink experience.",
-      "fields": {
-        "all_discovered": {
-          "description": "Expand Beolink experience to all discovered devices.",
-          "name": "All discovered"
-        },
-        "beolink_jids": {
-          "description": "Specify which Beolink JIDs will join current Beolink experience.",
-          "name": "Beolink JIDs"
-        }
-      },
-      "name": "Beolink expand",
-      "sections": {
-        "jid_options": {
-          "description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
-          "name": "JID options"
-        }
-      }
-    },
-    "beolink_join": {
-      "description": "Joins a Beolink experience.",
-      "fields": {
-        "beolink_jid": {
-          "description": "Manually specify Beolink JID to join.",
-          "name": "Beolink JID"
-        },
-        "source_id": {
-          "description": "Specify which source to join, behavior varies between hardware platforms. Source names prefaced by a platform name can only be used when connecting to that platform. For example \"ASE Beoradio\" can only be used when joining an ASE device, while \u201dASE / Mozart Deezer\u201d can be used with ASE or Mozart devices. A defined Beolink JID is required.",
-          "name": "Source"
-        }
-      },
-      "name": "Beolink join",
-      "sections": {
-        "jid_options": {
-          "description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
-          "name": "JID options"
-        }
-      }
-    },
-    "beolink_leader_command": {
-      "description": "Send a media_player command to Beolink leader.",
-      "fields": {
-        "command": {
-          "description": "Specify the media_player command.",
-          "name": "Command"
-        },
-        "parameter": {
-          "description": "Specify the media_player command's parameter.",
-          "name": "Parameter"
-        }
-      },
-      "name": "Beolink leader command"
-    },
-    "beolink_leave": {
-      "description": "Leaves a Beolink experience.",
-      "name": "Beolink leave"
-    },
-    "beolink_set_relative_volume": {
-      "description": "Set a volume level relative to the current level of all connected Beolink devices.",
-      "fields": {
-        "volume_level": {
-          "description": "Specify the volume level.",
-          "name": "Volume level"
-        }
-      },
-      "name": "Beolink set relative volume"
-    },
-    "beolink_set_volume": {
-      "description": "Set a volume level for all connected Beolink devices.",
-      "fields": {
-        "volume_level": {
-          "description": "Specify the volume level.",
-          "name": "Volume level"
-        }
-      },
-      "name": "Beolink set volume"
-    },
-    "beolink_unexpand": {
-      "description": "Removes devices from the current Beolink experience.",
-      "fields": {
-        "beolink_jids": {
-          "description": "Specify which Beolink JIDs will leave from current Beolink experience.",
-          "name": "Beolink JIDs"
-        }
-      },
-      "name": "Beolink unexpand",
-      "sections": {
-        "jid_options": {
-          "description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
-          "name": "JID options"
-        }
-      }
-    },
-    "halo_configuration": {
-      "description": "Get the raw Halo configuration.",
-      "name": "Halo Configuration"
-    },
-    "halo_display_page": {
-      "description": "Focus on a Page and Button on a Halo.",
-      "fields": {
-        "button_id": {
-          "description": "The UUID of a Button.",
-          "name": "Button ID"
-        },
-        "page_id": {
-          "description": "The UUID of a Page.",
-          "name": "Page ID"
-        }
-      },
-      "name": "Halo Display Page"
-    },
-    "halo_notification": {
-      "description": "Send a notification to the Halo.",
-      "fields": {
-        "subtitle": {
-          "description": "The subtitle of the notification. 6 lines are supported before formatting starts to break. Use | in yaml mode to construct multiline strings.",
-          "name": "Subtitle"
-        },
-        "title": {
-          "description": "The title of the notification.",
-          "name": "Title"
-        }
-      },
-      "name": "Halo Notification"
-    },
-    "reboot": {
-      "description": "Reboot the device.",
-      "name": "Reboot"
-    }
-  }
 }

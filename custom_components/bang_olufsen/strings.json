@@ -1324,10 +1324,14 @@
         "beoradio": "ASE Beoradio",
         "cd": "Beolink Converter NL/ML CD",
         "deezer": "ASE / Mozart Deezer",
+        "line_in": "Mozart Line in (non GVA only)",
+        "linein": "ASE Line in (non GVA only)",
         "ph": "Beolink Converter NL/ML PH",
         "radio": "Beolink Converter NL/ML RADIO",
+        "spdif": "Mozart Optical in (non GVA only)",
         "spotify": "ASE / Mozart Spotify",
         "tidal": "Mozart Tidal",
+        "toslink": "ASE Optical in (non GVA only)",
         "tp1": "Beolink Converter NL/ML TP1",
         "tp2": "Beolink Converter NL/ML TP2"
       }

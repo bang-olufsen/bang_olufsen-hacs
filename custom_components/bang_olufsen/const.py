@@ -485,12 +485,17 @@ BEOLINK_JOIN_SOURCES_TO_UPPER = (
     "tp1",
     "tp2",
 )
+# Mozart sources are in camelCase
+BEOLINK_JOIN_SOURCES_TO_CAMELIZE = ("line_in",)
 BEOLINK_JOIN_SOURCES = (
     *BEOLINK_JOIN_SOURCES_TO_UPPER,
+    *BEOLINK_JOIN_SOURCES_TO_CAMELIZE,
     "beoradio",
     "deezer",
+    "linein",
     "spotify",
     "tidal",
+    "toslink",
 )
 
 
