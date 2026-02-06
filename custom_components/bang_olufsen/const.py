@@ -491,6 +491,10 @@ BEOLINK_JOIN_SOURCES = (
     "deezer",
     "spotify",
     "tidal",
+    "lineIn",
+    "spdif",
+    "linein",
+    "toslink",
 )
 
 
