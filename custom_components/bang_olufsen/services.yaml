@@ -50,9 +50,13 @@ beolink_join:
               translation_key: "source_ids"
               options:
                 - beoradio
+                - linein
+                - toslink
                 - deezer
                 - spotify
                 - tidal
+                - lineIn
+                - spdif
                 - radio
                 - tp1
                 - tp2
