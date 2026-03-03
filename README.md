@@ -59,6 +59,7 @@ Generally "wheel" events are handled by counting the number of detents in a "rot
   - Number / Input Number
   - Scene
   - Script
+  - Select / Input Select
   - Sensor
   - Switch / Input Boolean
 - Entity state is shown as subtitle
@@ -96,7 +97,6 @@ These features have to evaluated further and are in no particular order.
   - Media player
   - Notify
   - Remote
-  - Select
   - Siren
   - Text
   - Update
@@ -533,9 +533,9 @@ Get the raw Halo configuration.
 
 Send a notification to the Halo.
 
-| Action data attribute | Optional | Description |
-| --------------------- | -------- | ---------------------------------------------------------------------------------------------- | 
-| `title`               | no       | The title of the notification.                                                                 |
+| Action data attribute | Optional | Description                                                                                                                                 |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`               | no       | The title of the notification.                                                                                                              |
 | `subtitle`            | no       | The subtitle of the notification. 6 lines are supported before formatting starts to break. Use in yaml mode to construct multiline strings. |
 
 #### Action `bang_olufsen.halo_display_page`

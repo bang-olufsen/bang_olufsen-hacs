@@ -21,10 +21,12 @@ from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.input_select import DOMAIN as INPUT_SELECT_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import (
@@ -40,6 +42,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_MODEL,
     CONF_NAME,
+    SERVICE_SELECT_OPTION,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_TOGGLE,
@@ -179,6 +182,10 @@ _halo_action_map: dict[str, dict[str, list[str]]] = {
         CONF_BUTTON_ACTION: [SERVICE_SET_VALUE],
         CONF_WHEEL_ACTION: [SERVICE_SET_VALUE],
     },
+    INPUT_SELECT_DOMAIN: {
+        CONF_BUTTON_ACTION: [],
+        CONF_WHEEL_ACTION: [SERVICE_SELECT_OPTION],
+    },
     LIGHT_DOMAIN: {
         CONF_BUTTON_ACTION: [SERVICE_TOGGLE],
         CONF_WHEEL_ACTION: [SERVICE_TURN_ON],
@@ -194,6 +201,10 @@ _halo_action_map: dict[str, dict[str, list[str]]] = {
     SCRIPT_DOMAIN: {
         CONF_BUTTON_ACTION: [],
         CONF_WHEEL_ACTION: [],
+    },
+    SELECT_DOMAIN: {
+        CONF_BUTTON_ACTION: [],
+        CONF_WHEEL_ACTION: [SERVICE_SELECT_OPTION],
     },
     SENSOR_DOMAIN: {
         CONF_BUTTON_ACTION: [],
@@ -875,10 +886,12 @@ class HaloOptionsFlowHandler(OptionsFlow):
                                 INPUT_BOOLEAN_DOMAIN,
                                 INPUT_BUTTON_DOMAIN,
                                 INPUT_NUMBER_DOMAIN,
+                                INPUT_SELECT_DOMAIN,
                                 LIGHT_DOMAIN,
                                 NUMBER_DOMAIN,
                                 SCENE_DOMAIN,
                                 SCRIPT_DOMAIN,
+                                SELECT_DOMAIN,
                                 SENSOR_DOMAIN,
                                 SWITCH_DOMAIN,
                             ],

@@ -40,6 +40,7 @@ from homeassistant.components.cover import (
 from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.input_select import DOMAIN as INPUT_SELECT_DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_STEP_PCT,
@@ -55,6 +56,11 @@ from homeassistant.components.number import (
 )
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    ATTR_OPTIONS,
+    DOMAIN as SELECT_DOMAIN,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -181,10 +187,12 @@ class HaloWebsocket(BeoBase):
             INPUT_BOOLEAN_DOMAIN: self._handle_binary_update,
             INPUT_BUTTON_DOMAIN: self._handle_no_update,
             INPUT_NUMBER_DOMAIN: self._handle_number_update,
+            INPUT_SELECT_DOMAIN: self._handle_select_update,
             LIGHT_DOMAIN: self._handle_light_update,
             NUMBER_DOMAIN: self._handle_number_update,
             SCENE_DOMAIN: self._handle_no_update,
             SCRIPT_DOMAIN: self._handle_no_update,
+            SELECT_DOMAIN: self._handle_select_update,
             SENSOR_DOMAIN: self._handle_number_update,
             SWITCH_DOMAIN: self._handle_binary_update,
         }
@@ -199,10 +207,12 @@ class HaloWebsocket(BeoBase):
             INPUT_BOOLEAN_DOMAIN: self._handle_no_action_data,
             INPUT_BUTTON_DOMAIN: self._handle_no_action_data,
             INPUT_NUMBER_DOMAIN: self._handle_number_action_data,
+            INPUT_SELECT_DOMAIN: self._handle_no_action_data,
             LIGHT_DOMAIN: self._handle_no_action_data,
             NUMBER_DOMAIN: self._handle_number_action_data,
             SCENE_DOMAIN: self._handle_no_action_data,
             SCRIPT_DOMAIN: self._handle_no_action_data,
+            SELECT_DOMAIN: self._handle_no_action_data,
             SENSOR_DOMAIN: self._handle_no_action_data,
             SWITCH_DOMAIN: self._handle_no_action_data,
         }
@@ -216,11 +226,13 @@ class HaloWebsocket(BeoBase):
             COVER_DOMAIN: self._calculate_cover_wheel_action,
             INPUT_BOOLEAN_DOMAIN: self._calculate_binary_wheel_action,
             INPUT_BUTTON_DOMAIN: self._calculate_no_wheel_action,
-            INPUT_NUMBER_DOMAIN: self._calculate_number_wheel_value,
+            INPUT_NUMBER_DOMAIN: self._calculate_number_wheel_action,
+            INPUT_SELECT_DOMAIN: self._calculate_select_wheel_action,
             LIGHT_DOMAIN: self._calculate_light_wheel_action,
-            NUMBER_DOMAIN: self._calculate_number_wheel_value,
+            NUMBER_DOMAIN: self._calculate_number_wheel_action,
             SCENE_DOMAIN: self._calculate_no_wheel_action,
             SCRIPT_DOMAIN: self._calculate_no_wheel_action,
+            SELECT_DOMAIN: self._calculate_select_wheel_action,
             SENSOR_DOMAIN: self._calculate_no_wheel_action,
             SWITCH_DOMAIN: self._calculate_binary_wheel_action,
         }
@@ -406,6 +418,22 @@ class HaloWebsocket(BeoBase):
 
         return (state.state, button_state, button_value)
 
+    def _handle_select_update(self, state: State) -> UpdateTuple:
+        """Handle state change events of select entities."""
+        # Show index of current state as button value
+        options: list[str] = state.attributes[ATTR_OPTIONS]
+        try:
+            return (
+                state.state,
+                ButtonState.ACTIVE,
+                interpolate_button_value(
+                    options.index(state.state), 0, len(options) - 1
+                ),
+            )
+        except ValueError:
+            _LOGGER.debug("Error when handling select state %s", state)
+            return ("", ButtonState.INACTIVE, 0)
+
     # Button action methods
     async def _manage_entity_action(self, button_id: str) -> None:
         """Manage actions of entities."""
@@ -539,7 +567,7 @@ class HaloWebsocket(BeoBase):
         """Handle entity with no associated wheel action."""
         return None
 
-    def _calculate_number_wheel_value(
+    def _calculate_number_wheel_action(
         self, button_id: str, state: State
     ) -> WheelActionTuple:
         """Calculate Number entity wheel value and return action variables."""
@@ -568,6 +596,22 @@ class HaloWebsocket(BeoBase):
             return None
 
         return (str(new_number), {ATTR_VALUE: new_number})
+
+    def _calculate_select_wheel_action(
+        self, button_id: str, state: State
+    ) -> WheelActionTuple:
+        """Calculate select entity wheel value and return action variables."""
+        options: list[str] = state.attributes[ATTR_OPTIONS]
+        # 7 was arbitrarily chosen as the threshold. It feels about right.
+        new_index = int(
+            np.clip(
+                options.index(state.state)
+                + int(self._wheel_action_handlers[state.entity_id].counter / 7),
+                0,
+                len(options) - 1,
+            )
+        )
+        return (options[new_index], {ATTR_OPTION: options[new_index]})
 
     # Button wheel action tasks
     async def _manage_entity_wheel_action_tasks(
