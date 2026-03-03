@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+import datetime
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -182,10 +183,10 @@ class HaloWebsocket(BeoBase):
         # Dict for associating platforms with update methods
         self._entity_update_map: dict[str, Callable[[State], UpdateTuple]] = {
             BINARY_SENSOR_DOMAIN: self._handle_binary_update,
-            BUTTON_DOMAIN: self._handle_no_update,
+            BUTTON_DOMAIN: self._handle_button_update,
             COVER_DOMAIN: self._handle_cover_update,
             INPUT_BOOLEAN_DOMAIN: self._handle_binary_update,
-            INPUT_BUTTON_DOMAIN: self._handle_no_update,
+            INPUT_BUTTON_DOMAIN: self._handle_button_update,
             INPUT_NUMBER_DOMAIN: self._handle_number_update,
             INPUT_SELECT_DOMAIN: self._handle_select_update,
             LIGHT_DOMAIN: self._handle_light_update,
@@ -288,7 +289,11 @@ class HaloWebsocket(BeoBase):
             return
 
         # Avoid unnecessary updates when Home Assistant is started if nothing has changed
-        if button.state == button_state and button.value == button_value:
+        if (
+            button.state == button_state
+            and button.value == button_value
+            and subtitle == button.title
+        ):
             _LOGGER.debug("Skipping update for %s button", button.title)
             return
 
@@ -433,6 +438,15 @@ class HaloWebsocket(BeoBase):
         except ValueError:
             _LOGGER.debug("Error when handling select state %s", state)
             return ("", ButtonState.INACTIVE, 0)
+
+    def _handle_button_update(self, state: State) -> UpdateTuple:
+        """Handle button entity state."""
+        # The default (iso format) value does not fit in the subtitle, so reformat it
+        return (
+            datetime.datetime.fromisoformat(state.state).strftime("%d-%m/%H:%M:%S"),
+            ButtonState.INACTIVE,
+            0,
+        )
 
     # Button action methods
     async def _manage_entity_action(self, button_id: str) -> None:
