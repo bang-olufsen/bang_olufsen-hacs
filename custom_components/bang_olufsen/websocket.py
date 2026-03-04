@@ -616,11 +616,11 @@ class HaloWebsocket(BeoBase):
     ) -> WheelActionTuple:
         """Calculate select entity wheel value and return action variables."""
         options: list[str] = state.attributes[ATTR_OPTIONS]
-        # 7 was arbitrarily chosen as the threshold. It feels about right.
+        # 5 was arbitrarily chosen as the threshold. It feels about right.
         new_index = int(
             np.clip(
                 options.index(state.state)
-                + int(self._wheel_action_handlers[state.entity_id].counter / 7),
+                + int(self._wheel_action_handlers[state.entity_id].counter / 5),
                 0,
                 len(options) - 1,
             )
@@ -783,6 +783,12 @@ class HaloWebsocket(BeoBase):
         if event.state == ButtonEventState.RELEASED:
             await self._manage_entity_action(event.id)
 
+        async_dispatcher_send(
+            self.hass,
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_BUTTON}_{event.id}",
+            EVENT_TRANSLATION_MAP[event.state],
+        )
+
     def on_power_event(self, event: PowerEvent) -> None:
         """Send halo_power dispatch."""
         async_dispatcher_send(
@@ -809,8 +815,13 @@ class HaloWebsocket(BeoBase):
 
     async def on_wheel_event(self, event: WheelEvent) -> None:
         """Send halo_wheel dispatch."""
-
         await self._manage_entity_wheel_action_tasks(event.id, event.counts)
+
+        async_dispatcher_send(
+            self.hass,
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_WHEEL}_{event.id}",
+            EVENT_TRANSLATION_MAP[event.counts],
+        )
 
     def on_all_events_raw(self, event: HaloBaseWebSocketResponse) -> None:
         """Receive all events."""

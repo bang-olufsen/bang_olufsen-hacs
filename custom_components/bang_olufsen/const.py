@@ -377,7 +377,7 @@ MOZART_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 HALO_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_halo_websocket_event"
 
 # Dict used to translate native Bang & Olufsen event names to string.json compatible ones
-EVENT_TRANSLATION_MAP: dict[str, str] = {
+EVENT_TRANSLATION_MAP: dict[str | int, str] = {
     # Beoremote One
     "KeyPress": "key_press",
     "KeyRelease": "key_release",
@@ -390,6 +390,19 @@ EVENT_TRANSLATION_MAP: dict[str, str] = {
     # Proximity sensor
     "proximityPresenceDetected": "proximity_presence_detected",
     "proximityPresenceNotDetected": "proximity_presence_not_detected",
+    # Beoremote Halo
+    "pressed": "button_pressed",
+    "released": "button_released",
+    1: "wheel_right_normal",
+    2: "wheel_right_fast",
+    3: "wheel_right_moderately_fast",
+    4: "wheel_right_very_fast",
+    5: "wheel_right_extremely_fast",
+    -1: "wheel_left_normal",
+    -2: "wheel_left_fast",
+    -3: "wheel_left_moderately_fast",
+    -4: "wheel_left_very_fast",
+    -5: "wheel_left_extremely_fast",
 }
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
@@ -475,6 +488,20 @@ PROXIMITY_EVENTS: Final[list[str]] = [
     "proximity_presence_not_detected",
 ]
 HALO_SYSTEM_EVENTS: Final[list[str]] = list(SystemEventState)
+HALO_BUTTON_EVENTS: Final[list[str]] = [
+    "button_pressed",
+    "button_released",
+    "wheel_right_normal",
+    "wheel_right_fast",
+    "wheel_right_moderately_fast",
+    "wheel_right_very_fast",
+    "wheel_right_extremely_fast",
+    "wheel_left_normal",
+    "wheel_left_fast",
+    "wheel_left_moderately_fast",
+    "wheel_left_very_fast",
+    "wheel_left_extremely_fast",
+]
 
 # Beolink Converter NL/ML sources need to be transformed to upper case
 BEOLINK_JOIN_SOURCES_TO_UPPER = (

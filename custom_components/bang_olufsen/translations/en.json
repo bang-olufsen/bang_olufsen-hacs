@@ -618,6 +618,27 @@
                     }
                 }
             },
+            "halo_button_state": {
+                "name": "Button status: {page_title} - {button_title}",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "button_pressed": "Button pressed",
+                            "button_released": "Button released",
+                            "wheel_left_extremely_fast": "Wheel turned left extremely fast",
+                            "wheel_left_fast": "Wheel turned left fast",
+                            "wheel_left_moderately_fast": "Wheel turned left moderately fast",
+                            "wheel_left_normal": "Wheel turned left",
+                            "wheel_left_very_fast": "Wheel turned left very fast",
+                            "wheel_right_extremely_fast": "Wheel turned right extremely fast",
+                            "wheel_right_fast": "Wheel turned right fast",
+                            "wheel_right_moderately_fast": "Wheel turned right moderately fast",
+                            "wheel_right_normal": "Wheel turned right",
+                            "wheel_right_very_fast": "Wheel turned right very fast"
+                        }
+                    }
+                }
+            },
             "halo_system_status": {
                 "name": "System status",
                 "state_attributes": {

@@ -76,6 +76,7 @@ Generally "wheel" events are handled by counting the number of detents in a "rot
   - Battery charging Binary Sensor Entity
   - Battery Level Sensor Entity
   - System status Event entity (Can be used as a proximity sensor)
+  - Button status entities for each of the configured buttons. Can be used to configure custom button behavior on top of the pre-configured actions through the integration.
 - Custom actions:
   - Get Halo configuration
   - Send notification to Halo

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
+from uuid import UUID
 
 from mozart_api.models import PairedRemote
 
@@ -10,20 +11,27 @@ from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.components.homeassistant import ServiceResponse
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BeoConfigEntry
 from .beoremote_halo.halo import Halo
-from .beoremote_halo.models import Update, UpdateDisplayPage, UpdateNotification
+from .beoremote_halo.models import (
+    BaseConfiguration,
+    Button,
+    Update,
+    UpdateDisplayPage,
+    UpdateNotification,
+)
 from .const import (
     BEO_MODEL_PLATFORM_MAP,
     BEO_REMOTE_KEY_EVENTS,
     CONNECTION_STATUS,
     DEVICE_BUTTON_EVENTS,
     DOMAIN,
+    HALO_BUTTON_EVENTS,
     HALO_SYSTEM_EVENTS,
     MANUFACTURER,
     MODEL_SUPPORT_MAP,
@@ -95,6 +103,39 @@ async def async_setup_entry(
 
         case BeoPlatform.BEOREMOTE_HALO.value:
             entities.append(BeoHaloSystemStatus(config_entry))
+
+            # Used to compare existing entities with ones created
+            button_unique_ids = []
+            for page in cast(
+                BaseConfiguration, config_entry.runtime_data.client.configuration
+            ).configuration.pages:
+                entities.extend(
+                    [
+                        BeoHaloButton(config_entry, button, page.title)
+                        for button in page.buttons
+                    ]
+                )
+                button_unique_ids.extend(
+                    [f"{config_entry.unique_id}_{button.id}" for button in page.buttons]
+                )
+
+            # Check if any deleted buttons have to be removed
+            entity_registry = er.async_get(hass)
+            existing_entities = (
+                entity_registry.entities.get_entries_for_config_entry_id(
+                    config_entry.entry_id
+                )
+            )
+
+            for existing_entity in existing_entities:
+                try:
+                    # Check if the remaining part of the unique ID is a UUID, confirming the type
+                    UUID(existing_entity.unique_id[9:])
+                except ValueError:
+                    continue
+
+                if existing_entity.unique_id not in button_unique_ids:
+                    entity_registry.async_remove(existing_entity.entity_id)
 
     async_add_entities(new_entities=entities)
 
@@ -297,3 +338,50 @@ class BeoHaloSystemStatus(BeoEvent):
             kwargs["button_id"] = button_id
 
         await self._client.update(Update(update=UpdateDisplayPage(**kwargs)))
+
+
+class BeoHaloButton(BeoEvent):
+    """Event class for Halo button events."""
+
+    _attr_event_types = HALO_BUTTON_EVENTS
+    _attr_translation_key = "halo_button_state"
+
+    def __init__(
+        self, config_entry: BeoConfigEntry, button: Button, page_title: str
+    ) -> None:
+        """Init the button event."""
+        super().__init__(config_entry)
+        self._client: Halo
+
+        self._attr_unique_id = f"{self._unique_id}_{button.id}"
+        self._attr_translation_placeholders = {
+            "page_title": page_title,
+            "button_title": button.title,
+        }
+        self._attr_extra_state_attributes = {"button_id": button.id}
+
+        self._button = button
+
+    async def async_added_to_hass(self) -> None:
+        """Turn on the dispatchers."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
+                self._async_update_connection_state,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_BUTTON}_{self._button.id}",
+                self._async_handle_event,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_WHEEL}_{self._button.id}",
+                self._async_handle_event,
+            )
+        )
