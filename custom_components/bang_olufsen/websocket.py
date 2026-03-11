@@ -616,15 +616,11 @@ class HaloWebsocket(BeoBase):
     ) -> WheelActionTuple:
         """Calculate select entity wheel value and return action variables."""
         options: list[str] = state.attributes[ATTR_OPTIONS]
-        # 5 was arbitrarily chosen as the threshold. It feels about right.
-        new_index = int(
-            np.clip(
-                options.index(state.state)
-                + int(self._wheel_action_handlers[state.entity_id].counter / 5),
-                0,
-                len(options) - 1,
-            )
-        )
+        new_index = (
+            options.index(state.state)
+            + int(self._wheel_action_handlers[state.entity_id].counter / 5)
+        ) % len(options)
+        
         return (options[new_index], {ATTR_OPTION: options[new_index]})
 
     # Button wheel action tasks
