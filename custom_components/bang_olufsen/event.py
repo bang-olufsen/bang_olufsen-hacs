@@ -8,7 +8,6 @@ from uuid import UUID
 from mozart_api.models import PairedRemote
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
-from homeassistant.components.homeassistant import ServiceResponse
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -18,13 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BeoConfigEntry
 from .beoremote_halo.halo import Halo
-from .beoremote_halo.models import (
-    BaseConfiguration,
-    Button,
-    Update,
-    UpdateDisplayPage,
-    UpdateNotification,
-)
+from .beoremote_halo.models import BaseConfiguration, Button
 from .const import (
     BEO_MODEL_PLATFORM_MAP,
     BEO_REMOTE_KEY_EVENTS,
@@ -310,34 +303,6 @@ class BeoHaloSystemStatus(BeoEvent):
                 self._async_handle_event,
             )
         )
-
-    # Setup custom actions
-    def async_halo_configuration(self) -> ServiceResponse:
-        """Get raw configuration for the Halo."""
-
-        return cast(ServiceResponse, self._client.configuration.to_dict())
-
-    async def async_halo_notification(self, title: str, subtitle: str) -> None:
-        """Send a notification to the Halo."""
-
-        await self._client.update(
-            Update(
-                update=UpdateNotification(
-                    title=title,
-                    subtitle=subtitle,
-                )
-            )
-        )
-
-    async def async_halo_display_page(
-        self, page_id: str, button_id: str | None = None
-    ) -> None:
-        """Display a page and button on a Halo."""
-        kwargs = {"page_id": page_id}
-        if button_id is not None:
-            kwargs["button_id"] = button_id
-
-        await self._client.update(Update(update=UpdateDisplayPage(**kwargs)))
 
 
 class BeoHaloButton(BeoEvent):

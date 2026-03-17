@@ -1,14 +1,31 @@
-"""Services for the Bang & Olufsen integration."""
+"""Actions for the Bang & Olufsen integration."""
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, cast
+
 import voluptuous as vol
 
-from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
+if TYPE_CHECKING:
+    from . import BeoConfigEntry
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.core import HomeAssistant, SupportsResponse, callback
-from homeassistant.helpers import config_validation as cv, service
+from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    service,
+)
 
+from .beoremote_halo.halo import Halo
+from .beoremote_halo.models import Update, UpdateDisplayPage, UpdateNotification
 from .const import ACCEPTED_COMMANDS, BEOLINK_JOIN_SOURCES, DOMAIN
 
 # Mozart
@@ -43,9 +60,9 @@ ATTR_BUTTON_ID = "button_id"
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Register Bang & Olufsen services."""
+    """Register Bang & Olufsen actions."""
 
-    # Mozart services
+    # Mozart (entity) services
     jid_regex = vol.Match(
         r"(^\d{4})[.](\d{7})[.](\d{8})(@products\.bang-olufsen\.com)$"
     )
@@ -154,48 +171,91 @@ def async_setup_services(hass: HomeAssistant) -> None:
         func=f"async_{SERVICE_REBOOT}",
     )
 
-    # Halo services
-
+    # Halo (device) actions
     uuid_regex = vol.Match(
         r"^[0-9a-f]{8}[-][0-9a-f]{4}[-][0-9a-f]{4}[-][0-9a-f]{4}[-][0-9a-f]{12}$"
     )
 
-    service.async_register_platform_entity_service(
-        hass,
+    hass.services.async_register(
         DOMAIN,
         SERVICE_HALO_CONFIGURATION,
-        entity_domain=EVENT_DOMAIN,
-        schema=None,
-        func=f"async_{SERVICE_HALO_CONFIGURATION}",
+        _async_halo_configuration,
+        schema=vol.Schema({vol.Required(ATTR_DEVICE_ID): cv.string}),
         supports_response=SupportsResponse.ONLY,
     )
 
-    service.async_register_platform_entity_service(
-        hass,
+    hass.services.async_register(
         DOMAIN,
         SERVICE_HALO_NOTIFICATION,
-        entity_domain=EVENT_DOMAIN,
-        schema={
-            vol.Required(ATTR_TITLE): vol.All(
-                vol.Length(min=1, max=62),
-                cv.string,
-            ),
-            vol.Required(ATTR_SUBTITLE): vol.All(
-                vol.Length(min=1, max=256),
-                cv.string,
-            ),
-        },
-        func=f"async_{SERVICE_HALO_NOTIFICATION}",
+        _async_halo_notification,
+        schema=vol.Schema(
+            {
+                vol.Required(ATTR_DEVICE_ID): cv.string,
+                vol.Required(ATTR_TITLE): vol.All(
+                    vol.Length(min=1, max=62),
+                    cv.string,
+                ),
+                vol.Required(ATTR_SUBTITLE): vol.All(
+                    vol.Length(min=1, max=256),
+                    cv.string,
+                ),
+            }
+        ),
     )
 
-    service.async_register_platform_entity_service(
-        hass,
+    hass.services.async_register(
         DOMAIN,
         SERVICE_HALO_DISPLAY_PAGE,
-        entity_domain=EVENT_DOMAIN,
-        schema={
-            vol.Required(ATTR_PAGE_ID): uuid_regex,
-            vol.Optional(ATTR_BUTTON_ID): uuid_regex,
-        },
-        func=f"async_{SERVICE_HALO_DISPLAY_PAGE}",
+        _async_halo_display_page,
+        schema=vol.Schema(
+            {
+                vol.Required(ATTR_DEVICE_ID): cv.string,
+                vol.Required(ATTR_PAGE_ID): uuid_regex,
+                vol.Optional(ATTR_BUTTON_ID): uuid_regex,
+            }
+        ),
     )
+
+
+def _get_halo_client(call: ServiceCall) -> Halo:
+    """Get Halo client from ServiceCall."""
+    device_id = str(call.data[ATTR_DEVICE_ID])
+
+    device_registry = dr.async_get(call.hass)
+    if (device := device_registry.async_get(device_id)) is None:
+        raise ServiceValidationError(
+            f"Unable to find device: {call.data[ATTR_DEVICE_ID]}"
+        )
+
+    entry_id = str(device.primary_config_entry)
+    if (entry := call.hass.config_entries.async_get_entry(entry_id)) is None:
+        raise ServiceValidationError(f"Invalid config entry id: {entry_id}")
+
+    return cast(Halo, cast("BeoConfigEntry", entry).runtime_data.client)
+
+
+def _async_halo_configuration(call: ServiceCall) -> ServiceResponse:
+    """Get raw configuration for the Halo."""
+    return cast(ServiceResponse, _get_halo_client(call).configuration.to_dict())
+
+
+async def _async_halo_notification(call: ServiceCall) -> None:
+    """Send a notification to the Halo."""
+    await _get_halo_client(call).update(
+        Update(
+            update=UpdateNotification(
+                title=call.data["title"],
+                subtitle=call.data["subtitle"],
+            )
+        )
+    )
+
+
+async def _async_halo_display_page(call: ServiceCall) -> None:
+    """Display a page and button on a Halo."""
+
+    kwargs = {"page_id": call.data["page_id"]}
+    if call.data.get("button_id") is not None:
+        kwargs["button_id"] = call.data["button_id"]
+
+    await _get_halo_client(call).update(Update(update=UpdateDisplayPage(**kwargs)))

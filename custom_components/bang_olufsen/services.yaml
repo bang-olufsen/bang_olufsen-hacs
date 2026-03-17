@@ -149,20 +149,25 @@ reboot:
   target:
     entity:
       integration: bang_olufsen
-      domain: event
+      domain: media_player
 
 halo_configuration:
-  target:
-    entity:
-      integration: bang_olufsen
-      domain: event
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: bang_olufsen
+          model: Beoremote Halo
 
 halo_notification:
-  target:
-    entity:
-      integration: bang_olufsen
-      domain: event
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: bang_olufsen
+          model: Beoremote Halo
     title:
       required: true
       example: "Test notification title"
@@ -175,11 +180,13 @@ halo_notification:
         text:
 
 halo_display_page:
-  target:
-    entity:
-      integration: bang_olufsen
-      domain: event
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: bang_olufsen
+          model: Beoremote Halo
     page_id:
       required: true
       example: "ca1a0965-7157-9432-9d92-c040728f5ad1"

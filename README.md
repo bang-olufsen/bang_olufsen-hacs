@@ -530,12 +530,17 @@ The Bang & Olufsen integration additionally supports different custom actions fo
 
 Get the raw Halo configuration.
 
+| Action data attribute | Optional | Description                     |
+| --------------------- | -------- | ------------------------------- |
+| `device_id`           | no       | Device ID for a Beoremote Halo. |
+
 #### Action `bang_olufsen.halo_notification`
 
 Send a notification to the Halo.
 
 | Action data attribute | Optional | Description                                                                                                                                 |
 | --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `device_id`           | no       | Device ID for a Beoremote Halo.                                                                                                             |
 | `title`               | no       | The title of the notification.                                                                                                              |
 | `subtitle`            | no       | The subtitle of the notification. 6 lines are supported before formatting starts to break. Use in yaml mode to construct multiline strings. |
 
@@ -543,7 +548,8 @@ Send a notification to the Halo.
 
 Focus on a Page and Button on a Halo.
 
-| Action data attribute | Optional | Description           |
-| --------------------- | -------- | --------------------- |
-| `page_id`             | no       | The UUID of a Page.   |
-| `button_id`           | no       | The UUID of a Button. |
+| Action data attribute | Optional | Description                     |
+| --------------------- | -------- | ------------------------------- |
+| `device_id`           | no       | Device ID for a Beoremote Halo. |
+| `page_id`             | no       | The UUID of a Page.             |
+| `button_id`           | no       | The UUID of a Button.           |

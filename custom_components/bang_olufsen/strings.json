@@ -1,5 +1,7 @@
 {
   "common": {
+    "halo_device_id_description": "Device ID for a Beoremote Halo",
+    "halo_device_id_name": "Device ID",
     "jid_options_description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
     "jid_options_name": "JID options",
     "key_press": "Press",
@@ -1459,6 +1461,12 @@
     },
     "halo_configuration": {
       "description": "Get the raw Halo configuration.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::bang_olufsen::common::halo_device_id_description%]",
+          "name": "[%key:component::bang_olufsen::common::halo_device_id_name%]"
+        }
+      },
       "name": "Halo Configuration"
     },
     "halo_display_page": {
@@ -1467,6 +1475,10 @@
         "button_id": {
           "description": "The UUID of a Button.",
           "name": "Button ID"
+        },
+        "device_id": {
+          "description": "[%key:component::bang_olufsen::common::halo_device_id_description%]",
+          "name": "[%key:component::bang_olufsen::common::halo_device_id_name%]"
         },
         "page_id": {
           "description": "The UUID of a Page.",
@@ -1478,6 +1490,10 @@
     "halo_notification": {
       "description": "Send a notification to the Halo.",
       "fields": {
+        "device_id": {
+          "description": "[%key:component::bang_olufsen::common::halo_device_id_description%]",
+          "name": "[%key:component::bang_olufsen::common::halo_device_id_name%]"
+        },
         "subtitle": {
           "description": "The subtitle of the notification. 6 lines are supported before formatting starts to break. Use | in yaml mode to construct multiline strings.",
           "name": "Subtitle"
