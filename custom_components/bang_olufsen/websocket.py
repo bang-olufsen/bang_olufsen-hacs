@@ -183,15 +183,15 @@ class HaloWebsocket(BeoBase):
         # Dict for associating platforms with update methods
         self._entity_update_map: dict[str, Callable[[State], UpdateTuple]] = {
             BINARY_SENSOR_DOMAIN: self._handle_binary_update,
-            BUTTON_DOMAIN: self._handle_button_update,
+            BUTTON_DOMAIN: self._handle_datetime_update,
             COVER_DOMAIN: self._handle_cover_update,
             INPUT_BOOLEAN_DOMAIN: self._handle_binary_update,
-            INPUT_BUTTON_DOMAIN: self._handle_button_update,
+            INPUT_BUTTON_DOMAIN: self._handle_datetime_update,
             INPUT_NUMBER_DOMAIN: self._handle_number_update,
             INPUT_SELECT_DOMAIN: self._handle_select_update,
             LIGHT_DOMAIN: self._handle_light_update,
             NUMBER_DOMAIN: self._handle_number_update,
-            SCENE_DOMAIN: self._handle_no_update,
+            SCENE_DOMAIN: self._handle_datetime_update,
             SCRIPT_DOMAIN: self._handle_no_update,
             SELECT_DOMAIN: self._handle_select_update,
             SENSOR_DOMAIN: self._handle_number_update,
@@ -439,14 +439,19 @@ class HaloWebsocket(BeoBase):
             _LOGGER.debug("Error when handling select state %s", state)
             return ("", ButtonState.INACTIVE, 0)
 
-    def _handle_button_update(self, state: State) -> UpdateTuple:
-        """Handle button entity state."""
+    def _handle_datetime_update(self, state: State) -> UpdateTuple:
+        """Handle datetime entity state (button / scene)."""
         # The default (iso format) value does not fit in the subtitle, so reformat it
-        return (
-            datetime.datetime.fromisoformat(state.state).strftime("%d-%m/%H:%M:%S"),
-            ButtonState.INACTIVE,
-            0,
-        )
+        try:
+            return (
+                datetime.datetime.fromisoformat(state.state).strftime("%d-%m/%H:%M:%S"),
+                ButtonState.INACTIVE,
+                0,
+            )
+        # State may be "unknown". Handle this by simply passing it on to another update method.
+        except ValueError:
+            _LOGGER.debug("Error when handling datetime state %s", state)
+            return self._handle_no_update(state)
 
     # Button action methods
     async def _manage_entity_action(self, button_id: str) -> None:
