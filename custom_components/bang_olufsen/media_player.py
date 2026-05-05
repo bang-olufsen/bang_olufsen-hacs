@@ -321,12 +321,12 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
                 # Add content id if available
                 content_id = ""
                 if action.content_id:
-                    # Determine if a netradio id should be split
-                    if "netRadio" in action.content_id:
+                    # Determine if a netradio id can be split to find the station ID
+                    if "netRadio://" in action.content_id:
                         content_id = action.content_id.split("netRadio://")[1]
                 elif action.queue_item:
-                    # Determine if a netradio id should be split
-                    if "tidal" in action.queue_item.uri:
+                    # Determine if a Tidal id should be split
+                    if "tidal://" in action.queue_item.uri:
                         content_id = action.queue_item.uri.split("tidal://")[1]
                     else:
                         content_id = action.queue_item.uri
