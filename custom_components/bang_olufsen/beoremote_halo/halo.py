@@ -4,6 +4,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
 import contextlib
+import inspect
 import json
 import logging
 
@@ -311,7 +312,7 @@ class Halo:
         *args: BaseWebSocketResponse | dict | str | EventType,
     ) -> None:
         """Trigger async or sync callback correctly."""
-        if asyncio.iscoroutinefunction(callback):
+        if inspect.iscoroutinefunction(callback):
             await callback(*args)
         else:
             callback(*args)

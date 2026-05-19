@@ -124,7 +124,7 @@ class Button(DataClassJSONMixin):
     """An interactable element that represents an action or physical device.
 
     Contains a title, content (either an icon or text), subtitle, value, state and if it is the default.
-    `Button`s marked as default will be pre-selected when interacting with the Halo. Only a single Button can be default in a configuration.
+    `Button`s marked as default will be preselected when interacting with the Halo. Only a single Button can be default in a configuration.
 
     Ensures that the value is in the range 0-100.
     """

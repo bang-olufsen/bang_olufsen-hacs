@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from aiohttp import (
     ClientConnectorError,
@@ -19,13 +19,22 @@ from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import get_default_context
 
 from .beoremote_halo.halo import Halo
 from .beoremote_halo.models import BaseConfiguration
-from .const import BEO_MODEL_PLATFORM_MAP, CONF_HALO, DOMAIN, MANUFACTURER, BeoPlatform
+from .const import (
+    BEO_MODEL_PLATFORM_MAP,
+    CONF_HALO,
+    DOMAIN,
+    MANUFACTURER,
+    BeoModel,
+    BeoPlatform,
+)
 from .services import async_setup_services
+from .util import get_remotes
 from .websocket import HaloWebsocket, MozartWebsocket
 
 MOZART_PLATFORMS = [
@@ -66,31 +75,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
 
-    # Remove casts to str
-    assert config_entry.unique_id
-
-    # Create device now as MozartWebsocket needs a device for debug logging, firing events etc.
-    # And in order to ensure entity platforms (button, binary_sensor) have device name before the primary (media_player) is initialized
     device_registry = dr.async_get(hass)
+
+    match BEO_MODEL_PLATFORM_MAP[config_entry.data[CONF_MODEL]]:
+        case BeoPlatform.MOZART.value:
+            return await _setup_mozart(hass, config_entry, device_registry)
+        case BeoPlatform.BEOREMOTE_HALO.value:
+            return await _setup_halo(hass, config_entry, device_registry)
+
+    return False
+
+
+def _create_device(config_entry: ConfigEntry, device_registry: DeviceRegistry) -> None:
+    """Create Home Assistant device for added B&O product."""
+    # Create device now as MozartWebsocket and HaloWebsocket need a device for debug logging, firing events etc.
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, config_entry.unique_id)},
+        identifiers={(DOMAIN, cast(str, config_entry.unique_id))},
         name=config_entry.title,
         model=config_entry.data[CONF_MODEL],
         serial_number=config_entry.unique_id,
         manufacturer=MANUFACTURER,
     )
 
-    match BEO_MODEL_PLATFORM_MAP[config_entry.data[CONF_MODEL]]:
-        case BeoPlatform.MOZART.value:
-            return await _setup_mozart(hass, config_entry)
-        case BeoPlatform.BEOREMOTE_HALO.value:
-            return await _setup_halo(hass, config_entry)
 
-    return False
-
-
-async def _setup_mozart(hass: HomeAssistant, config_entry: BeoConfigEntry) -> bool:
+async def _setup_mozart(
+    hass: HomeAssistant, config_entry: BeoConfigEntry, device_registry: DeviceRegistry
+) -> bool:
     """Set up a Mozart based product."""
     client = MozartClient(
         host=config_entry.data[CONF_HOST], ssl_context=get_default_context()
@@ -112,6 +123,22 @@ async def _setup_mozart(hass: HomeAssistant, config_entry: BeoConfigEntry) -> bo
             f"Unable to connect to {config_entry.title}"
         ) from error
 
+    # Create Mozart device
+    _create_device(config_entry, device_registry)
+
+    # Create devices for paired Beoremote One remotes
+    for remote in await get_remotes(client):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, f"{remote.serial_number}_{config_entry.unique_id}")},
+            name=f"{BeoModel.BEOREMOTE_ONE}-{remote.serial_number}-{config_entry.unique_id}",
+            model=BeoModel.BEOREMOTE_ONE,
+            serial_number=remote.serial_number,
+            sw_version=remote.app_version,
+            manufacturer=MANUFACTURER,
+            via_device=(DOMAIN, cast(str, config_entry.unique_id)),
+        )
+
     # Initialize websocket
     websocket = MozartWebsocket(hass, config_entry, client)
 
@@ -127,7 +154,9 @@ async def _setup_mozart(hass: HomeAssistant, config_entry: BeoConfigEntry) -> bo
     return True
 
 
-async def _setup_halo(hass: HomeAssistant, config_entry: BeoConfigEntry) -> bool:
+async def _setup_halo(
+    hass: HomeAssistant, config_entry: BeoConfigEntry, device_registry: DeviceRegistry
+) -> bool:
     """Set up a Halo."""
 
     # Get/set configuration
@@ -151,6 +180,9 @@ async def _setup_halo(hass: HomeAssistant, config_entry: BeoConfigEntry) -> bool
         raise ConfigEntryNotReady(
             f"Unable to connect to {config_entry.title}"
         ) from error
+
+    # Create Halo device
+    _create_device(config_entry, device_registry)
 
     # Initialize websocket
     websocket = HaloWebsocket(hass, config_entry, client)

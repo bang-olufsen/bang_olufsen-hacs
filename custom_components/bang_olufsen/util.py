@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_serial_number_from_jid(jid: str) -> str:
     """Get serial number from Beolink JID."""
-    return jid.split(".")[2].split("@")[0]
+    return jid.split(".")[2].split("@", maxsplit=1)[0]
 
 
 async def get_remotes(client: MozartClient | Halo) -> list[PairedRemote]:

@@ -267,6 +267,7 @@ ZEROCONF_HALO: Final[str] = "_zenith._tcp.local."
 ATTR_TYPE_NUMBER: Final[str] = "tn"
 ATTR_MOZART_SERIAL_NUMBER: Final[str] = "sn"
 ATTR_HALO_SERIAL_NUMBER: Final[str] = "serial"
+ATTR_HALO_FRIENDLY_NAME: Final[str] = "name"
 ATTR_ITEM_NUMBER: Final[str] = "in"
 ATTR_FRIENDLY_NAME: Final[str] = "fn"
 
