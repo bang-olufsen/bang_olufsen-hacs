@@ -40,7 +40,11 @@ from mozart_api.models import (
     VolumeMute,
     VolumeState,
 )
-from mozart_api.mozart_client import MozartClient, get_highest_resolution_artwork
+from mozart_api.mozart_client import (
+    MozartClient,
+    WebSocketEventTypes,
+    get_highest_resolution_artwork,
+)
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -58,8 +62,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -89,7 +93,7 @@ from .const import (
     BeoMediaType,
     BeoPlatform,
     BeoSource,
-    WebsocketNotification,
+    WebsocketSubNotification,
 )
 from .entity import BeoEntity
 from .util import get_serial_number_from_jid, get_sources
@@ -220,17 +224,17 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
             },
             self._unique_id: {
                 CONNECTION_STATUS: self._async_update_connection_state,
-                WebsocketNotification.ACTIVE_LISTENING_MODE: self._async_update_sound_modes,
-                WebsocketNotification.BEOLINK: self._async_update_beolink,
-                WebsocketNotification.CONFIGURATION: self._async_update_name_and_beolink,
-                WebsocketNotification.PLAYBACK_ERROR: self._async_update_playback_error,
-                WebsocketNotification.PLAYBACK_METADATA: self._async_update_playback_metadata_and_beolink,
-                WebsocketNotification.PLAYBACK_PROGRESS: self._async_update_playback_progress,
-                WebsocketNotification.PLAYBACK_SOURCE: self._async_update_sources,
-                WebsocketNotification.PLAYBACK_STATE: self._async_update_playback_state,
-                WebsocketNotification.REMOTE_MENU_CHANGED: self._async_update_sources,
-                WebsocketNotification.SOURCE_CHANGE: self._async_update_source_change,
-                WebsocketNotification.VOLUME: self._async_update_volume,
+                WebSocketEventTypes.ACTIVE_LISTENING_MODE: self._async_update_sound_modes,
+                WebsocketSubNotification.BEOLINK: self._async_update_beolink,
+                WebsocketSubNotification.CONFIGURATION: self._async_update_beolink,
+                WebSocketEventTypes.PLAYBACK_ERROR: self._async_update_playback_error,
+                WebSocketEventTypes.PLAYBACK_METADATA: self._async_update_playback_metadata_and_beolink,
+                WebSocketEventTypes.PLAYBACK_PROGRESS: self._async_update_playback_progress,
+                WebSocketEventTypes.PLAYBACK_SOURCE: self._async_update_sources,
+                WebSocketEventTypes.PLAYBACK_STATE: self._async_update_playback_state,
+                WebsocketSubNotification.REMOTE_MENU_CHANGED: self._async_update_sources,
+                WebSocketEventTypes.SOURCE_CHANGE: self._async_update_source_change,
+                WebSocketEventTypes.VOLUME: self._async_update_volume,
             },
         }
 
@@ -264,8 +268,8 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
 
         await self._async_update_sound_modes()
 
-        # Update beolink attributes and device name.
-        await self._async_update_name_and_beolink()
+        # Update beolink attributes
+        await self._async_update_beolink()
 
     async def async_update(self) -> None:
         """Update queue settings."""
@@ -498,19 +502,6 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
         self._volume = data
 
         self.async_write_ha_state()
-
-    async def _async_update_name_and_beolink(self) -> None:
-        """Update the device friendly name."""
-        beolink_self = await self._client.get_beolink_self()
-
-        # Update device name
-        device_registry = dr.async_get(self.hass)
-        device_registry.async_update_device(
-            device_id=cast(DeviceEntry, self.device_entry).id,
-            name=beolink_self.friendly_name,
-        )
-
-        await self._async_update_beolink()
 
     async def _async_update_beolink(self) -> None:
         """Update the current Beolink leader, listeners, peers and self.

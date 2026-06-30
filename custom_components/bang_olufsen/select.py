@@ -7,7 +7,7 @@ from typing import cast
 from uuid import UUID
 
 from mozart_api.models import SpeakerGroupOverview
-from mozart_api.mozart_client import MozartClient
+from mozart_api.mozart_client import MozartClient, WebSocketEventTypes
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -22,7 +22,7 @@ from .const import (
     CONNECTION_STATUS,
     DOMAIN,
     BeoPlatform,
-    WebsocketNotification,
+    WebsocketSubNotification,
 )
 from .entity import BeoEntity
 
@@ -99,14 +99,14 @@ class BeoMozartListeningPosition(BeoSelect):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.ACTIVE_SPEAKER_GROUP}",
+                f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.ACTIVE_SPEAKER_GROUP}",
                 self._update_listening_positions,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketSubNotification.REMOTE_MENU_CHANGED}",
                 self._update_listening_positions,
             )
         )

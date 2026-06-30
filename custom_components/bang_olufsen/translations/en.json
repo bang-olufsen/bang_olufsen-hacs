@@ -48,6 +48,20 @@
             }
         }
     },
+    "device": {
+        "floor_stand": {
+            "name": "{device_name} Floor Stand"
+        },
+        "floor_stand_extended_range": {
+            "name": "{device_name} Floor Stand Extended Range"
+        },
+        "wall_bracket_left": {
+            "name": "{device_name} Wall Bracket Left"
+        },
+        "wall_bracket_right": {
+            "name": "{device_name} Wall Bracket Right"
+        }
+    },
     "device_automation": {
         "action_type": {
             "turn_off": "Turn off {entity_name}",
@@ -55,6 +69,11 @@
         }
     },
     "entity": {
+        "button": {
+            "stand_stop": {
+                "name": "Stop stand movement"
+            }
+        },
         "event": {
             "bluetooth": {
                 "name": "Bluetooth",
@@ -1229,6 +1248,11 @@
                         }
                     }
                 }
+            }
+        },
+        "number": {
+            "stand_angle": {
+                "name": "Stand angle"
             }
         },
         "select": {

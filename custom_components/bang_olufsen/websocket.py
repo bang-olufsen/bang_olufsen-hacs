@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import datetime
 import logging
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 from mozart_api.models import (
     BatteryState,
@@ -21,12 +22,14 @@ from mozart_api.models import (
     SoftwareUpdateState,
     Source,
     SpeakerGroupOverview,
+    StandPosition,
     VolumeState,
     WebsocketNotificationTag,
 )
 from mozart_api.mozart_client import (
     BaseWebSocketResponse as MozartBaseWebSocketResponse,
     MozartClient,
+    WebSocketEventTypes,
 )
 import numpy as np
 
@@ -80,6 +83,7 @@ from .beoremote_halo.models import (
     ButtonEvent as HaloButtonEvent,
     ButtonEventState,
     ButtonState,
+    EventTypes,
     Icon,
     PowerEvent,
     StatusEvent,
@@ -88,6 +92,7 @@ from .beoremote_halo.models import (
     Update,
     UpdateButton,
     WheelEvent,
+    WheelEventValues,
 )
 from .beoremote_halo.util import clamp_button_value, interpolate_button_value
 from .const import (
@@ -103,7 +108,7 @@ from .const import (
     MOZART_WEBSOCKET_EVENT,
     BeoModel,
     EntityMapValues,
-    WebsocketNotification,
+    WebsocketSubNotification,
 )
 from .entity import BeoBase
 from .util import get_remotes
@@ -283,7 +288,7 @@ class HaloWebsocket(BeoBase):
 
         # Get button from Halo configuration
         try:
-            button = get_button_from_id(self._client.configuration, button_id)
+            button = get_button_from_id(self._client.configuration, UUID(button_id))
         except ValueError:
             _LOGGER.debug("Error retrieving button %s from configuration", button_id)
             return
@@ -301,7 +306,7 @@ class HaloWebsocket(BeoBase):
         await self._client.update(
             Update(
                 update=UpdateButton(
-                    id=button.id,
+                    id_=button.uuid_id,
                     value=button_value,
                     subtitle=subtitle,
                     state=button_state,
@@ -634,7 +639,7 @@ class HaloWebsocket(BeoBase):
 
     # Button wheel action tasks
     async def _manage_entity_wheel_action_tasks(
-        self, button_id: str, counts: int
+        self, button_id: str, counts: WheelEventValues
     ) -> None:
         """Handle wheel actions of entities."""
 
@@ -647,7 +652,7 @@ class HaloWebsocket(BeoBase):
             return
 
         # Increment or decrement counter
-        self._wheel_action_handlers[entity_state.entity_id].counter += counts
+        self._wheel_action_handlers[entity_state.entity_id].counter += counts.value
 
         # Calculate new entity value
         if (
@@ -693,12 +698,12 @@ class HaloWebsocket(BeoBase):
         # Save original content if needed
         if self._wheel_action_handlers[state.entity_id].content is None:
             self._wheel_action_handlers[state.entity_id].content = get_button_from_id(
-                self._client.configuration, button_id
+                self._client.configuration, UUID(button_id)
             ).content
 
         # Show preview of value
         _ = await self._client.update(
-            Update(UpdateButton(button_id, content=Text(preview_value))),
+            Update(UpdateButton(content=Text(preview_value), id_=UUID(button_id))),
         )
 
     def _create_wheel_action_task(
@@ -747,8 +752,8 @@ class HaloWebsocket(BeoBase):
             await self._client.update(
                 Update(
                     UpdateButton(
-                        button_id,
                         content=self._wheel_action_handlers[state.entity_id].content,
+                        id_=UUID(button_id),
                     )
                 )
             )
@@ -786,11 +791,11 @@ class HaloWebsocket(BeoBase):
     async def on_button_event(self, event: HaloButtonEvent) -> None:
         """Send halo_button dispatch."""
         if event.state == ButtonEventState.RELEASED:
-            await self._manage_entity_action(event.id)
+            await self._manage_entity_action(event.str_id)
 
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_BUTTON}_{event.id}",
+            f"{DOMAIN}_{self._unique_id}_{EventTypes.BUTTON}_{event.str_id}",
             EVENT_TRANSLATION_MAP[event.state],
         )
 
@@ -798,7 +803,7 @@ class HaloWebsocket(BeoBase):
         """Send halo_power dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_POWER}",
+            f"{DOMAIN}_{self._unique_id}_{EventTypes.POWER}",
             event,
         )
 
@@ -806,7 +811,7 @@ class HaloWebsocket(BeoBase):
         """Send halo_status dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_STATUS}",
+            f"{DOMAIN}_{self._unique_id}_{EventTypes.STATUS}",
             event,
         )
 
@@ -814,17 +819,17 @@ class HaloWebsocket(BeoBase):
         """Send halo_system dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_SYSTEM}",
+            f"{DOMAIN}_{self._unique_id}_{EventTypes.SYSTEM}",
             event.state,
         )
 
     async def on_wheel_event(self, event: WheelEvent) -> None:
         """Send halo_wheel dispatch."""
-        await self._manage_entity_wheel_action_tasks(event.id, event.counts)
+        await self._manage_entity_wheel_action_tasks(event.str_id, event.counts)
 
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_WHEEL}_{event.id}",
+            f"{DOMAIN}_{self._unique_id}_{EventTypes.WHEEL}_{event.str_id}",
             EVENT_TRANSLATION_MAP[event.counts],
         )
 
@@ -861,10 +866,10 @@ class MozartWebsocket(BeoBase):
 
         # WebSocket callbacks
         self._client.get_active_listening_mode_notifications(
-            self.on_active_listening_mode
+            self.on_active_listening_mode_notification
         )
         self._client.get_active_speaker_group_notifications(
-            self.on_active_speaker_group
+            self.on_active_speaker_group_notification
         )
         self._client.get_battery_notifications(self.on_battery_notification)
         self._client.get_beo_remote_button_notifications(
@@ -890,9 +895,12 @@ class MozartWebsocket(BeoBase):
             self.on_playback_state_notification
         )
         self._client.get_software_update_state_notifications(
-            self.on_software_update_state
+            self.on_software_update_state_notification
         )
         self._client.get_source_change_notifications(self.on_source_change_notification)
+        self._client.get_stand_position_notifications(
+            self.on_stand_position_notification
+        )
         self._client.get_volume_notifications(self.on_volume_notification)
 
         # Used for firing events and debugging
@@ -916,19 +924,23 @@ class MozartWebsocket(BeoBase):
         _LOGGER.error("Lost connection to the %s", self.entry.title)
         self._update_connection_status()
 
-    def on_active_listening_mode(self, notification: ListeningModeProps) -> None:
+    def on_active_listening_mode_notification(
+        self, notification: ListeningModeProps
+    ) -> None:
         """Send active_listening_mode dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.ACTIVE_LISTENING_MODE}",
+            f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.ACTIVE_LISTENING_MODE}",
             notification,
         )
 
-    def on_active_speaker_group(self, notification: SpeakerGroupOverview) -> None:
+    def on_active_speaker_group_notification(
+        self, notification: SpeakerGroupOverview
+    ) -> None:
         """Send active_speaker_group dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.ACTIVE_SPEAKER_GROUP}",
+            f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.ACTIVE_SPEAKER_GROUP}",
             notification,
         )
 
@@ -936,7 +948,7 @@ class MozartWebsocket(BeoBase):
         """Send battery dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BATTERY}",
+            f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.BATTERY}",
             notification,
         )
 
@@ -948,7 +960,7 @@ class MozartWebsocket(BeoBase):
         # Send to event entity
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BEO_REMOTE_BUTTON}_{notification.key}",
+            f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.BEO_REMOTE_BUTTON}_{notification.key}",
             EVENT_TRANSLATION_MAP[notification.type],
         )
 
@@ -958,7 +970,7 @@ class MozartWebsocket(BeoBase):
         # Send to event entity
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BUTTON}_{notification.button}",
+            f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.BUTTON}_{notification.button}",
             EVENT_TRANSLATION_MAP[notification.state],
         )
 
@@ -968,35 +980,46 @@ class MozartWebsocket(BeoBase):
         """Send notification dispatch."""
         assert notification.value
 
-        # Try to match the notification type with available WebsocketNotification members
-        notification_type = try_parse_enum(WebsocketNotification, notification.value)
+        # Try to match the notification type with available WebsocketSubNotification members
+        notification_type = try_parse_enum(WebsocketSubNotification, notification.value)
 
         if notification_type in (
-            WebsocketNotification.BEOLINK_PEERS,
-            WebsocketNotification.BEOLINK_LISTENERS,
-            WebsocketNotification.BEOLINK_AVAILABLE_LISTENERS,
+            WebsocketSubNotification.BEOLINK_PEERS,
+            WebsocketSubNotification.BEOLINK_LISTENERS,
+            WebsocketSubNotification.BEOLINK_AVAILABLE_LISTENERS,
         ):
             async_dispatcher_send(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BEOLINK}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketSubNotification.BEOLINK}",
             )
-        elif notification_type is WebsocketNotification.CONFIGURATION:
+        elif notification_type is WebsocketSubNotification.CONFIGURATION:
+            # Update device name
+            beolink_self = await self._client.get_beolink_self()
+
+            device_registry = dr.async_get(self.hass)
+            # Mozart device
+            device_registry.async_update_device(
+                device_id=self._device.id,
+                name=beolink_self.friendly_name,
+            )
+            # Ideally stand device names are also updated here, but that is currently not possible / easy to get to work
+            # As the name is made from translated strings with placeholders
             async_dispatcher_send(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.CONFIGURATION}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketSubNotification.CONFIGURATION}",
             )
         elif notification_type in (
-            WebsocketNotification.PROXIMITY_PRESENCE_DETECTED,
-            WebsocketNotification.PROXIMITY_PRESENCE_NOT_DETECTED,
+            WebsocketSubNotification.PROXIMITY_PRESENCE_DETECTED,
+            WebsocketSubNotification.PROXIMITY_PRESENCE_NOT_DETECTED,
         ):
             async_dispatcher_send(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PROXIMITY}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketSubNotification.PROXIMITY}",
                 EVENT_TRANSLATION_MAP[notification.value],
             )
         # This notification is triggered by a remote pairing, unpairing and connecting to a device
         # So the current remote devices have to be compared to available remotes to determine action
-        elif notification_type is WebsocketNotification.REMOTE_CONTROL_DEVICES:
+        elif notification_type is WebsocketSubNotification.REMOTE_CONTROL_DEVICES:
             device_registry = dr.async_get(self.hass)
             device_serial_numbers = [
                 device.serial_number
@@ -1019,17 +1042,17 @@ class MozartWebsocket(BeoBase):
                 )
                 self.hass.config_entries.async_schedule_reload(self.entry.entry_id)
 
-        elif notification_type is WebsocketNotification.REMOTE_MENU_CHANGED:
+        elif notification_type is WebsocketSubNotification.REMOTE_MENU_CHANGED:
             async_dispatcher_send(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketSubNotification.REMOTE_MENU_CHANGED}",
             )
 
     def on_playback_error_notification(self, notification: PlaybackError) -> None:
         """Send playback_error dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_ERROR}",
+            f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.PLAYBACK_ERROR}",
             notification,
         )
 
@@ -1039,7 +1062,7 @@ class MozartWebsocket(BeoBase):
         """Send playback_metadata dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
+            f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.PLAYBACK_METADATA}",
             notification,
         )
 
@@ -1047,7 +1070,7 @@ class MozartWebsocket(BeoBase):
         """Send playback_progress dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_PROGRESS}",
+            f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.PLAYBACK_PROGRESS}",
             notification,
         )
 
@@ -1055,7 +1078,7 @@ class MozartWebsocket(BeoBase):
         """Send playback_source dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_SOURCE}",
+            f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.PLAYBACK_SOURCE}",
             notification,
         )
 
@@ -1063,7 +1086,7 @@ class MozartWebsocket(BeoBase):
         """Send playback_state dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_STATE}",
+            f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.PLAYBACK_STATE}",
             notification,
         )
 
@@ -1071,7 +1094,15 @@ class MozartWebsocket(BeoBase):
         """Send source_change dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.SOURCE_CHANGE}",
+            f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.SOURCE_CHANGE}",
+            notification,
+        )
+
+    def on_stand_position_notification(self, notification: StandPosition) -> None:
+        """Send stand_position dispatch."""
+        async_dispatcher_send(
+            self.hass,
+            f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.STAND_POSITION}",
             notification,
         )
 
@@ -1079,11 +1110,13 @@ class MozartWebsocket(BeoBase):
         """Send volume dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.VOLUME}",
+            f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.VOLUME}",
             notification,
         )
 
-    async def on_software_update_state(self, _: SoftwareUpdateState) -> None:
+    async def on_software_update_state_notification(
+        self, _: SoftwareUpdateState
+    ) -> None:
         """Check device sw version."""
         software_status = await self._client.get_softwareupdate_status()
 

@@ -1,12 +1,12 @@
 """Halo client."""
 
 import asyncio
-from collections import defaultdict
 from collections.abc import Awaitable, Callable
 import contextlib
 import inspect
 import json
 import logging
+import sys
 
 from aiohttp import ClientSession, ClientTimeout, WSMessageTypeError
 from aiohttp.client_exceptions import (
@@ -14,7 +14,6 @@ from aiohttp.client_exceptions import (
     ClientOSError,
     ServerTimeoutError,
 )
-from inflection import underscore
 
 from .const import WEBSOCKET_TIMEOUT
 from .helpers import update_button
@@ -25,6 +24,7 @@ from .models import (
     Configuration,
     Event,
     EventType,
+    EventTypes,
     PowerEvent,
     StatusEvent,
     SystemEvent,
@@ -33,25 +33,31 @@ from .models import (
     WheelEvent,
 )
 
+# Add support for "older" Python versions
+if sys.version_info >= (3, 13):  # noqa: UP036,RUF100
+    QueueExceptions = (asyncio.QueueFull, asyncio.QueueShutDown)
+else:
+    QueueExceptions = asyncio.QueueFull
+
 
 class Halo:
     """Beoremote Halo client."""
 
     def __init__(
-        self,
-        host: str,
-        configuration: BaseConfiguration = BaseConfiguration(Configuration([])),
+        self, host: str, configuration: BaseConfiguration | None = None
     ) -> None:
         """Initialize Halo client.
 
         Args:
-            host: IPv4 address.
-            configuration: Halo configuration. Defaults to `BaseConfiguration(Configuration([]))`.
-
+            host: IPv4 address
+            configuration: Halo configuration. Defaults to `BaseConfiguration(Configuration([]))` if set to None
         """
         self.host = host
         self.websocket_connected = False
         self.websocket_reconnect = False
+
+        if configuration is None:
+            configuration = BaseConfiguration(Configuration(pages=[]))
 
         self._configuration = configuration
 
@@ -64,8 +70,7 @@ class Halo:
         self._on_all_events: Callable | None = None
         self._on_all_events_raw: Callable | None = None
 
-        self._event_callbacks: dict[str, Callable | None] = defaultdict()
-        self._event_callbacks.default_factory = lambda: None
+        self._event_callbacks: dict[EventTypes, Callable | None] = {}
 
         self._logger = logging.getLogger(__name__)
 
@@ -73,15 +78,14 @@ class Halo:
         """Send data to the Beoremote Halo.
 
         Args:
-            data: `Configuration` or `Update`.
+            data: `Configuration` or `Update` to send
 
         Returns:
-            If the data was successfully put into WebSocket queue.
-
+            If the data was successfully put into WebSocket queue
         """
         try:
-            self._queue.put_nowait(str(data.to_json()))
-        except (asyncio.QueueFull, asyncio.QueueShutDown) as e:
+            self._queue.put_nowait(data.to_json())
+        except QueueExceptions as e:
             self._logger.debug("Unable to send data: %s with error: %s", data, e)
             return False
         else:
@@ -100,15 +104,14 @@ class Halo:
         Setting configuration to be `None` will set the configuration to be `BaseConfiguration(Configuration([]))`.
 
         Args:
-            configuration: Configuration to set/send.
-            send_configuration: Send configuration to Halo. Requires WebSocket connection to be active.. Defaults to True.
+            configuration: Configuration to set/send
+            send_configuration: Send configuration to Halo. Requires WebSocket connection to be active. Defaults to True
 
         Returns:
-            If the configuration was successfully put into WebSocket queue.
-
+            If the configuration was successfully put into WebSocket queue
         """
         self._configuration = (
-            BaseConfiguration(Configuration([]))
+            BaseConfiguration(Configuration(pages=[]))
             if configuration is None
             else configuration
         )
@@ -121,18 +124,17 @@ class Halo:
         """Send update to Halo. Requires WebSocket connection to be active.
 
         Args:
-            update: Update event to be sent.
-            update_configuration: If the configuration should be modified with passed `UpdateButton` values. Defaults to True.
+            update: Update event to be sent
+            update_configuration: If the configuration should be modified with passed `UpdateButton` values. Defaults to True
 
         Returns:
-            If the update was successfully put into WebSocket queue.
-
+            If the update was successfully put into WebSocket queue
         """
         if update_configuration and isinstance(update.update, UpdateButton):
             # Update button in configuration
             update_button(
                 self._configuration,
-                update.update.id,
+                update.update.uuid_id,
                 state=update.update.state,
                 value=update.update.value,
                 title=update.update.title,
@@ -146,11 +148,16 @@ class Halo:
         """Check WebSocket connection.
 
         Args:
-            raise_error: Raise any errors. Defaults to False.
+            raise_error: Raise any errors. Defaults to False
 
         Returns:
             Connection successful
 
+        Raises:
+            ClientConnectorError: Error connecting and receiving from WebSocket
+            ClientOSError: Error connecting and receiving from WebSocket
+            ServerTimeoutError: Error connecting and receiving from WebSocket
+            WSMessageTypeError: Error connecting and receiving from WebSocket
         """
         try:
             async with (
@@ -166,12 +173,10 @@ class Halo:
             ClientOSError,
             ServerTimeoutError,
             WSMessageTypeError,
-        ) as error:
+        ):
             if raise_error:
                 raise
-            self._logger.error(
-                "Unable to connect to %s : %s - %s", self.host, type(error), error
-            )
+            self._logger.exception("Unable to connect to %s", self.host)
             return False
 
     async def connect(
@@ -182,9 +187,8 @@ class Halo:
         Will start listening for events and allow updates to be sent.
 
         Args:
-            reconnect: Whether or not to reconnect. Defaults to False.
-            send_configuration: Whether to automatically send configuration on connect/reconnect. Defaults to True.
-
+            reconnect: Whether or not to reconnect. Defaults to False
+            send_configuration: Whether to automatically send configuration on connect/reconnect. Defaults to True
         """
         self.websocket_reconnect = reconnect
 
@@ -215,9 +219,8 @@ class Halo:
         """WebSocket connection handler.
 
         Args:
-            host: IPV4 address to connect to.
-            send_configuration: Whether to automatically send configuration on connect/reconnect. Defaults to True.
-
+            host: IPV4 address to connect to
+            send_configuration: Whether to automatically send configuration on connect/reconnect. Defaults to True
         """
         while True:
             try:
@@ -256,8 +259,8 @@ class Halo:
             except (
                 ClientConnectorError,
                 ClientOSError,
-                TypeError,
                 ServerTimeoutError,
+                TypeError,
                 WSMessageTypeError,
             ) as error:
                 if self.websocket_connected:
@@ -268,7 +271,7 @@ class Halo:
                         await self._trigger_callback(self._on_connection_lost)
 
                 if not self.websocket_reconnect:
-                    self._logger.error("%s : %s - %s", host, type(error), error)
+                    self._logger.exception("Lost connection to %s", host)
                     await self.disconnect()
                     return
 
@@ -279,37 +282,29 @@ class Halo:
         # Get the object type and deserialized object.
         try:
             deserialized_data = Event.from_json(event).event
-        except (ValueError, AttributeError) as error:
-            self._logger.error(
-                "%s unable to deserialize WebSocket event: (%s) with error: (%s : %s)",
-                self.host,
-                event,
-                type(error),
-                error,
+        except ValueError, AttributeError:
+            self._logger.exception(
+                "%s unable to deserialize WebSocket event: %s", self.host, event
             )
             return
 
         # Handle all events if defined
         if self._on_all_events:
             await self._trigger_callback(
-                self._on_all_events,
-                deserialized_data,
-                underscore(deserialized_data.type),
+                self._on_all_events, deserialized_data, deserialized_data.type_
             )
 
         if self._on_all_events_raw:
             await self._trigger_callback(self._on_all_events_raw, json.loads(event))
 
         # Handle specific events if defined
-        triggered_event = self._event_callbacks[deserialized_data.type]
-
-        if triggered_event:
+        if triggered_event := self._event_callbacks.get(deserialized_data.type_):
             await self._trigger_callback(triggered_event, deserialized_data)
 
+    @staticmethod
     async def _trigger_callback(
-        self,
         callback: Callable,
-        *args: BaseWebSocketResponse | dict | str | EventType,
+        *args: BaseWebSocketResponse | dict | str | EventType | EventTypes,
     ) -> None:
         """Trigger async or sync callback correctly."""
         if inspect.iscoroutinefunction(callback):
@@ -327,7 +322,7 @@ class Halo:
 
     def get_all_events(
         self,
-        on_all_events: Callable[[EventType, str], Awaitable[None] | None],
+        on_all_events: Callable[[EventType, EventTypes], Awaitable[None] | None],
     ) -> None:
         """Set callback for all events."""
         self._on_all_events = on_all_events
@@ -343,28 +338,28 @@ class Halo:
         self, on_wheel_event: Callable[[WheelEvent], Awaitable[None] | None]
     ) -> None:
         """Set callback for WheelEvent."""
-        self._event_callbacks["wheel"] = on_wheel_event
+        self._event_callbacks[EventTypes.WHEEL] = on_wheel_event
 
     def get_system_event(
         self, on_system_event: Callable[[SystemEvent], Awaitable[None] | None]
     ) -> None:
         """Set callback for SystemEvent."""
-        self._event_callbacks["system"] = on_system_event
+        self._event_callbacks[EventTypes.SYSTEM] = on_system_event
 
     def get_status_event(
         self, on_status_event: Callable[[StatusEvent], Awaitable[None] | None]
     ) -> None:
         """Set callback for StatusEvent."""
-        self._event_callbacks["status"] = on_status_event
+        self._event_callbacks[EventTypes.STATUS] = on_status_event
 
     def get_power_event(
         self, on_power_event: Callable[[PowerEvent], Awaitable[None] | None]
     ) -> None:
         """Set callback for PowerEvent."""
-        self._event_callbacks["power"] = on_power_event
+        self._event_callbacks[EventTypes.POWER] = on_power_event
 
     def get_button_event(
         self, on_button_event: Callable[[ButtonEvent], Awaitable[None] | None]
     ) -> None:
         """Set callback for ButtonEvent."""
-        self._event_callbacks["button"] = on_button_event
+        self._event_callbacks[EventTypes.BUTTON] = on_button_event

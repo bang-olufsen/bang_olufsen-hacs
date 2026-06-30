@@ -11,6 +11,7 @@ from aiohttp import (
     ServerTimeoutError,
     WSMessageTypeError,
 )
+from inflection import underscore
 from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 
@@ -34,13 +35,15 @@ from .const import (
     BeoPlatform,
 )
 from .services import async_setup_services
-from .util import get_remotes
+from .util import get_remotes, get_stand_info_and_status
 from .websocket import HaloWebsocket, MozartWebsocket
 
 MOZART_PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.EVENT,
     Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.TEXT,
@@ -103,6 +106,9 @@ async def _setup_mozart(
     hass: HomeAssistant, config_entry: BeoConfigEntry, device_registry: DeviceRegistry
 ) -> bool:
     """Set up a Mozart based product."""
+    if TYPE_CHECKING:
+        assert isinstance(config_entry.unique_id, str)
+
     client = MozartClient(
         host=config_entry.data[CONF_HOST], ssl_context=get_default_context()
     )
@@ -136,7 +142,22 @@ async def _setup_mozart(
             serial_number=remote.serial_number,
             sw_version=remote.app_version,
             manufacturer=MANUFACTURER,
-            via_device=(DOMAIN, cast(str, config_entry.unique_id)),
+            via_device=(DOMAIN, config_entry.unique_id),
+        )
+
+    # Create device for stand if connected
+    if stand := await get_stand_info_and_status(client):
+        stand_info, _ = stand
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, cast(str, stand_info.serial_number))},
+            translation_key=underscore(cast(str, stand_info.stand_type)),
+            translation_placeholders={"device_name": config_entry.title},
+            serial_number=stand_info.serial_number,
+            model=cast(str, stand_info.stand_type),
+            sw_version=f"{stand_info.bootloader_version}-{stand_info.application_version}",
+            manufacturer=MANUFACTURER,
+            via_device=(DOMAIN, config_entry.unique_id),
         )
 
     # Initialize websocket

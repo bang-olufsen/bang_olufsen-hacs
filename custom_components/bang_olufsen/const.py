@@ -23,7 +23,7 @@ from homeassistant.const import (
     SERVICE_SET_COVER_TILT_POSITION,
 )
 
-from .beoremote_halo.models import Icons, SystemEventState
+from .beoremote_halo.models import Icons, SystemEventState, WheelEventValues
 
 
 class BeoSource:
@@ -99,6 +99,7 @@ class BeoModel(StrEnum):
     BEOSOUND_LEVEL = "Beosound Level"
     BEOSOUND_PREMIERE = "Beosound Premiere"
     BEOSOUND_THEATRE = "Beosound Theatre"
+    # Remotes
     BEOREMOTE_HALO = "Beoremote Halo"
     BEOREMOTE_ONE = "Beoremote One"
 
@@ -153,31 +154,9 @@ class BeoButtons(StrEnum):
 
 
 # Dispatcher events
-class WebsocketNotification(StrEnum):
-    """Enum for WebSocket notification types."""
+class WebsocketSubNotification(StrEnum):
+    """Enum for WebSocket sub-notification types used in `WebsocketNotificationTag`."""
 
-    ACTIVE_LISTENING_MODE = "active_listening_mode"
-    ACTIVE_SPEAKER_GROUP = "active_speaker_group"
-    ALARM_TRIGGERED = "alarm_triggered"
-    BATTERY = "battery"
-    BEO_REMOTE_BUTTON = "beo_remote_button"
-    BEOLINK_EXPERIENCES_RESULT = "beolink_experiences_result"
-    BEOLINK_JOIN_RESULT = "beolink_join_result"
-    BUTTON = "button"
-    CURTAINS = "curtains"
-    PLAYBACK_ERROR = "playback_error"
-    PLAYBACK_METADATA = "playback_metadata"
-    PLAYBACK_PROGRESS = "playback_progress"
-    PLAYBACK_SOURCE = "playback_source"
-    PLAYBACK_STATE = "playback_state"
-    POWER_STATE = "power_state"
-    ROLE = "role"
-    SOFTWARE_UPDATE_STATE = "software_update_state"
-    SOUND_SETTINGS = "sound_settings"
-    SOURCE_CHANGE = "source_change"
-    VOLUME = "volume"
-
-    # Sub-notifications
     BEOLINK = "beolink"
     BEOLINK_AVAILABLE_LISTENERS = "beolinkAvailableListeners"
     BEOLINK_LISTENERS = "beolinkListeners"
@@ -190,13 +169,6 @@ class WebsocketNotification(StrEnum):
     PROXIMITY_PRESENCE_NOT_DETECTED = "proximityPresenceNotDetected"
     REMOTE_CONTROL_DEVICES = "remoteControlDevices"
     REMOTE_MENU_CHANGED = "remoteMenuChanged"
-
-    # Halo notifications
-    HALO_WHEEL = "halo_wheel"
-    HALO_SYSTEM = "halo_system"
-    HALO_STATUS = "halo_status"
-    HALO_POWER = "halo_power"
-    HALO_BUTTON = "halo_button"
 
 
 DOMAIN: Final[str] = "bang_olufsen"
@@ -254,7 +226,7 @@ COVER_ATTRIBUTE_MAP: Final[dict[str, tuple[str, str]]] = {
 
 # Models that can be setup manually
 SELECTABLE_MODELS: Final[list[BeoModel]] = [
-    model for model in BeoModel if model.value not in (BeoModel.BEOREMOTE_ONE)
+    model for model in BeoModel if model.value != BeoModel.BEOREMOTE_ONE
 ]
 
 
@@ -378,7 +350,7 @@ MOZART_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 HALO_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_halo_websocket_event"
 
 # Dict used to translate native Bang & Olufsen event names to string.json compatible ones
-EVENT_TRANSLATION_MAP: dict[str | int, str] = {
+EVENT_TRANSLATION_MAP: dict[str | int | WheelEventValues, str] = {
     # Beoremote One
     "KeyPress": "key_press",
     "KeyRelease": "key_release",
@@ -394,16 +366,16 @@ EVENT_TRANSLATION_MAP: dict[str | int, str] = {
     # Beoremote Halo
     "pressed": "button_pressed",
     "released": "button_released",
-    1: "wheel_right_normal",
-    2: "wheel_right_fast",
-    3: "wheel_right_moderately_fast",
-    4: "wheel_right_very_fast",
-    5: "wheel_right_extremely_fast",
-    -1: "wheel_left_normal",
-    -2: "wheel_left_fast",
-    -3: "wheel_left_moderately_fast",
-    -4: "wheel_left_very_fast",
-    -5: "wheel_left_extremely_fast",
+    WheelEventValues.WHEEL_CLOCKWISE_NORMAL: "wheel_right_normal",
+    WheelEventValues.WHEEL_CLOCKWISE_FAST: "wheel_right_fast",
+    WheelEventValues.WHEEL_CLOCKWISE_MODERATELY_FAST: "wheel_right_moderately_fast",
+    WheelEventValues.WHEEL_CLOCKWISE_VERY_FAST: "wheel_right_very_fast",
+    WheelEventValues.WHEEL_CLOCKWISE_EXTREMELY_FAST: "wheel_right_extremely_fast",
+    WheelEventValues.WHEEL_COUNTER_CLOCKWISE_NORMAL: "wheel_left_normal",
+    WheelEventValues.WHEEL_COUNTER_CLOCKWISE_FAST: "wheel_left_fast",
+    WheelEventValues.WHEEL_COUNTER_CLOCKWISE_MODERATELY_FAST: "wheel_left_moderately_fast",
+    WheelEventValues.WHEEL_COUNTER_CLOCKWISE_VERY_FAST: "wheel_left_very_fast",
+    WheelEventValues.WHEEL_COUNTER_CLOCKWISE_EXTREMELY_FAST: "wheel_left_extremely_fast",
 }
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"

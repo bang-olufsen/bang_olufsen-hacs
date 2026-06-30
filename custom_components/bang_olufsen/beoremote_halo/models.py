@@ -1,23 +1,127 @@
 """Models used for the Beoremote Halo client."""
 
-from dataclasses import dataclass, field
-from enum import StrEnum
-from typing import TypedDict
-from uuid import uuid1
+from enum import Enum, StrEnum
+import logging
+from typing import Any, Literal, Self, TypedDict, cast
+from uuid import UUID, uuid4
 
-from mashumaro import field_options
-from mashumaro.config import BaseConfig
-from mashumaro.mixins.json import DataClassJSONMixin
+from pydantic import ConfigDict, Field, TypeAdapter, field_validator
+from pydantic.dataclasses import dataclass
+from pydantic_core import from_json, to_json
 
 from .const import (
+    BUTTON_CONTENT_TEXT_MAX_LENGTH,
+    BUTTON_CONTENT_TEXT_MIN_LENGTH,
+    BUTTON_SUBTITLE_MAX_LENGTH,
+    BUTTON_SUBTITLE_MIN_LENGTH,
+    BUTTON_TITLE_MAX_LENGTH,
+    BUTTON_TITLE_MIN_LENGTH,
     MAX_BUTTONS,
     MAX_PAGES,
     MAX_VALUE,
     MIN_BUTTONS,
     MIN_PAGES,
     MIN_VALUE,
+    NOTIFICATION_SUBTITLE_MAX_LENGTH,
+    NOTIFICATION_SUBTITLE_MAX_LINE_LENGTH,
+    NOTIFICATION_SUBTITLE_MAX_LINES,
+    NOTIFICATION_SUBTITLE_MIN_LENGTH,
+    NOTIFICATION_SUBTITLE_MIN_LINE_LENGTH,
+    NOTIFICATION_SUBTITLE_MIN_LINES,
+    NOTIFICATION_TITLE_MAX_LENGTH,
+    NOTIFICATION_TITLE_MIN_LENGTH,
+    PAGE_TITLE_MAX_LENGTH,
+    PAGE_TITLE_MIN_LENGTH,
     VERSION,
 )
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(
+    config=ConfigDict(
+        validate_by_name=True, validate_by_alias=True, validate_assignment=True
+    )
+)
+class _HaloConfigMixin:
+    """Mixin for Beoremote Halo dataclass configuration."""
+
+    def to_json(self) -> str:
+        return to_json(self, exclude_none=True, by_alias=True).decode()
+
+    @classmethod
+    def from_json(cls, value: str) -> Self:
+        return TypeAdapter(cls).validate_json(value, by_alias=True, by_name=True)
+
+    def to_dict(self) -> dict[str, Any]:
+        return cast(dict[str, Any], from_json(self.to_json()))
+
+    @classmethod
+    def from_dict(cls, value: dict[str, Any]) -> Self:
+        return TypeAdapter(cls).validate_python(value, by_alias=True, by_name=True)
+
+
+@dataclass
+class _HaloIdMixin:
+    """Mixin for Beoremote Halo dataclasses that contain an ID.
+
+    String values are accepted in the constructor, but are immediately converted to UUID.
+    """
+
+    # This is kw_only to ensure that it is placed at the end of constructor's of classes that inherit from this one
+    id_: UUID | str = Field(
+        serialization_alias="id",
+        validation_alias="id",
+        default_factory=uuid4,
+        kw_only=True,
+    )
+
+    @property
+    def uuid_id(self) -> UUID:
+        """IDs are always converted to UUID, so only casting is necessary."""
+        return cast("UUID", self.id_)
+
+    @property
+    def str_id(self) -> str:
+        """String representation of ID."""
+        return str(self.id_)
+
+    @field_validator("id_", mode="after")
+    @classmethod
+    def valid_id_(cls, id_: UUID | str) -> UUID:
+        """Check if provided string is a valid UUID.
+
+        Returns:
+            Valid ID in UUID form
+
+        Raises:
+            ValueError: Invalid UUID string
+        """
+        if isinstance(id_, str):
+            try:
+                return UUID(id_)
+            except ValueError as e:
+                msg = f"Malformed UUID str: {id_}"
+                raise ValueError(msg) from e
+        return id_
+
+
+class UpdateTypes(StrEnum):
+    """Values present in the `type` members of Update classes."""
+
+    BUTTON = "button"
+    DISPLAY_PAGE = "displaypage"
+    NOTIFICATION = "notification"
+
+
+class EventTypes(StrEnum):
+    """Values present in the `type` members of Event classes."""
+
+    BUTTON = "button"
+    POWER = "power"
+    STATUS = "status"
+    SYSTEM = "system"
+    WHEEL = "wheel"
 
 
 class Icons(StrEnum):
@@ -99,17 +203,24 @@ class Icons(StrEnum):
 
 
 @dataclass
-class Icon(DataClassJSONMixin):
+class Icon(_HaloConfigMixin):
     """Icon to be shown inside of a `Button`."""
 
     icon: Icons
 
 
 @dataclass
-class Text(DataClassJSONMixin):
-    """Text to be shown inside of a `Button`."""
+class Text(_HaloConfigMixin):
+    """Text to be shown inside of a `Button`.
 
-    text: str
+    Args:
+        text: Limited to 0-6
+    """
+
+    text: str = Field(
+        min_length=BUTTON_CONTENT_TEXT_MIN_LENGTH,
+        max_length=BUTTON_CONTENT_TEXT_MAX_LENGTH,
+    )
 
 
 class ButtonState(StrEnum):
@@ -120,103 +231,111 @@ class ButtonState(StrEnum):
 
 
 @dataclass
-class Button(DataClassJSONMixin):
-    """An interactable element that represents an action or physical device.
+class Button(_HaloConfigMixin, _HaloIdMixin):
+    """An interact-able element that represents an action or physical device.
 
-    Contains a title, content (either an icon or text), subtitle, value, state and if it is the default.
-    `Button`s marked as default will be preselected when interacting with the Halo. Only a single Button can be default in a configuration.
+    Args:
+        title: Limited to a length of 0-15
+        content: Shown in the center of the `Button` on the Halo
+        subtitle: Limited to a length of 0-15
+        value: Limited to value of 0-100
+        state: Overall state of the `Button`. Affects the `Icon` if configured
+        default: `Button`s marked as default will be preselected when interacting with the Halo.
+            Only a single Button can be default in a configuration
+        id_: Unique identifier for the button. If no ID is provided, then one will be automatically generated
 
-    Ensures that the value is in the range 0-100.
     """
 
-    title: str
-    content: Icon | Text
-    subtitle: str | None = None
-    value: int | None = None
+    title: str = Field(
+        min_length=BUTTON_TITLE_MIN_LENGTH, max_length=BUTTON_TITLE_MAX_LENGTH
+    )
+    content: Icon | Text = Field()
+    subtitle: str | None = Field(
+        default=None,
+        min_length=BUTTON_SUBTITLE_MIN_LENGTH,
+        max_length=BUTTON_SUBTITLE_MAX_LENGTH,
+    )
+    value: int | None = Field(default=None, ge=MIN_VALUE, le=MAX_VALUE)
     state: ButtonState | None = None
     default: bool | None = False
-    id: str = str(uuid1())
-
-    class Config(BaseConfig):
-        """Mashumaro config."""
-
-        omit_none = True
-
-    def __post_init__(self) -> None:
-        """Ensure value is in a valid range."""
-        if self.value is not None:
-            if self.value < MIN_VALUE or self.value > MAX_VALUE:
-                raise ValueError(
-                    f"Invalid button value: {self.value}. Button value must be in the range: {MIN_VALUE}-{MAX_VALUE}"
-                )
 
 
 @dataclass
-class Page(DataClassJSONMixin):
+class Page(_HaloConfigMixin, _HaloIdMixin):
     """Group of `Button` elements grouped with a title in the `Configuration`.
 
-    Contains a title, a list of buttons and an id.
-
-    Ensures that at 1-8 buttons are in a page.
+    Args:
+        title: Limited to a length of  0-40
+        buttons: Group of `Button` elements. Limited to a length of 0-8
+        id_: Unique identifier for the button. If no ID is provided, then one will be automatically generated
     """
 
-    title: str
-    buttons: list[Button]
-    id: str = str(uuid1())
+    title: str = Field(
+        min_length=PAGE_TITLE_MIN_LENGTH, max_length=PAGE_TITLE_MAX_LENGTH
+    )
+    buttons: list[Button] = Field(min_length=MIN_BUTTONS, max_length=MAX_BUTTONS)
 
-    def __post_init__(self) -> None:
-        """Ensure page is valid."""
+    @field_validator("buttons", mode="after")
+    @classmethod
+    def valid_default(cls, buttons: list[Button]) -> list[Button]:
+        """Check if provided buttons only contain at most 1 default button.
 
-        # Ensure that there are  0-8 buttons.
-        number_of_buttons = len(self.buttons)
-        if number_of_buttons < MIN_BUTTONS or number_of_buttons > MAX_BUTTONS:
-            raise ValueError(
-                f"Invalid number of buttons: {number_of_buttons}. Only {MIN_BUTTONS}-{MAX_BUTTONS} buttons are allowed in a page."
-            )
+        Returns:
+            Defined buttons
+
+        Raises:
+            ValueError: More than 1 default button
+        """
+        default_buttons = [button for button in buttons if button.default is True]
+
+        if len(default_buttons) > 1:
+            msg = f"Only a single Button can be default per configuration. Default buttons found {default_buttons}"
+            raise ValueError(msg)
+        return buttons
 
 
 @dataclass
-class Configuration(DataClassJSONMixin):
+class Configuration(_HaloConfigMixin, _HaloIdMixin):
     """Main Configuration class.
 
-    Contains a list of pages, the version of the API client and an ID.
-
-    Ensures that at most one `Button` is marked default.
-    Ensures that at 1-3 pages are in a configuration.
+    Args:
+        pages: Group of `Page` elements. Limited to a length of 1-3
+        version: Version of the API
+        id_: Unique identifier for the button. If no ID is provided, then one will be automatically generated
     """
 
-    pages: list[Page]
-    version: str = VERSION
-    id: str = str(uuid1())
+    pages: list[Page] = Field(min_length=MIN_PAGES, max_length=MAX_PAGES)
+    version: str = Field(VERSION, init=False)
 
-    def __post_init__(self) -> None:
-        """Ensure configuration is valid."""
+    @field_validator("pages", mode="after")
+    @classmethod
+    def valid_default(cls, pages: list[Page]) -> list[Page]:
+        """Check if provided pages only contain at most 1 default button.
 
-        # Ensure that at most one Button is marked as default.
+        Returns:
+            Defined pages
+
+        Raises:
+            ValueError: More than 1 default button
+        """
         default_buttons: list[Button] = []
-        for page in self.pages:
+        for page in pages:
             default_buttons.extend(
                 button for button in page.buttons if button.default is True
             )
 
         if len(default_buttons) > 1:
-            raise ValueError(
-                f"Only a single Button can be default per configuration. Default buttons found {default_buttons}"
-            )
-
-        # Ensure that there are 0-3 pages.
-        number_of_pages = len(self.pages)
-        if number_of_pages < MIN_PAGES or number_of_pages > MAX_PAGES:
-            raise ValueError(
-                f"Invalid number of pages: {number_of_pages}. Only {MIN_PAGES}-{MAX_PAGES} pages are allowed per configuration."
-            )
+            msg = f"Only a single Button can be default per configuration. Default buttons found {default_buttons}"
+            raise ValueError(msg)
+        return pages
 
 
 @dataclass
-class BaseConfiguration(DataClassJSONMixin):
+class BaseConfiguration(_HaloConfigMixin):
     """Root configuration class.
 
-    Contains the main configuration class.
+    Args:
+        configuration: Main configuration class
     """
 
     configuration: Configuration
@@ -230,15 +349,11 @@ class ButtonEventState(StrEnum):
 
 
 @dataclass
-class ButtonEvent(DataClassJSONMixin):
-    """Button event received from the Halo.
+class ButtonEvent(_HaloConfigMixin, _HaloIdMixin):
+    """Button event received from the Halo."""
 
-    Contains the id and the (new) state of the button.
-    """
-
-    id: str
     state: ButtonEventState
-    type: str = field(default="button", init=False)
+    type_: Literal[EventTypes.BUTTON] = Field(serialization_alias="type", init=False)
 
 
 class PowerEventState(StrEnum):
@@ -253,7 +368,7 @@ class PowerEventState(StrEnum):
 
 
 @dataclass
-class PowerEvent(DataClassJSONMixin):
+class PowerEvent(_HaloConfigMixin):
     """Power event received from the Halo.
 
     Contains the battery capacity and the (new) power state.
@@ -261,7 +376,9 @@ class PowerEvent(DataClassJSONMixin):
 
     capacity: int
     state: PowerEventState
-    type: str = field(default="power", init=False)
+    type_: Literal[EventTypes.POWER] = Field(
+        default=EventTypes.POWER, serialization_alias="type"
+    )
 
 
 class StatusEventState(StrEnum):
@@ -272,7 +389,7 @@ class StatusEventState(StrEnum):
 
 
 @dataclass
-class StatusEvent(DataClassJSONMixin):
+class StatusEvent(_HaloConfigMixin):
     """Status event received from the Halo.
 
     Contains a message and state.
@@ -297,7 +414,11 @@ class StatusEvent(DataClassJSONMixin):
 
     state: StatusEventState
     message: str | None = None
-    type: str = field(default="status", init=False)
+    type_: Literal[EventTypes.STATUS] = Field(
+        default=EventTypes.STATUS,
+        serialization_alias="type",
+        validation_alias="type",
+    )
 
 
 class SystemEventState(StrEnum):
@@ -309,18 +430,37 @@ class SystemEventState(StrEnum):
 
 
 @dataclass
-class SystemEvent(DataClassJSONMixin):
+class SystemEvent(_HaloConfigMixin):
     """System event received from the Halo.
 
     Contains state describing state of the system.
     """
 
     state: SystemEventState
-    type: str = field(default="system", init=False)
+    type_: Literal[EventTypes.SYSTEM] = Field(
+        default=EventTypes.SYSTEM,
+        serialization_alias="type",
+        validation_alias="type",
+    )
+
+
+class WheelEventValues(Enum):
+    """Available values for `counts` received in `WheelEvent`."""
+
+    WHEEL_CLOCKWISE_NORMAL = 1
+    WHEEL_CLOCKWISE_FAST = 2
+    WHEEL_CLOCKWISE_MODERATELY_FAST = 3
+    WHEEL_CLOCKWISE_VERY_FAST = 4
+    WHEEL_CLOCKWISE_EXTREMELY_FAST = 5
+    WHEEL_COUNTER_CLOCKWISE_NORMAL = -1
+    WHEEL_COUNTER_CLOCKWISE_FAST = -2
+    WHEEL_COUNTER_CLOCKWISE_MODERATELY_FAST = -3
+    WHEEL_COUNTER_CLOCKWISE_VERY_FAST = -4
+    WHEEL_COUNTER_CLOCKWISE_EXTREMELY_FAST = -5
 
 
 @dataclass
-class WheelEvent(DataClassJSONMixin):
+class WheelEvent(_HaloConfigMixin, _HaloIdMixin):
     """Wheel event received from the Halo.
 
     Contains id of button and momentum-affected counts value with value range -5..5.
@@ -330,89 +470,130 @@ class WheelEvent(DataClassJSONMixin):
     The momentum of the wheel can also be determined by the counts value: 1 -> slow clockwise movement, 5 -> very fast clockwise movement.
     """
 
-    id: str
-    counts: int
-    type: str = field(default="wheel", init=False)
+    counts: WheelEventValues
+    type_: Literal[EventTypes.WHEEL] = Field(
+        default=EventTypes.WHEEL,
+        serialization_alias="type",
+        validation_alias="type",
+    )
 
 
 @dataclass
-class Event(DataClassJSONMixin):
+class Event(_HaloConfigMixin):
     """Base Event class."""
 
     event: WheelEvent | SystemEvent | StatusEvent | PowerEvent | ButtonEvent
 
 
 @dataclass
-class UpdateButton(DataClassJSONMixin):
+class UpdateButton(_HaloConfigMixin, _HaloIdMixin):
     """Button update to be sent to the Halo.
 
-    Contains all defined button attributes
-
     Sending this will update the defined attributes of a single `Button` in a configuration.
+
+    Args:
+        state: State to update
+        value: Value to update
+        title: Title to update
+        subtitle: Subtitle to update
+        content: Content to update
     """
 
-    id: str
     state: ButtonState | None = None
-    value: int | None = None
-    title: str | None = None
-    subtitle: str | None = None
+    value: int | None = Field(default=None, ge=MIN_VALUE, le=MAX_VALUE)
+    title: str | None = Field(
+        default=None,
+        min_length=BUTTON_TITLE_MIN_LENGTH,
+        max_length=BUTTON_TITLE_MAX_LENGTH,
+    )
+    subtitle: str | None = Field(
+        default=None,
+        min_length=BUTTON_SUBTITLE_MIN_LENGTH,
+        max_length=BUTTON_SUBTITLE_MAX_LENGTH,
+    )
     content: Text | Icon | None = None
-    type: str = field(default="button", init=False)
-
-    class Config(BaseConfig):
-        """Mashumaro config."""
-
-        omit_none = True
-
-    def __post_init__(self) -> None:
-        """Ensure value is in a valid range."""
-        if self.value is not None:
-            if self.value < MIN_VALUE or self.value > MAX_VALUE:
-                raise ValueError(
-                    f"Invalid button value: {self.value}. Button value must be in the range: {MIN_VALUE}-{MAX_VALUE}"
-                )
+    type_: Literal[UpdateTypes.BUTTON] = Field(
+        default=UpdateTypes.BUTTON, serialization_alias="type", init=False
+    )
 
 
 @dataclass
-class UpdateDisplayPage(DataClassJSONMixin):
+class UpdateDisplayPage(_HaloConfigMixin):
     """Display a specific `Page` and `Button`.
 
-    Contains page and button id.
-
     Sending this will make the Halo focus on a specified button on a page.
+
+    Args:
+        page_id: UUID of page to display
+        button_id: UUID of button in page to display
     """
 
-    class Config(BaseConfig):
-        """Mashumaro config."""
-
-        omit_none = True
-        serialize_by_alias = True
-
-    page_id: str = field(metadata=field_options(alias="pageid"))
-    button_id: str | None = field(
-        default=None, metadata=field_options(alias="buttonid")
+    page_id: UUID = Field(serialization_alias="pageid")
+    button_id: UUID | None = Field(default=None, serialization_alias="buttonid")
+    type_: Literal[UpdateTypes.DISPLAY_PAGE] = Field(
+        default=UpdateTypes.DISPLAY_PAGE, serialization_alias="type", init=False
     )
-    type: str = field(default="displaypage", init=False)
 
 
 @dataclass
-class UpdateNotification(DataClassJSONMixin):
-    """Notification."""
+class UpdateNotification(_HaloConfigMixin, _HaloIdMixin):
+    """Display a notification message.
 
-    class Config(BaseConfig):
-        """Mashumaro config."""
+    Sending this will make the Halo show a notification box with the defined title and message.
 
-        omit_none = True
+    Args:
+        title: Title of notification
+        message: Message to display in notification
+    """
 
-    title: str | None = None
-    subtitle: str | None = None
-    type: str = field(default="notification", init=False)
-    id: str = str(uuid1())
+    title: str | None = Field(
+        default=None,
+        min_length=NOTIFICATION_TITLE_MIN_LENGTH,
+        max_length=NOTIFICATION_TITLE_MAX_LENGTH,
+    )
+    message: str | None = Field(default=None, serialization_alias="subtitle")
+    type_: Literal[UpdateTypes.NOTIFICATION] = Field(
+        default=UpdateTypes.NOTIFICATION, serialization_alias="type", init=False
+    )
+
+    @field_validator("message", mode="after")
+    @classmethod
+    def valid_message(cls, message: str | None) -> str | None:
+        """Check if notification has valid formatting.
+
+        Returns:
+            Defined message
+
+        Raises:
+            ValueError: Invalid notification formatting
+        """
+        if message is not None:
+            # Overall length
+            if (
+                message_length := len(message)
+            ) and message_length > NOTIFICATION_SUBTITLE_MAX_LENGTH:
+                msg = f"Defined message contains too many characters. Valid range: {NOTIFICATION_SUBTITLE_MIN_LENGTH}..{NOTIFICATION_SUBTITLE_MAX_LENGTH}"
+                raise ValueError(msg)
+            # Number of lines
+            if (message_lines := message.splitlines()) and len(
+                message_lines
+            ) > NOTIFICATION_SUBTITLE_MAX_LINES:
+                msg = f"Defined message contains too many lines: {len(message_lines)}. Valid range: {NOTIFICATION_SUBTITLE_MIN_LINES}..{NOTIFICATION_SUBTITLE_MAX_LINES}"
+                raise ValueError(msg)
+            # Length of each line
+            for line in message_lines:
+                if (
+                    line_length := len(line)
+                ) and line_length > NOTIFICATION_SUBTITLE_MAX_LINE_LENGTH:
+                    msg = f"Defined message contains a line with too many characters: {line_length}. Valid range: {NOTIFICATION_SUBTITLE_MIN_LINE_LENGTH}..{NOTIFICATION_SUBTITLE_MAX_LINE_LENGTH}"
+                    raise ValueError(msg)
+
+        return message
 
 
 @dataclass
-class Update(DataClassJSONMixin):
-    """Update."""
+class Update(_HaloConfigMixin):
+    """An update to be sent to the Beoremote Halo."""
 
     update: UpdateButton | UpdateDisplayPage | UpdateNotification
 

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from mozart_api.models import PairedRemote
+from mozart_api.mozart_client import WebSocketEventTypes
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.const import CONF_MODEL
@@ -17,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BeoConfigEntry
 from .beoremote_halo.halo import Halo
-from .beoremote_halo.models import BaseConfiguration, Button
+from .beoremote_halo.models import BaseConfiguration, Button, EventTypes
 from .const import (
     BEO_MODEL_PLATFORM_MAP,
     BEO_REMOTE_KEY_EVENTS,
@@ -31,7 +32,7 @@ from .const import (
     PROXIMITY_EVENTS,
     BeoModel,
     BeoPlatform,
-    WebsocketNotification,
+    WebsocketSubNotification,
 )
 from .entity import BeoEntity
 from .util import get_device_buttons, get_remote_keys, get_remotes
@@ -108,7 +109,10 @@ async def async_setup_entry(
                     ]
                 )
                 button_unique_ids.extend(
-                    [f"{config_entry.unique_id}_{button.id}" for button in page.buttons]
+                    [
+                        f"{config_entry.unique_id}_{button.str_id}"
+                        for button in page.buttons
+                    ]
                 )
 
             # Check if any deleted buttons have to be removed
@@ -180,7 +184,7 @@ class BeoMozartButton(BeoEvent):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BUTTON}_{self._button_type}",
+                f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.BUTTON}_{self._button_type}",
                 self._async_handle_event,
             )
         )
@@ -226,7 +230,7 @@ class BeoMozartRemoteKey(BeoEvent):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BEO_REMOTE_BUTTON}_{self._key_type}",
+                f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.BEO_REMOTE_BUTTON}_{self._key_type}",
                 self._async_handle_event,
             )
         )
@@ -257,7 +261,7 @@ class BeoMozartProximity(BeoEvent):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PROXIMITY}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketSubNotification.PROXIMITY}",
                 self._async_handle_event,
             )
         )
@@ -292,7 +296,7 @@ class BeoHaloSystemStatus(BeoEvent):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_SYSTEM}",
+                f"{DOMAIN}_{self._unique_id}_{EventTypes.SYSTEM}",
                 self._async_handle_event,
             )
         )
@@ -311,12 +315,12 @@ class BeoHaloButton(BeoEvent):
         super().__init__(config_entry)
         self._client: Halo
 
-        self._attr_unique_id = f"{self._unique_id}_{button.id}"
+        self._attr_unique_id = f"{self._unique_id}_{button.str_id}"
         self._attr_translation_placeholders = {
             "page_title": page_title,
             "button_title": button.title,
         }
-        self._attr_extra_state_attributes = {"button_id": button.id}
+        self._attr_extra_state_attributes = {"button_id": button.str_id}
 
         self._button = button
 
@@ -332,14 +336,14 @@ class BeoHaloButton(BeoEvent):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_BUTTON}_{self._button.id}",
+                f"{DOMAIN}_{self._unique_id}_{EventTypes.BUTTON}_{self._button.str_id}",
                 self._async_handle_event,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_WHEEL}_{self._button.id}",
+                f"{DOMAIN}_{self._unique_id}_{EventTypes.WHEEL}_{self._button.str_id}",
                 self._async_handle_event,
             )
         )

@@ -217,8 +217,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
 
-def _get_halo_client(call: ServiceCall) -> Halo:
-    """Get Halo client from ServiceCall."""
+def _get_client[T](call: ServiceCall, typ: type[T]) -> T:
+    """Get API client from ServiceCall."""
     device_id = str(call.data[ATTR_DEVICE_ID])
 
     device_registry = dr.async_get(call.hass)
@@ -231,21 +231,21 @@ def _get_halo_client(call: ServiceCall) -> Halo:
     if (entry := call.hass.config_entries.async_get_entry(entry_id)) is None:
         raise ServiceValidationError(f"Invalid config entry id: {entry_id}")
 
-    return cast(Halo, cast("BeoConfigEntry", entry).runtime_data.client)
+    return cast(T, cast("BeoConfigEntry", entry).runtime_data.client)
 
 
 def _async_halo_configuration(call: ServiceCall) -> ServiceResponse:
     """Get raw configuration for the Halo."""
-    return cast(ServiceResponse, _get_halo_client(call).configuration.to_dict())
+    return cast(ServiceResponse, _get_client(call, Halo).configuration.to_dict())
 
 
 async def _async_halo_notification(call: ServiceCall) -> None:
     """Send a notification to the Halo."""
-    await _get_halo_client(call).update(
+    await _get_client(call, Halo).update(
         Update(
             update=UpdateNotification(
                 title=call.data["title"],
-                subtitle=call.data["subtitle"],
+                message=call.data["subtitle"],
             )
         )
     )
@@ -258,4 +258,4 @@ async def _async_halo_display_page(call: ServiceCall) -> None:
     if call.data.get("button_id") is not None:
         kwargs["button_id"] = call.data["button_id"]
 
-    await _get_halo_client(call).update(Update(update=UpdateDisplayPage(**kwargs)))
+    await _get_client(call, Halo).update(Update(update=UpdateDisplayPage(**kwargs)))

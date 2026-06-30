@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from mozart_api import __version__ as MOZART_API_VERSION
-from mozart_api.models import PairedRemote, Source
+from mozart_api import StandStatus, __version__ as MOZART_API_VERSION
+from mozart_api.exceptions import ApiException
+from mozart_api.models import PairedRemote, Source, StandInfo
 from mozart_api.mozart_client import MozartClient
 
 from .beoremote_halo import Halo
@@ -40,6 +41,24 @@ async def get_remotes(client: MozartClient | Halo) -> list[PairedRemote]:
         for remote in cast(list[PairedRemote], bluetooth_remote_list.items)
         if remote.serial_number is not None
     ]
+
+
+async def get_stand_info_and_status(
+    client: MozartClient | Halo,
+) -> tuple[StandInfo, StandStatus] | None:
+    """Get connected motorized stand info and status."""
+    # Only used with Mozart devices
+    if TYPE_CHECKING:
+        assert isinstance(client, MozartClient)
+
+    try:
+        stand_info = await client.get_stand_info()
+        stand_status = await client.get_stand_status()
+    except ApiException:
+        # Will raise an exception if no stand is connected
+        return None
+    else:
+        return (stand_info, stand_status)
 
 
 async def get_sources(client: MozartClient | Halo) -> list[Source]:

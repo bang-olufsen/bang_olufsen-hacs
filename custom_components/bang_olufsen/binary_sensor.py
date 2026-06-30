@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from mozart_api.models import BatteryState
+from mozart_api.mozart_client import WebSocketEventTypes
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -14,13 +15,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BeoConfigEntry
-from .beoremote_halo.models import PowerEvent, PowerEventState
-from .const import (
-    BEO_MODEL_PLATFORM_MAP,
-    CONNECTION_STATUS,
-    DOMAIN,
-    WebsocketNotification,
-)
+from .beoremote_halo.models import EventTypes, PowerEvent, PowerEventState
+from .const import BEO_MODEL_PLATFORM_MAP, CONNECTION_STATUS, DOMAIN
 from .entity import BeoEntity, BeoPlatform
 from .util import supports_battery
 
@@ -76,7 +72,7 @@ class BeoMozartBatteryCharging(BeoBinarySensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BATTERY}",
+                f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.BATTERY}",
                 self._update_battery_charging,
             )
         )
@@ -110,7 +106,7 @@ class BeoHaloBatteryCharging(BeoBinarySensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_POWER}",
+                f"{DOMAIN}_{self._unique_id}_{EventTypes.POWER}",
                 self._update_battery_charging,
             )
         )

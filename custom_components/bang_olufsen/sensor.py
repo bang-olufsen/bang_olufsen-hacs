@@ -9,6 +9,7 @@ from typing import cast
 from aiohttp import ClientConnectorError
 from mozart_api.exceptions import ApiException
 from mozart_api.models import BatteryState, PairedRemote
+from mozart_api.mozart_client import WebSocketEventTypes
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,21 +17,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL, PERCENTAGE
+from homeassistant.const import CONF_MODEL, PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BeoConfigEntry
-from .beoremote_halo.models import PowerEvent
-from .const import (
-    BEO_MODEL_PLATFORM_MAP,
-    CONNECTION_STATUS,
-    DOMAIN,
-    BeoPlatform,
-    WebsocketNotification,
-)
+from .beoremote_halo.models import EventTypes, PowerEvent
+from .const import BEO_MODEL_PLATFORM_MAP, CONNECTION_STATUS, DOMAIN, BeoPlatform
 from .entity import BeoEntity
 from .util import get_remotes, supports_battery
 
@@ -105,7 +100,7 @@ class BeoMozartBatteryLevel(BeoSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BATTERY}",
+                f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.BATTERY}",
                 self._update_battery,
             )
         )
@@ -162,7 +157,7 @@ class BeoMozartBatteryChargingTime(BeoSensor):
     """Battery charging time Sensor."""
 
     _attr_entity_registry_enabled_default = False
-    _attr_native_unit_of_measurement = "min"
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_translation_key = "battery_charging_time"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -185,7 +180,7 @@ class BeoMozartBatteryChargingTime(BeoSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BATTERY}",
+                f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.BATTERY}",
                 self._update_battery,
             )
         )
@@ -208,7 +203,7 @@ class BeoMozartBatteryPlayingTime(BeoSensor):
     """Battery playing time Sensor."""
 
     _attr_entity_registry_enabled_default = False
-    _attr_native_unit_of_measurement = "min"
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_translation_key = "battery_playing_time"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -230,7 +225,7 @@ class BeoMozartBatteryPlayingTime(BeoSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BATTERY}",
+                f"{DOMAIN}_{self._unique_id}_{WebSocketEventTypes.BATTERY}",
                 self._update_battery,
             )
         )
@@ -276,7 +271,7 @@ class BeoHaloBatteryLevel(BeoSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.HALO_POWER}",
+                f"{DOMAIN}_{self._unique_id}_{EventTypes.POWER}",
                 self._update_battery,
             )
         )

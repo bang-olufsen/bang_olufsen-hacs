@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "stand_stop": {
+        "default": "mdi:stop-circle-outline"
+      }
+    },
     "event": {
       "control_blue": {
         "default": "mdi:remote"
@@ -273,6 +278,11 @@
       },
       "light_yellow": {
         "default": "mdi:remote"
+      }
+    },
+    "number": {
+      "stand_angle": {
+        "default": "mdi:angle-obtuse"
       }
     },
     "select": {
