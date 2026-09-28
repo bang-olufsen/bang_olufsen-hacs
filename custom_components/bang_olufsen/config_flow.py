@@ -116,6 +116,7 @@ from .const import (
     HALO_OPTION_REMOVE_DEFAULT,
     HALO_OPTION_SELECT_DEFAULT,
     SELECTABLE_MODELS,
+    SERVICE_NO_ACTION,
     ZEROCONF_HALO,
     ZEROCONF_MOZART,
     BeoModel,
@@ -921,38 +922,25 @@ class HaloOptionsFlowHandler(OptionsFlow):
             default_icon["default"] = content.icon.name
 
         action_kwargs = {}
-        button_actions = _halo_action_map[domain][CONF_BUTTON_ACTION]
-        wheel_actions = _halo_action_map[domain][CONF_WHEEL_ACTION]
 
-        # Add button action select option if more than 1 option is available
-        if len(button_actions) > 1:
-            # Add default value if button is being modified
-            button_kwargs = {}
-            if id_ is not None:
-                button_kwargs["default"] = self._entity_map[id_][CONF_BUTTON_ACTION]
+        for configuration_key in (CONF_BUTTON_ACTION, CONF_WHEEL_ACTION):
+            # Add button/wheel action select option if at least 1 option is available
+            # To add the "no action" option
+            actions = _halo_action_map[domain][configuration_key]
+            if len(actions) >= 1:
+                # Add default value if button/wheel is being modified
+                kwargs = {}
+                if id_ is not None:
+                    kwargs["default"] = self._entity_map[id_][configuration_key]
 
-            action_kwargs[vol.Required(CONF_BUTTON_ACTION, **button_kwargs)] = (
-                SelectSelector(
-                    SelectSelectorConfig(
-                        options=button_actions, mode=SelectSelectorMode.DROPDOWN
+                action_kwargs[vol.Required(configuration_key, **kwargs)] = (
+                    SelectSelector(
+                        SelectSelectorConfig(
+                            options=[*actions, SERVICE_NO_ACTION],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
                     )
                 )
-            )
-
-        # Same for wheel action
-        if len(wheel_actions) > 1:
-            # Add default value if button is being modified
-            wheel_kwargs = {}
-            if id_ is not None:
-                wheel_kwargs["default"] = self._entity_map[id_][CONF_WHEEL_ACTION]
-
-            action_kwargs[vol.Required(CONF_WHEEL_ACTION, **wheel_kwargs)] = (
-                SelectSelector(
-                    SelectSelectorConfig(
-                        options=wheel_actions, mode=SelectSelectorMode.DROPDOWN
-                    )
-                )
-            )
 
         return vol.Schema(
             {

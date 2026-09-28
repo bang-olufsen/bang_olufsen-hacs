@@ -66,8 +66,15 @@ from homeassistant.components.select import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
@@ -104,6 +111,7 @@ from .const import (
     HALO_WEBSOCKET_EVENT,
     HALO_WHEEL_TIMEOUT,
     MOZART_WEBSOCKET_EVENT,
+    SERVICE_NO_ACTION,
     BeoModel,
     EntityMapValues,
     WebsocketSubNotification,
@@ -248,6 +256,11 @@ class HaloWebsocket(BeoBase):
         entity_state = self.hass.states.get(entity_id)
         if entity_state is None:
             _LOGGER.error("Error retrieving state for %s", entity_id)
+            return None
+        if entity_state.state == STATE_UNAVAILABLE:
+            _LOGGER.error(
+                "Unable to process action for %s as it is unavailable", entity_id
+            )
             return None
 
         return entity_state
@@ -478,11 +491,16 @@ class HaloWebsocket(BeoBase):
             action_data,
         )
 
-        await self.hass.services.async_call(
-            state.domain,
-            action,
-            {ATTR_ENTITY_ID: state.entity_id, **action_data},
-        )
+        try:
+            await self.hass.services.async_call(
+                state.domain,
+                action,
+                {ATTR_ENTITY_ID: state.entity_id, **action_data},
+            )
+        except ServiceValidationError:
+            _LOGGER.error(
+                "Unable to call %s button action for %s", action, state.entity_id
+            )
 
     async def _handle_no_action_data(self, state: State) -> dict[str, Any]:
         """Handle action call action data."""
@@ -648,6 +666,8 @@ class HaloWebsocket(BeoBase):
         if (action := self._entity_map[button_id][CONF_WHEEL_ACTION]) is None:
             _LOGGER.debug("No wheel action available for %s", entity_state.domain)
             return
+        if action == SERVICE_NO_ACTION:
+            return
 
         # Increment or decrement counter
         self._wheel_action_handlers[entity_state.entity_id].counter += counts.value
@@ -715,7 +735,8 @@ class HaloWebsocket(BeoBase):
 
         # Wrap action call in a task as callbacks can't be async
         self._wheel_action_handlers[state.entity_id].task = asyncio.create_task(
-            self._handle_wheel_action_task(button_id, state, action, action_data)
+            self._handle_wheel_action_task(button_id, state, action, action_data),
+            eager_start=True,
         )
 
     async def _handle_wheel_action_task(
@@ -736,11 +757,16 @@ class HaloWebsocket(BeoBase):
             action_data,
         )
 
-        await self.hass.services.async_call(
-            state.domain,
-            action,
-            {ATTR_ENTITY_ID: state.entity_id, **action_data},
-        )
+        try:
+            await self.hass.services.async_call(
+                state.domain,
+                action,
+                {ATTR_ENTITY_ID: state.entity_id, **action_data},
+            )
+        except ServiceValidationError:
+            _LOGGER.error(
+                "Unable to call %s wheel action for %s", action, state.entity_id
+            )
 
         # Reset counter, timer and content
         self._wheel_action_handlers[state.entity_id].counter = 0

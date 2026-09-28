@@ -222,6 +222,8 @@ COVER_ATTRIBUTE_MAP: Final[dict[str, tuple[str, str]]] = {
     SERVICE_SET_COVER_TILT_POSITION: (ATTR_CURRENT_TILT_POSITION, ATTR_TILT_POSITION),
 }
 
+SERVICE_NO_ACTION: Final = "no_action"
+
 # Models that can be setup manually
 SELECTABLE_MODELS: Final[list[BeoModel]] = [
     model for model in BeoModel if model.value != BeoModel.BEOREMOTE_ONE
