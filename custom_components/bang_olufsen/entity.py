@@ -37,11 +37,12 @@ class BeoBase:
         else:
             self._client = config_entry.runtime_data.client
 
-    @staticmethod
-    def get_device(hass: HomeAssistant, unique_id: str) -> dr.DeviceEntry:
+    def get_device(self, hass: HomeAssistant, unique_id: str) -> dr.DeviceEntry:
         """Get the device."""
         device_registry = dr.async_get(hass)
-        device = device_registry.async_get_device({(DOMAIN, unique_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, unique_id), self.entry.entry_id
+        )
         assert device
 
         return device
