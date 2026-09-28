@@ -1,6 +1,6 @@
 """Text entities for the Bang & Olufsen integration."""
 
-from __future__ import annotations
+from typing import override
 
 from mozart_api.models import HomeControlUri
 from mozart_api.mozart_client import MozartClient
@@ -73,6 +73,7 @@ class BeoMozartHomeControlUri(BeoText):
 
         self._attr_unique_id = f"{self._unique_id}_home_control_uri"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
         self.async_on_remove(
@@ -86,6 +87,7 @@ class BeoMozartHomeControlUri(BeoText):
         home_control = await self._client.get_remote_home_control_uri()
         self._attr_native_value = home_control.uri
 
+    @override
     async def async_set_value(self, value: str) -> None:
         """Set the Home Control URI name."""
         self._attr_native_value = value

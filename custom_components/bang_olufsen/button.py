@@ -1,9 +1,7 @@
 """Button entities for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import cast
+from typing import cast, override
 
 from mozart_api import StandStatus
 from mozart_api.models import StandInfo, StandMovement
@@ -75,6 +73,7 @@ class BeoMozartStandStop(BeoNumber):
             identifiers={(DOMAIN, cast(str, stand_info.serial_number))}
         )
 
+    @override
     async def async_press(self) -> None:
         """Stop any ongoing stand movement."""
         await self._client.set_stand_movement(StandMovement(stand_motion="stop"))

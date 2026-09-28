@@ -15,7 +15,7 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "already_in_progress": "Configuration flow is already in progress"
+            "already_in_progress": "This is already being configured. Finish the existing configuration before starting again."
         },
         "error": {
             "api_exception": "Failed to connect",

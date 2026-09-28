@@ -1,9 +1,7 @@
 """Select entities for the Bang & Olufsen Mozart integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import cast
+from typing import cast, override
 from uuid import UUID
 
 from mozart_api.models import SpeakerGroupOverview
@@ -87,6 +85,7 @@ class BeoMozartListeningPosition(BeoSelect):
         self._listening_positions: dict[str, UUID] = {}
         self._scenes: dict[str, str] = {}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
         self.async_on_remove(
@@ -113,6 +112,7 @@ class BeoMozartListeningPosition(BeoSelect):
 
         await self._update_listening_positions()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._client.post_scene_trigger(id=self._listening_positions[option])

@@ -1,7 +1,5 @@
 """Actions for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, cast
 
 import voluptuous as vol
@@ -9,7 +7,7 @@ import voluptuous as vol
 if TYPE_CHECKING:
     from . import BeoConfigEntry
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -44,7 +42,6 @@ ATTR_SOURCE_ID = "source_id"
 ATTR_ALL_DISCOVERED = "all_discovered"
 ATTR_BEOLINK_JIDS = "beolink_jids"
 ATTR_VOLUME_LEVEL = "volume_level"
-ATTR_COMMAND = "command"
 ATTR_PARAMETER = "parameter"
 
 # Halo

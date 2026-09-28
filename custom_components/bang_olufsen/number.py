@@ -1,9 +1,7 @@
 """Number entities for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import cast
+from typing import cast, override
 
 from mozart_api import StandStatus
 from mozart_api.models import StandInfo, StandMovement, StandPosition
@@ -81,6 +79,7 @@ class BeoMozartStandAngle(BeoNumber):
 
         self._attr_native_value = cast(StandPosition, self._stand_status.position).angle
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
         self.async_on_remove(
@@ -104,6 +103,7 @@ class BeoMozartStandAngle(BeoNumber):
         self._attr_native_value = round(cast(float, data.angle), 2)
         self.async_write_ha_state()
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the angle of the stand."""
         await self._client.set_stand_movement(StandMovement(angle=value))

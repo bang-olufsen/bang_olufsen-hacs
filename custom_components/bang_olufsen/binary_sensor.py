@@ -1,6 +1,6 @@
 """Binary Sensor entities for the Bang & Olufsen integration."""
 
-from __future__ import annotations
+from typing import override
 
 from mozart_api.models import BatteryState
 from mozart_api.mozart_client import WebSocketEventTypes
@@ -60,6 +60,7 @@ class BeoMozartBatteryCharging(BeoBinarySensor):
 
         self._attr_unique_id = f"{self._unique_id}_battery_charging"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
         self.async_on_remove(
@@ -94,6 +95,7 @@ class BeoHaloBatteryCharging(BeoBinarySensor):
 
         self._attr_unique_id = f"{self._unique_id}_battery_charging"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
         self.async_on_remove(

@@ -1,8 +1,6 @@
 """Event entities for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 from uuid import UUID
 
 from mozart_api.models import PairedRemote
@@ -172,6 +170,7 @@ class BeoMozartButton(BeoEvent):
 
         self._button_type = button_type
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Listen to WebSocket button events."""
         self.async_on_remove(
@@ -218,6 +217,7 @@ class BeoMozartRemoteKey(BeoEvent):
 
         self._key_type = key_type
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Listen to WebSocket Beoremote One key events."""
         self.async_on_remove(
@@ -249,6 +249,7 @@ class BeoMozartProximity(BeoEvent):
 
         self._attr_unique_id = f"{self._unique_id}_proximity"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
         self.async_on_remove(
@@ -284,6 +285,7 @@ class BeoHaloSystemStatus(BeoEvent):
 
         self._attr_unique_id = f"{self._unique_id}_system_status"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
         self.async_on_remove(
@@ -324,6 +326,7 @@ class BeoHaloButton(BeoEvent):
 
         self._button = button
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
         self.async_on_remove(

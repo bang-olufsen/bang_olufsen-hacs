@@ -1,13 +1,11 @@
 """Media player entity for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from datetime import timedelta
 import json
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 from uuid import UUID
 
 from aiohttp import ClientConnectorError
@@ -146,7 +144,7 @@ class BeoMediaPlayer(MediaPlayerEntity, BeoEntity):
     """Base Media Player class."""
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
-    _attr_name: None | str = None
+    _attr_name: str | None = None
 
 
 # Mozart entities
@@ -209,6 +207,7 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
         # Input signal: Human formatted string of current audio signal (surround etc.)
         self._input_signal_attribute: str | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
         await super().async_added_to_hass()
@@ -668,6 +667,7 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
         self.async_write_ha_state()
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         features = BEO_FEATURES
@@ -679,11 +679,13 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
         return features
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return the current state of the media player."""
         return BEO_STATES[self._state]
 
     @property
+    @override
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if self._volume.level and self._volume.level.level is not None:
@@ -691,6 +693,7 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
         return None
 
     @property
+    @override
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         if self._volume.muted and self._volume.muted.muted:
@@ -698,6 +701,7 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
         return None
 
     @property
+    @override
     def media_content_type(self) -> MediaType | str | None:
         """Return the current media type."""
         content_type = {
@@ -714,56 +718,67 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
         return MediaType.MUSIC
 
     @property
+    @override
     def media_duration(self) -> int | None:
         """Return the total duration of the current track in seconds."""
         return self._playback_metadata.total_duration_seconds
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Return the current playback progress."""
         return self._playback_progress.progress
 
     @property
+    @override
     def media_content_id(self) -> str | None:
         """Return internal ID of Deezer, Tidal and radio stations."""
         return self._playback_metadata.source_internal_id
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Return URL of the currently playing music."""
         return self._media_image.url
 
     @property
+    @override
     def media_image_remotely_accessible(self) -> bool:
         """Return whether or not the image of the current media is available outside the local network."""
         return not self._media_image.has_local_image
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Return the currently playing title."""
         return self._playback_metadata.title
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Return the currently playing album name."""
         return self._playback_metadata.album_name
 
     @property
+    @override
     def media_album_artist(self) -> str | None:
         """Return the currently playing artist name."""
         return self._playback_metadata.artist_name
 
     @property
+    @override
     def media_track(self) -> int | None:
         """Return the currently playing track."""
         return self._playback_metadata.track
 
     @property
+    @override
     def media_channel(self) -> str | None:
         """Return the currently playing channel."""
         return self._playback_metadata.organization
 
     @property
+    @override
     def source(self) -> str | None:
         """Return the current audio/video source."""
         # Associate TV content ID with a video source
@@ -773,6 +788,7 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
         return self._source_change.name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return information that is not returned anywhere else."""
         attributes: dict[str, Any] = {}
@@ -791,10 +807,12 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
 
         return attributes
 
+    @override
     async def async_turn_off(self) -> None:
         """Set the device to "networkStandby"."""
         await self._client.post_standby()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
 
@@ -817,10 +835,12 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
             volume_level=VolumeLevel(level=new_volume)
         )
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute media player."""
         await self._client.set_volume_mute(volume_mute=VolumeMute(muted=mute))
 
+    @override
     async def async_media_play_pause(self) -> None:
         """Toggle play/pause media player."""
         if self.state == MediaPlayerState.PLAYING:
@@ -828,22 +848,27 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
         elif self.state in (MediaPlayerState.PAUSED, MediaPlayerState.IDLE):
             await self.async_media_play()
 
+    @override
     async def async_media_pause(self) -> None:
         """Pause media player."""
         await self._client.post_playback_command(command="pause")
 
+    @override
     async def async_media_play(self) -> None:
         """Play media player."""
         await self._client.post_playback_command(command="play")
 
+    @override
     async def async_media_stop(self) -> None:
         """Pause media player."""
         await self._client.post_playback_command(command="stop")
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send the next track command."""
         await self._client.post_playback_command(command="skip")
 
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Seek to position in ms."""
         await self._client.seek_to_position(position_ms=int(position * 1000))
@@ -853,26 +878,31 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
 
         self.async_write_ha_state()
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send the previous track command."""
         await self._client.post_playback_command(command="prev")
 
+    @override
     async def async_clear_playlist(self) -> None:
         """Clear the current playback queue."""
         await self._client.post_clear_queue()
 
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set playback queues to shuffle."""
         await self._client.set_settings_queue(
             play_queue_settings=PlayQueueSettings(shuffle=shuffle),
         )
 
+    @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set playback queues to repeat."""
         await self._client.set_settings_queue(
             play_queue_settings=PlayQueueSettings(repeat=BEO_REPEAT_FROM_HA[repeat])
         )
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""
         if source not in self._sources.values():
@@ -895,6 +925,7 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
             # Video
             await self._client.post_remote_trigger(id=UUID(key))
 
+    @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a sound mode."""
         # Ensure only known sound modes known by the integration can be activated.
@@ -910,6 +941,7 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
 
         await self._client.activate_listening_mode(id=self._sound_modes[sound_mode])
 
+    @override
     async def async_play_media(
         self,
         media_type: MediaType | str,
@@ -1056,6 +1088,7 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
                     },
                 ) from error
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -1068,6 +1101,7 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
             content_filter=lambda item: item.media_content_type.startswith("audio/"),
         )
 
+    @override
     async def async_join_players(self, group_members: list[str]) -> None:
         """Create a Beolink session with defined group members."""
 
@@ -1083,6 +1117,7 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
         jids = [self._get_beolink_jid(group_member) for group_member in group_members]
         await self.async_beolink_expand(jids)
 
+    @override
     async def async_unjoin_player(self) -> None:
         """Unjoin Beolink session. End session if leader."""
         await self._client.post_beolink_leave()

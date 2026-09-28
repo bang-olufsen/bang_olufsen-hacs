@@ -1,9 +1,7 @@
 """Config flow for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from ipaddress import AddressValueError, IPv4Address
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, override
 from uuid import UUID
 
 from aiohttp.client_exceptions import (
@@ -279,6 +277,7 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -386,6 +385,7 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="halo", data_schema=HALO_SCHEMA)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -487,6 +487,7 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
