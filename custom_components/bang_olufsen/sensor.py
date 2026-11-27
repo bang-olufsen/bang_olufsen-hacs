@@ -5,16 +5,15 @@ from datetime import timedelta
 from typing import cast, override
 
 from aiohttp import ClientConnectorError
+from mozart_api.const import WebSocketEventTypes
 from mozart_api.exceptions import ApiException
 from mozart_api.models import BatteryState, PairedRemote
-from mozart_api.mozart_client import WebSocketEventTypes
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -34,7 +33,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BeoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensor entities from config entry."""
@@ -67,10 +66,6 @@ async def async_setup_entry(
 
 class BeoSensor(SensorEntity, BeoEntity):
     """Base Bang & Olufsen Sensor."""
-
-    def __init__(self, config_entry: BeoConfigEntry) -> None:
-        """Initialize Sensor."""
-        super().__init__(config_entry)
 
 
 class BeoMozartBatteryLevel(BeoSensor):

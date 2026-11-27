@@ -6,7 +6,6 @@ from mozart_api.models import HomeControlUri
 from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.text import TextEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -28,7 +27,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BeoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Text entities from config entry."""
@@ -51,10 +50,6 @@ class BeoText(TextEntity, BeoEntity):
     """Base Text class."""
 
     _attr_entity_category = EntityCategory.CONFIG
-
-    def __init__(self, config_entry: BeoConfigEntry) -> None:
-        """Init the Text entity."""
-        super().__init__(config_entry)
 
 
 # Mozart entities

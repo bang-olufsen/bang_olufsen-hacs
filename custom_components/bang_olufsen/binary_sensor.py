@@ -2,8 +2,8 @@
 
 from typing import override
 
+from mozart_api.const import WebSocketEventTypes
 from mozart_api.models import BatteryState
-from mozart_api.mozart_client import WebSocketEventTypes
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -16,8 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BeoConfigEntry
 from .beoremote_halo.models import EventTypes, PowerEvent, PowerEventState
-from .const import BEO_MODEL_PLATFORM_MAP, CONNECTION_STATUS, DOMAIN
-from .entity import BeoEntity, BeoPlatform
+from .const import BEO_MODEL_PLATFORM_MAP, CONNECTION_STATUS, DOMAIN, BeoPlatform
+from .entity import BeoEntity
 from .util import supports_battery
 
 
@@ -43,10 +43,6 @@ class BeoBinarySensor(BinarySensorEntity, BeoEntity):
     """Base Binary Sensor class."""
 
     _attr_is_on = False
-
-    def __init__(self, config_entry: BeoConfigEntry) -> None:
-        """Init the Binary Sensor."""
-        super().__init__(config_entry)
 
 
 class BeoMozartBatteryCharging(BeoBinarySensor):

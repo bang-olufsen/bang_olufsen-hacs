@@ -3,8 +3,8 @@
 from typing import TYPE_CHECKING, cast, override
 from uuid import UUID
 
+from mozart_api.const import WebSocketEventTypes
 from mozart_api.models import PairedRemote
-from mozart_api.mozart_client import WebSocketEventTypes
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.const import CONF_MODEL
@@ -79,8 +79,8 @@ async def async_setup_entry(
             # As it has to be removed from the device on the app.
 
             device_registry = dr.async_get(hass)
-            devices = device_registry.devices.get_devices_for_config_entry_id(
-                config_entry.entry_id
+            devices = dr.async_entries_for_config_entry(
+                device_registry, config_entry.entry_id
             )
             for device in devices:
                 if (
@@ -115,10 +115,8 @@ async def async_setup_entry(
 
             # Check if any deleted buttons have to be removed
             entity_registry = er.async_get(hass)
-            existing_entities = (
-                entity_registry.entities.get_entries_for_config_entry_id(
-                    config_entry.entry_id
-                )
+            existing_entities = er.async_entries_for_config_entry(
+                entity_registry, config_entry.entry_id
             )
 
             for existing_entity in existing_entities:
@@ -138,10 +136,6 @@ class BeoEvent(EventEntity, BeoEntity):
     """Base Event class."""
 
     _attr_entity_registry_enabled_default = False
-
-    def __init__(self, config_entry: BeoConfigEntry) -> None:
-        """Initialize Event."""
-        super().__init__(config_entry)
 
     @callback
     def _async_handle_event(self, event: str) -> None:

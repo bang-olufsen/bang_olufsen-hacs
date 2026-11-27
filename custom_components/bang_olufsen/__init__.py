@@ -73,24 +73,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: BeoConfigEntry) -> None:
     """Set up from a config entry."""
 
     device_registry = dr.async_get(hass)
 
     match BEO_MODEL_PLATFORM_MAP[config_entry.data[CONF_MODEL]]:
         case BeoPlatform.MOZART.value:
-            return await _setup_mozart(hass, config_entry, device_registry)
+            await _setup_mozart(hass, config_entry, device_registry)
         case BeoPlatform.BEOREMOTE_HALO.value:
-            return await _setup_halo(hass, config_entry, device_registry)
-
-    return False
+            await _setup_halo(hass, config_entry, device_registry)
 
 
-def _create_device(config_entry: ConfigEntry, device_registry: DeviceRegistry) -> None:
+def _create_device(
+    config_entry: BeoConfigEntry, device_registry: DeviceRegistry
+) -> dr.DeviceEntry:
     """Create Home Assistant device for added B&O product."""
     # Create device now as MozartWebsocket and HaloWebsocket need a device for debug logging, firing events etc.
-    device_registry.async_get_or_create(
+    return device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, cast(str, config_entry.unique_id))},
         name=config_entry.title,
@@ -102,7 +102,7 @@ def _create_device(config_entry: ConfigEntry, device_registry: DeviceRegistry) -
 
 async def _setup_mozart(
     hass: HomeAssistant, config_entry: BeoConfigEntry, device_registry: DeviceRegistry
-) -> bool:
+) -> None:
     """Set up a Mozart based product."""
     if TYPE_CHECKING:
         assert isinstance(config_entry.unique_id, str)
@@ -128,7 +128,7 @@ async def _setup_mozart(
         ) from error
 
     # Create Mozart device
-    _create_device(config_entry, device_registry)
+    device = _create_device(config_entry, device_registry)
 
     # Create devices for paired Beoremote One remotes
     for remote in await get_remotes(client):
@@ -140,7 +140,7 @@ async def _setup_mozart(
             serial_number=remote.serial_number,
             sw_version=remote.app_version,
             manufacturer=MANUFACTURER,
-            via_device=(DOMAIN, config_entry.unique_id),
+            via_device_id=device.id,
         )
 
     # Create device for stand if connected
@@ -155,7 +155,7 @@ async def _setup_mozart(
             model=cast(str, stand_info.stand_type),
             sw_version=f"{stand_info.bootloader_version}-{stand_info.application_version}",
             manufacturer=MANUFACTURER,
-            via_device=(DOMAIN, config_entry.unique_id),
+            via_device_id=device.id,
         )
 
     # Initialize websocket
@@ -170,12 +170,10 @@ async def _setup_mozart(
     # This ensures that the initial WebSocket notifications are dispatched to entities
     await client.connect_notifications(remote_control=True, reconnect=True)
 
-    return True
-
 
 async def _setup_halo(
     hass: HomeAssistant, config_entry: BeoConfigEntry, device_registry: DeviceRegistry
-) -> bool:
+) -> None:
     """Set up a Halo."""
 
     # Get/set configuration
@@ -216,19 +214,14 @@ async def _setup_halo(
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_update_options))
 
-    return True
 
-
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_update_options(hass: HomeAssistant, entry: BeoConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: BeoConfigEntry) -> None:
     """Unload a config entry."""
-    if TYPE_CHECKING:
-        assert isinstance(config_entry.runtime_data, BeoData)
-
     match BEO_MODEL_PLATFORM_MAP[config_entry.data[CONF_MODEL]]:
         case BeoPlatform.MOZART.value:
             if TYPE_CHECKING:
@@ -245,6 +238,4 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             await config_entry.runtime_data.client.disconnect()
             platforms = HALO_PLATFORMS
 
-    # Close the API client and WebSocket notification listener
-
-    return await hass.config_entries.async_unload_platforms(config_entry, platforms)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, platforms)

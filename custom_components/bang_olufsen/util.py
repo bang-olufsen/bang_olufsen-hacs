@@ -3,9 +3,9 @@
 import logging
 from typing import TYPE_CHECKING, cast
 
-from mozart_api import StandStatus, __version__ as MOZART_API_VERSION
+from mozart_api import __version__ as MOZART_API_VERSION
 from mozart_api.exceptions import ApiException
-from mozart_api.models import PairedRemote, Source, StandInfo
+from mozart_api.models import PairedRemote, Source, StandInfo, StandStatus
 from mozart_api.mozart_client import MozartClient
 
 from .beoremote_halo import Halo

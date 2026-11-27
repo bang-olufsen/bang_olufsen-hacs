@@ -1,11 +1,10 @@
 """Actions for the Bang & Olufsen integration."""
 
+from enum import StrEnum
 from typing import TYPE_CHECKING, cast
 
-import voluptuous as vol
+import probatio
 
-if TYPE_CHECKING:
-    from . import BeoConfigEntry
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID
 from homeassistant.core import (
@@ -26,33 +25,46 @@ from .beoremote_halo.halo import Halo
 from .beoremote_halo.models import Update, UpdateDisplayPage, UpdateNotification
 from .const import ACCEPTED_COMMANDS, BEOLINK_JOIN_SOURCES, DOMAIN
 
-# Mozart
-SERVICE_BEOLINK_JOIN = "beolink_join"
-SERVICE_BEOLINK_EXPAND = "beolink_expand"
-SERVICE_BEOLINK_UNEXPAND = "beolink_unexpand"
-SERVICE_BEOLINK_LEAVE = "beolink_leave"
-SERVICE_BEOLINK_ALLSTANDBY = "beolink_allstandby"
-SERVICE_BEOLINK_SET_VOLUME = "beolink_set_volume"
-SERVICE_BEOLINK_SET_RELATIVE_VOLUME = "beolink_set_relative_volume"
-SERVICE_BEOLINK_LEADER_COMMAND = "beolink_leader_command"
-SERVICE_REBOOT = "reboot"
+if TYPE_CHECKING:
+    from . import BeoConfigEntry
 
-ATTR_BEOLINK_JID = "beolink_jid"
-ATTR_SOURCE_ID = "source_id"
-ATTR_ALL_DISCOVERED = "all_discovered"
-ATTR_BEOLINK_JIDS = "beolink_jids"
-ATTR_VOLUME_LEVEL = "volume_level"
-ATTR_PARAMETER = "parameter"
 
-# Halo
-SERVICE_HALO_CONFIGURATION = "halo_configuration"
-SERVICE_HALO_NOTIFICATION = "halo_notification"
-SERVICE_HALO_DISPLAY_PAGE = "halo_display_page"
+class BeoService(StrEnum):
+    """Store keys for Bang & Olufsen services."""
 
-ATTR_TITLE = "title"
-ATTR_SUBTITLE = "subtitle"
-ATTR_PAGE_ID = "page_id"
-ATTR_BUTTON_ID = "button_id"
+    # Mozart
+    ALLSTANDBY = "beolink_allstandby"
+    EXPAND = "beolink_expand"
+    JOIN = "beolink_join"
+    LEADER_COMMAND = "beolink_leader_command"
+    LEAVE = "beolink_leave"
+    REBOOT = "reboot"
+    SET_RELATIVE_VOLUME = "beolink_set_relative_volume"
+    SET_VOLUME = "beolink_set_volume"
+    UNEXPAND = "beolink_unexpand"
+
+    # Halo
+    HALO_CONFIGURATION = "halo_configuration"
+    HALO_DISPLAY_PAGE = "halo_display_page"
+    HALO_NOTIFICATION = "halo_notification"
+
+
+class BeoServiceArgument(StrEnum):
+    """Store keys for Bang & Olufsen service arguments."""
+
+    # Mozart
+    ALL_DISCOVERED = "all_discovered"
+    JIDS = "beolink_jids"
+    JID = "beolink_jid"
+    PARAMETER = "parameter"
+    SOURCE_ID = "source_id"
+    VOLUME_LEVEL = "volume_level"
+
+    # Halo
+    BUTTON_ID = "button_id"
+    PAGE_ID = "page_id"
+    SUBTITLE = "subtitle"
+    TITLE = "title"
 
 
 @callback
@@ -60,140 +72,144 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register Bang & Olufsen actions."""
 
     # Mozart (entity) services
-    jid_regex = vol.Match(
+    jid_regex = probatio.Match(
         r"(^\d{4})[.](\d{7})[.](\d{8})(@products\.bang-olufsen\.com)$"
     )
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_BEOLINK_JOIN,
+        BeoService.JOIN,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Optional(ATTR_BEOLINK_JID): jid_regex,
-            vol.Optional(ATTR_SOURCE_ID): vol.In(BEOLINK_JOIN_SOURCES),
+            probatio.Optional(BeoServiceArgument.JID): jid_regex,
+            probatio.Optional(BeoServiceArgument.SOURCE_ID): probatio.In(
+                BEOLINK_JOIN_SOURCES
+            ),
         },
-        func=f"async_{SERVICE_BEOLINK_JOIN}",
+        func=f"async_{BeoService.JOIN}",
         supports_response=SupportsResponse.OPTIONAL,
     )
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_BEOLINK_EXPAND,
+        BeoService.EXPAND,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Exclusive(ATTR_ALL_DISCOVERED, "devices", ""): cv.boolean,
-            vol.Exclusive(
-                ATTR_BEOLINK_JIDS,
+            probatio.Exclusive(
+                BeoServiceArgument.ALL_DISCOVERED, "devices", ""
+            ): cv.boolean,
+            probatio.Exclusive(
+                BeoServiceArgument.JIDS,
                 "devices",
                 "Define either specific Beolink JIDs or all discovered",
-            ): vol.All(
-                cv.ensure_list,
+            ): probatio.All(
+                probatio.EnsureList(),
                 [jid_regex],
             ),
         },
-        func=f"async_{SERVICE_BEOLINK_EXPAND}",
+        func=f"async_{BeoService.EXPAND}",
         supports_response=SupportsResponse.OPTIONAL,
     )
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_BEOLINK_UNEXPAND,
+        BeoService.UNEXPAND,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Required(ATTR_BEOLINK_JIDS): vol.All(
-                cv.ensure_list,
+            probatio.Required(BeoServiceArgument.JIDS): probatio.All(
+                probatio.EnsureList(),
                 [jid_regex],
             ),
         },
-        func=f"async_{SERVICE_BEOLINK_UNEXPAND}",
+        func=f"async_{BeoService.UNEXPAND}",
     )
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_BEOLINK_LEAVE,
+        BeoService.LEAVE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
-        func=f"async_{SERVICE_BEOLINK_LEAVE}",
+        func=f"async_{BeoService.LEAVE}",
     )
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_BEOLINK_ALLSTANDBY,
+        BeoService.ALLSTANDBY,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
-        func=f"async_{SERVICE_BEOLINK_ALLSTANDBY}",
+        func=f"async_{BeoService.ALLSTANDBY}",
     )
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_BEOLINK_SET_VOLUME,
+        BeoService.SET_VOLUME,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Required(ATTR_VOLUME_LEVEL): cv.string},
-        func=f"async_{SERVICE_BEOLINK_SET_VOLUME}",
+        schema={probatio.Required(BeoServiceArgument.VOLUME_LEVEL): cv.string},
+        func=f"async_{BeoService.SET_VOLUME}",
     )
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_BEOLINK_SET_RELATIVE_VOLUME,
+        BeoService.SET_RELATIVE_VOLUME,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Required(ATTR_VOLUME_LEVEL): cv.string},
-        func=f"async_{SERVICE_BEOLINK_SET_RELATIVE_VOLUME}",
+        schema={probatio.Required(BeoServiceArgument.VOLUME_LEVEL): cv.string},
+        func=f"async_{BeoService.SET_RELATIVE_VOLUME}",
     )
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_BEOLINK_LEADER_COMMAND,
+        BeoService.LEADER_COMMAND,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Required(ATTR_COMMAND): vol.In(ACCEPTED_COMMANDS),
-            vol.Optional(ATTR_PARAMETER): cv.string,
+            probatio.Required(ATTR_COMMAND): probatio.In(ACCEPTED_COMMANDS),
+            probatio.Optional(BeoServiceArgument.PARAMETER): cv.string,
         },
-        func=f"async_{SERVICE_BEOLINK_LEADER_COMMAND}",
+        func=f"async_{BeoService.LEADER_COMMAND}",
     )
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_REBOOT,
+        BeoService.REBOOT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
-        func=f"async_{SERVICE_REBOOT}",
+        func=f"async_{BeoService.REBOOT}",
     )
 
     # Halo (device) actions
-    uuid_regex = vol.Match(
+    uuid_regex = probatio.Match(
         r"^[0-9a-f]{8}[-][0-9a-f]{4}[-][0-9a-f]{4}[-][0-9a-f]{4}[-][0-9a-f]{12}$"
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_HALO_CONFIGURATION,
+        BeoService.HALO_CONFIGURATION,
         _async_halo_configuration,
-        schema=vol.Schema({vol.Required(ATTR_DEVICE_ID): cv.string}),
+        schema=probatio.Schema({probatio.Required(ATTR_DEVICE_ID): cv.string}),
         supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_HALO_NOTIFICATION,
+        BeoService.HALO_NOTIFICATION,
         _async_halo_notification,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_DEVICE_ID): cv.string,
-                vol.Required(ATTR_TITLE): vol.All(
-                    vol.Length(min=1, max=62),
+                probatio.Required(ATTR_DEVICE_ID): cv.string,
+                probatio.Required(BeoServiceArgument.TITLE): probatio.All(
+                    probatio.Length(min=1, max=62),
                     cv.string,
                 ),
-                vol.Required(ATTR_SUBTITLE): vol.All(
-                    vol.Length(min=1, max=256),
+                probatio.Required(BeoServiceArgument.SUBTITLE): probatio.All(
+                    probatio.Length(min=1, max=256),
                     cv.string,
                 ),
             }
@@ -202,13 +218,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_HALO_DISPLAY_PAGE,
+        BeoService.HALO_DISPLAY_PAGE,
         _async_halo_display_page,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_DEVICE_ID): cv.string,
-                vol.Required(ATTR_PAGE_ID): uuid_regex,
-                vol.Optional(ATTR_BUTTON_ID): uuid_regex,
+                probatio.Required(ATTR_DEVICE_ID): cv.string,
+                probatio.Required(BeoServiceArgument.PAGE_ID): uuid_regex,
+                probatio.Optional(BeoServiceArgument.BUTTON_ID): uuid_regex,
             }
         ),
     )
@@ -241,8 +257,8 @@ async def _async_halo_notification(call: ServiceCall) -> None:
     await _get_client(call, Halo).update(
         Update(
             update=UpdateNotification(
-                title=call.data["title"],
-                message=call.data["subtitle"],
+                title=call.data[BeoServiceArgument.TITLE],
+                message=call.data[BeoServiceArgument.SUBTITLE],
             )
         )
     )
@@ -251,8 +267,8 @@ async def _async_halo_notification(call: ServiceCall) -> None:
 async def _async_halo_display_page(call: ServiceCall) -> None:
     """Display a page and button on a Halo."""
 
-    kwargs = {"page_id": call.data["page_id"]}
-    if call.data.get("button_id") is not None:
-        kwargs["button_id"] = call.data["button_id"]
+    kwargs = {"page_id": call.data[BeoServiceArgument.PAGE_ID]}
+    if (button_id := call.data.get(BeoServiceArgument.BUTTON_ID)) is not None:
+        kwargs["button_id"] = button_id
 
     await _get_client(call, Halo).update(Update(update=UpdateDisplayPage(**kwargs)))

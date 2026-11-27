@@ -3,12 +3,11 @@
 from datetime import timedelta
 from typing import cast, override
 
-from mozart_api import StandStatus
-from mozart_api.models import StandInfo, StandMovement, StandPosition
-from mozart_api.mozart_client import MozartClient, WebSocketEventTypes
+from mozart_api.const import WebSocketEventTypes
+from mozart_api.models import StandInfo, StandMovement, StandPosition, StandStatus
+from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, DEGREE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,7 +26,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BeoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Number entities from config entry."""
@@ -49,10 +48,6 @@ async def async_setup_entry(
 
 class BeoNumber(NumberEntity, BeoEntity):
     """Base Bang & Olufsen Number."""
-
-    def __init__(self, config_entry: BeoConfigEntry) -> None:
-        """Initialize Number."""
-        super().__init__(config_entry)
 
 
 class BeoMozartStandAngle(BeoNumber):

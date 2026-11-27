@@ -1,10 +1,9 @@
 """Entity representing a Bang & Olufsen device."""
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from mozart_api.mozart_client import MozartClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -14,12 +13,15 @@ from homeassistant.helpers.entity import Entity
 from .beoremote_halo.halo import Halo
 from .const import BEO_MODEL_PLATFORM_MAP, DOMAIN, BeoPlatform
 
+if TYPE_CHECKING:
+    from . import BeoConfigEntry
+
 
 class BeoBase:
     """Base class for Bang & Olufsen Home Assistant objects."""
 
     def __init__(
-        self, config_entry: ConfigEntry, client: MozartClient | Halo | None = None
+        self, config_entry: BeoConfigEntry, client: MozartClient | Halo | None = None
     ) -> None:
         """Initialize the object."""
 
@@ -54,7 +56,7 @@ class BeoEntity(Entity, BeoBase):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Initialize the object."""
         super().__init__(config_entry)
 

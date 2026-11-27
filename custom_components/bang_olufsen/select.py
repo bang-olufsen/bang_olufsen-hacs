@@ -4,11 +4,11 @@ import logging
 from typing import cast, override
 from uuid import UUID
 
+from mozart_api.const import WebSocketEventTypes
 from mozart_api.models import SpeakerGroupOverview
-from mozart_api.mozart_client import MozartClient, WebSocketEventTypes
+from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -31,7 +31,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BeoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Select entities from config entry."""
@@ -60,10 +60,6 @@ class BeoSelect(SelectEntity, BeoEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_options = []
-
-    def __init__(self, config_entry: BeoConfigEntry) -> None:
-        """Init the Select entity."""
-        super().__init__(config_entry)
 
 
 # Mozart entities

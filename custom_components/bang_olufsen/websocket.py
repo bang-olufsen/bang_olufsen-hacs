@@ -3,11 +3,15 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
+from mozart_api.const import (
+    BaseWebSocketResponse as MozartBaseWebSocketResponse,
+    WebSocketEventTypes,
+)
 from mozart_api.models import (
     BatteryState,
     BeoRemoteButton,
@@ -24,11 +28,7 @@ from mozart_api.models import (
     VolumeState,
     WebsocketNotificationTag,
 )
-from mozart_api.mozart_client import (
-    BaseWebSocketResponse as MozartBaseWebSocketResponse,
-    MozartClient,
-    WebSocketEventTypes,
-)
+from mozart_api.mozart_client import MozartClient
 import numpy as np
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -65,7 +65,6 @@ from homeassistant.components.select import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -119,6 +118,9 @@ from .const import (
 from .entity import BeoBase
 from .util import get_remotes
 
+if TYPE_CHECKING:
+    from . import BeoConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -149,7 +151,7 @@ class HaloWebsocket(BeoBase):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BeoConfigEntry,
         client: Halo,
     ) -> None:
         """Initialize the entity coordinator."""
@@ -460,7 +462,7 @@ class HaloWebsocket(BeoBase):
         # The default (iso format) value does not fit in the subtitle, so reformat it
         try:
             return (
-                datetime.datetime.fromisoformat(state.state).strftime("%d-%m/%H:%M:%S"),
+                dt.datetime.fromisoformat(state.state).strftime("%d-%m/%H:%M:%S"),
                 ButtonState.INACTIVE,
                 0,
             )
@@ -794,7 +796,7 @@ class HaloWebsocket(BeoBase):
         """Handle WebSocket connection made."""
         _LOGGER.debug("Connected to the %s event channel", self.entry.title)
 
-        if self._client.configuration:
+        if self._entity_ids:
             # Send entity states as updates
             for entity_id in self._entity_ids:
                 await self._manage_entity_updates(entity_id)
@@ -875,7 +877,7 @@ class MozartWebsocket(BeoBase):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BeoConfigEntry,
         client: MozartClient,
     ) -> None:
         """Initialize the entity coordinator."""
@@ -1047,8 +1049,8 @@ class MozartWebsocket(BeoBase):
             device_registry = dr.async_get(self.hass)
             device_serial_numbers = [
                 device.serial_number
-                for device in device_registry.devices.get_devices_for_config_entry_id(
-                    self.entry.entry_id
+                for device in dr.async_entries_for_config_entry(
+                    device_registry, self.entry.entry_id
                 )
                 if device.serial_number is not None
                 and device.model == BeoModel.BEOREMOTE_ONE

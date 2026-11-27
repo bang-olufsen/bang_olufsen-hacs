@@ -10,9 +10,16 @@ from aiohttp.client_exceptions import (
     ServerTimeoutError,
     WSMessageTypeError,
 )
+from mozart_api.const import (
+    MDNS_FRIENDLY_NAME as MOZART_MDNS_FRIENDLY_NAME,
+    MDNS_ITEM_NUMBER as MOZART_MDNS_ITEM_NUMBER,
+    MDNS_SERIAL_NUMBER as MOZART_MDNS_SERIAL_NUMBER,
+    MDNS_SERVICE_TYPE as MOZART_MDNS_SERVICE_TYPE,
+    MDNS_TYPE_NUMBER as MOZART_MDNS_TYPE_NUMBER,
+)
 from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -91,12 +98,8 @@ from .beoremote_halo.models import (
 )
 from .beoremote_halo.util import trim_button_title
 from .const import (
-    ATTR_FRIENDLY_NAME,
     ATTR_HALO_FRIENDLY_NAME,
     ATTR_HALO_SERIAL_NUMBER,
-    ATTR_ITEM_NUMBER,
-    ATTR_MOZART_SERIAL_NUMBER,
-    ATTR_TYPE_NUMBER,
     CONF_BUTTON_ACTION,
     CONF_BUTTON_TITLE,
     CONF_DEFAULT_BUTTON,
@@ -118,7 +121,6 @@ from .const import (
     SELECTABLE_MODELS,
     SERVICE_NO_ACTION,
     ZEROCONF_HALO,
-    ZEROCONF_MOZART,
     BeoModel,
     EntityMapActionValues,
     EntityMapValues,
@@ -148,7 +150,7 @@ _exception_map: dict[
         | ClientConnectorError
         | TimeoutError
         | AddressValueError
-        | vol.MatchInvalid
+        | probatio.MatchInvalid
         | ClientOSError
         | ServerTimeoutError
         | WSMessageTypeError
@@ -159,7 +161,7 @@ _exception_map: dict[
     ClientConnectorError: "client_connector_error",
     TimeoutError: "timeout_error",
     AddressValueError: "invalid_ip",
-    vol.MatchInvalid: "invalid_serial_number",
+    probatio.MatchInvalid: "invalid_serial_number",
     ClientOSError: "client_os_error",
     ServerTimeoutError: "server_timeout_error",
     WSMessageTypeError: "ws_message_type_error",
@@ -252,15 +254,15 @@ def _get_uuid_from_string(string: str) -> UUID:
     return UUID(string[-37:-1])
 
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
             SelectSelectorConfig(options=SELECTABLE_MODELS)
         ),
     }
 )
-HALO_SCHEMA = vol.Schema({vol.Required(CONF_SERIAL_NUMBER): str})
+HALO_SCHEMA = probatio.Schema({probatio.Required(CONF_SERIAL_NUMBER): str})
 
 
 class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -368,8 +370,8 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
             # Check if serial number has the right format
             try:
-                vol.Match(r"\d{8}")(self._serial_number)
-            except vol.MatchInvalid as error:
+                probatio.Match(r"\d{8}")(self._serial_number)
+            except probatio.MatchInvalid as error:
                 return self.async_show_form(
                     step_id="halo",
                     data_schema=HALO_SCHEMA,
@@ -401,10 +403,10 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="ipv6_address")
 
         # Default to Mozart products
-        name_key = ATTR_FRIENDLY_NAME
+        name_key = MOZART_MDNS_FRIENDLY_NAME.decode()
 
         # Handle Mozart based products
-        if discovery_info.type == ZEROCONF_MOZART:
+        if discovery_info.type == MOZART_MDNS_SERVICE_TYPE:
             if (status := await self._zeroconf_mozart(discovery_info)) is not None:
                 return status
 
@@ -434,7 +436,7 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult | None:
         """Handle Zeroconf discovery of Mozart products."""
         # Check if the discovered device is a Mozart device
-        if ATTR_FRIENDLY_NAME not in discovery_info.properties:
+        if MOZART_MDNS_FRIENDLY_NAME.decode() not in discovery_info.properties:
             return self.async_abort(reason="not_mozart_device")
 
         # Check connection to ensure valid address is received
@@ -449,9 +451,10 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="invalid_address")
 
         self._model = discovery_info.hostname[:-16].replace("-", " ")
-        self._friendly_name = discovery_info.properties[ATTR_FRIENDLY_NAME]
-        self._serial_number = discovery_info.properties[ATTR_MOZART_SERIAL_NUMBER]
-        self._beolink_jid = f"{discovery_info.properties[ATTR_TYPE_NUMBER]}.{discovery_info.properties[ATTR_ITEM_NUMBER]}.{self._serial_number}@products.bang-olufsen.com"
+        properties = discovery_info.properties
+        self._friendly_name = properties[MOZART_MDNS_FRIENDLY_NAME.decode()]
+        self._serial_number = properties[MOZART_MDNS_SERIAL_NUMBER.decode()]
+        self._beolink_jid = f"{properties[MOZART_MDNS_TYPE_NUMBER.decode()]}.{properties[MOZART_MDNS_ITEM_NUMBER.decode()]}.{self._serial_number}@products.bang-olufsen.com"
 
         return None
 
@@ -474,14 +477,12 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._create_entry()
 
-        self._set_confirm_only()
-
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
-                CONF_HOST: self._host,
-                CONF_MODEL: self._model,
-                CONF_SERIAL_NUMBER: self._serial_number,
+                "host": self._host,
+                "model": self._model,
+                "serial_number": self._serial_number,
             },
             last_step=True,
         )
@@ -594,9 +595,15 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
             return await self.async_step_button()
 
-        return self.async_show_form(
-            step_id=HALO_OPTION_PAGE, data_schema=self._page_schema()
-        )
+        if self._page_being_modified:
+            data_schema = self._page_schema(
+                page_title=self._page.title,
+                entities=self._entity_ids_in_page,
+            )
+        else:
+            data_schema = self._page_schema()
+
+        return self.async_show_form(step_id=HALO_OPTION_PAGE, data_schema=data_schema)
 
     async def async_step_button(
         self, user_input: dict[str, Any] | None = None
@@ -669,7 +676,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="button",
             data_schema=button_schema,
-            description_placeholders={CONF_NAME: self._entity_ids[-1]},
+            description_placeholders={"name": self._entity_ids[-1]},
         )
 
     async def async_step_modify_page(
@@ -688,13 +695,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
                 for button in self._page.buttons
             ]
 
-            return self.async_show_form(
-                step_id=HALO_OPTION_PAGE,
-                data_schema=self._page_schema(
-                    page_title=self._page.title,
-                    entities=self._entity_ids_in_page,
-                ),
-            )
+            return await self.async_step_page()
 
         return self.async_show_form(
             step_id=HALO_OPTION_MODIFY_PAGE,
@@ -799,9 +800,9 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id=HALO_OPTION_SELECT_DEFAULT,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEFAULT_BUTTON): SelectSelector(
+                    probatio.Required(CONF_DEFAULT_BUTTON): SelectSelector(
                         SelectSelectorConfig(
                             options=buttons,
                             sort=True,
@@ -862,19 +863,19 @@ class HaloOptionsFlowHandler(OptionsFlow):
 
     def _page_schema(
         self,
-        page_title: str | vol.Undefined = vol.UNDEFINED,
-        entities: list[str] | vol.Undefined = vol.UNDEFINED,
-    ) -> vol.Schema:
+        page_title: str | probatio.Undefined = probatio.UNDEFINED,
+        entities: list[str] | probatio.Undefined = probatio.UNDEFINED,
+    ) -> probatio.Schema:
         """Fill schema for page modification or creation."""
 
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(CONF_PAGE_TITLE, default=page_title): vol.All(
+                probatio.Required(CONF_PAGE_TITLE, default=page_title): probatio.All(
                     str,
-                    vol.Length(max=PAGE_TITLE_MAX_LENGTH),
+                    probatio.Length(max=PAGE_TITLE_MAX_LENGTH),
                 ),
-                vol.Required(CONF_ENTITIES, default=entities): vol.All(
-                    vol.Length(
+                probatio.Required(CONF_ENTITIES, default=entities): probatio.All(
+                    probatio.Length(
                         min=MIN_BUTTONS_VALIDATION,
                         max=MAX_BUTTONS,
                         msg=f"Between {MIN_BUTTONS}-{MAX_BUTTONS} buttons have to be in a page",
@@ -907,9 +908,9 @@ class HaloOptionsFlowHandler(OptionsFlow):
     def _button_schema(
         self,
         content: Icon | Text | None = None,
-        title: str | vol.Undefined = vol.UNDEFINED,
+        title: str | probatio.Undefined = probatio.UNDEFINED,
         id_: str | None = None,
-    ) -> vol.Schema:
+    ) -> probatio.Schema:
         """Fill schema for button modification or creation."""
         domain = _get_domain(self._entity_ids[-1])
 
@@ -933,7 +934,7 @@ class HaloOptionsFlowHandler(OptionsFlow):
                 if id_ is not None:
                     kwargs["default"] = self._entity_map[id_][configuration_key]
 
-                action_kwargs[vol.Required(configuration_key, **kwargs)] = (
+                action_kwargs[probatio.Required(configuration_key, **kwargs)] = (
                     SelectSelector(
                         SelectSelectorConfig(
                             options=[*actions, SERVICE_NO_ACTION],
@@ -942,24 +943,24 @@ class HaloOptionsFlowHandler(OptionsFlow):
                     )
                 )
 
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(CONF_BUTTON_TITLE, default=title): vol.All(
-                    str, vol.Length(max=BUTTON_TITLE_MAX_LENGTH)
+                probatio.Required(CONF_BUTTON_TITLE, default=title): probatio.All(
+                    str, probatio.Length(max=BUTTON_TITLE_MAX_LENGTH)
                 ),
-                vol.Required(**default_icon): SelectSelector(
+                probatio.Required(**default_icon): SelectSelector(
                     SelectSelectorConfig(options=HALO_BUTTON_ICONS)
                 ),
                 **action_kwargs,
             },
         )
 
-    def _page_selector_schema(self, multiple: bool) -> vol.Schema:
+    def _page_selector_schema(self, multiple: bool) -> probatio.Schema:
         """Select a single or multiple pages from title."""
 
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(CONF_PAGES): SelectSelector(
+                probatio.Required(CONF_PAGES): SelectSelector(
                     SelectSelectorConfig(
                         options=[
                             f"{page.title} - ({page.str_id})"

@@ -10,6 +10,7 @@ from uuid import UUID
 
 from aiohttp import ClientConnectorError
 from inflection import camelize, titleize, underscore
+from mozart_api.const import WebSocketEventTypes
 from mozart_api.exceptions import ApiException
 from mozart_api.models import (
     Action,
@@ -38,11 +39,8 @@ from mozart_api.models import (
     VolumeMute,
     VolumeState,
 )
-from mozart_api.mozart_client import (
-    MozartClient,
-    WebSocketEventTypes,
-    get_highest_resolution_artwork,
-)
+from mozart_api.mozart_client import MozartClient
+from mozart_api.util import get_highest_resolution_artwork
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -56,7 +54,6 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -70,7 +67,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 from homeassistant.util.json import JsonObjectType
 
-from . import MANUFACTURER, BeoConfigEntry
+from . import BeoConfigEntry
 from .const import (
     ACCEPTED_COMMANDS_LISTS,
     BEO_MODEL_PLATFORM_MAP,
@@ -86,6 +83,7 @@ from .const import (
     CONF_BEOLINK_JID,
     CONNECTION_STATUS,
     DOMAIN,
+    MANUFACTURER,
     VALID_MEDIA_TYPES,
     BeoAttribute,
     BeoMediaType,
@@ -125,7 +123,7 @@ BEO_FEATURES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BeoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Media Player entity from config entry."""
@@ -246,6 +244,17 @@ class BeoMozartMediaPlayer(BeoMediaPlayer):
                         signal_handler,
                     )
                 )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Replace the own entity_id in the group members."""
+        super().async_entity_id_changed(old_entity_id)
+        if self._attr_group_members and old_entity_id in self._attr_group_members:
+            self._attr_group_members = [
+                self.entity_id if member == old_entity_id else member
+                for member in self._attr_group_members
+            ]
 
     async def _initialize(self) -> None:
         """Initialize connection dependent variables."""

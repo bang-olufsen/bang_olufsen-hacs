@@ -3,12 +3,10 @@
 from datetime import timedelta
 from typing import cast, override
 
-from mozart_api import StandStatus
-from mozart_api.models import StandInfo, StandMovement
+from mozart_api.models import StandInfo, StandMovement, StandStatus
 from mozart_api.mozart_client import MozartClient
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -26,7 +24,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BeoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Button entities from config entry."""
@@ -48,10 +46,6 @@ async def async_setup_entry(
 
 class BeoNumber(ButtonEntity, BeoEntity):
     """Base Bang & Olufsen Button."""
-
-    def __init__(self, config_entry: BeoConfigEntry) -> None:
-        """Initialize Button."""
-        super().__init__(config_entry)
 
 
 class BeoMozartStandStop(BeoNumber):

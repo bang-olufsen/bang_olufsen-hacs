@@ -232,16 +232,11 @@ SELECTABLE_MODELS: Final[list[BeoModel]] = [
 
 MANUFACTURER: Final[str] = "Bang & Olufsen"
 
-ZEROCONF_MOZART: Final[str] = "_bangolufsen._tcp.local."
 ZEROCONF_HALO: Final[str] = "_zenith._tcp.local."
 
-# Attribute names for zeroconf discovery.
-ATTR_TYPE_NUMBER: Final[str] = "tn"
-ATTR_MOZART_SERIAL_NUMBER: Final[str] = "sn"
+# Attribute names for Halo zeroconf discovery.
 ATTR_HALO_SERIAL_NUMBER: Final[str] = "serial"
 ATTR_HALO_FRIENDLY_NAME: Final[str] = "name"
-ATTR_ITEM_NUMBER: Final[str] = "in"
-ATTR_FRIENDLY_NAME: Final[str] = "fn"
 
 # Power states.
 BEO_ON: Final[str] = "on"
